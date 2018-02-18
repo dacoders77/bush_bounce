@@ -1,0 +1,41 @@
+    <script>
+
+        var chart2; // Chart variable declaration
+
+
+            // Calling the controller
+            var request = $.get('jsonload/USDBTC'); // ajax request
+
+            request.done(function(response) { 
+
+                console.log(response[0]);
+
+            // create the chart
+            chart2 = new Highcharts.stockChart('container', {
+
+                chart: {
+                    height: $(document).height()-100,
+                    renderTo: 'container' // DIV where the chart will be rendered
+                },
+
+                series: [
+                    {
+                    name: 'ETH',
+                    data: response[0],
+                    },
+                    {
+                        name: 'ZZZ',
+                        color: 'red',
+                        data: response[1]
+                    }
+                ],
+
+            });
+
+            }); // ajax request
+        
+
+    </script>
+
+
+
