@@ -75,6 +75,6 @@ class RatchetPawlSocket extends Command
 
         $loop->run();
 
-        
+
     }
 }
