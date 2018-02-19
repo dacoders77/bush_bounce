@@ -40,6 +40,10 @@ class loadJsonFromDB extends Controller
         $profit_trades = 0;
         $loss_trades = 0;
 
+         // Starting value for local drawdown
+        $tempDrawDown = 0;
+        $localDrawDown = 0;
+
 
 //************
         $StartUpAsset = DB::table('assets')->where('show_on_startup', 1)->value('asset_name'); // We take only one asset from the DB. The one which has show_on_startup flag
@@ -200,7 +204,7 @@ class loadJsonFromDB extends Controller
             if($last > $curr && $curr < $profit_diagram[$i + 1][1]) {
                 $extremes[] = $curr;
             }
-            //maxes
+            //max
             else if ($last < $curr && $curr > $profit_diagram[$i + 1][1]) {
                 $extremes[] = $curr;
             }
@@ -218,25 +222,40 @@ class loadJsonFromDB extends Controller
         // 2. One is positive, other is negative. High - (-Low) (low has - sign)
         // 3. Both are negative. abs(high) - abs(low)
 
+        $num = count($extremes); // Count all found extremas
+        for($i=0; $i<$num; $i++) // Start from second element
+        {
+            if ($i > 0) { // Do not take first element. Otherwise we will no be able the take the previous element
+                if ($extremes[$i - 1] > $extremes[$i]) { // We start from second element. If the previous is higher than current meaning that we are going down
+                        if (max($extremes) > 0 && (min($extremes) >= 0)){
+                            //$drawDawnVals [] = [1, max($extremes) - min($extremes)];
+                            $localDrawDown = $extremes[$num - 1] - $extremes[$num]; // Previous - current
+                        }
 
-            if (max($extremes) > 0 && (min($extremes) >= 0)){
-                $drawDawnVals [] = [1, max($extremes) - min($extremes)];
+                        if (max($extremes) > 0 && (min($extremes) < 0)){
+                            //$drawDawnVals [] = [2, max($extremes) - min($extremes)];
+                            //$localDrawDown = max($extremes) - min($extremes);
+                            $localDrawDown = $extremes[$i - 1] - $extremes[$i];
+                        }
+
+                        if (min($extremes) <= 0 && (max($extremes) < 0)){
+                            //$drawDawnVals [] = [3, abs(min($extremes)) - max($extremes)];
+                            //$localDrawDown = abs(min($extremes)) - max($extremes);
+                            $localDrawDown = abs($extremes[$i]) - abs($extremes[$i - 1]);
+                        }
+                    }
             }
 
-            if (max($extremes) > 0 && (min($extremes) < 0)){
-                $drawDawnVals [] = [2, max($extremes) - min($extremes)];
-            }
+            if ($localDrawDown > $tempDrawDown) // Find the biggest value of drawdown
+                $tempDrawDown = $localDrawDown;
+        }
 
-            if (min($extremes) <= 0 && (max($extremes) < 0)){
-                $drawDawnVals [] = [3, abs(min($extremes)) - max($extremes)];
-            }
-
-
+        $drawDawnVals [] = $tempDrawDown;
 
 
         //$drawDawnVals [] = [abs(max($extremes)) - abs(min($extremes))];
         //$drawDawnVals [] = [5,77,88,123];
-        //$drawDawnVals [] = $extremes;
+        //$drawDawnVals [] = $tempDrawDown;
 
         //$message [] = ["kopa"];
         //$arr2 = [1,9,11,2,5];
