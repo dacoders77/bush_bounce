@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client; // Guzzle is used to send http headers
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-require '..\vendor\autoload.php'; // Used for guzzle hookup
+
 
 /*
  * Candles data retrieved from www.bitfines.com

@@ -212,9 +212,9 @@ class loadJsonFromDB extends Controller
         $extremes[] = $profit_diagram[$num - 1][1];
 
 
-        //$drawDawnVals [] = [abs(max($extremes)) + abs(min($extremes))];
+        $drawDawnVals [] = [abs(max($extremes)) - abs(min($extremes))];
         //$drawDawnVals [] = [5,77,88,123];
-        $drawDawnVals [] = $extremes;
+        //$drawDawnVals [] = $extremes;
 
         //$message [] = ["kopa"];
         //$arr2 = [1,9,11,2,5];
