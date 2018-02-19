@@ -1,12 +1,11 @@
-﻿<?php
+<?php
 namespace App\Http\Controllers;
-require '..\vendor\autoload.php'; // Used for guzzle hookup
 use Illuminate\Http\Request;
 use GuzzleHttp\Client; // Guzzle is used to send http headers
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use DateTime;
 use Illuminate\Database\Schema\Blueprint;
+require '..\vendor\autoload.php'; // Used for guzzle hookup
 
 /*
  * Candles data retrieved from www.bitfines.com
@@ -159,7 +158,7 @@ class history_finex extends Controller
             // delete for ($x = 0; $x <= 40; $x += 10) // 3 steps. 20 days each. works fine for 1h timeframe
             // delete {
 
-                echo "<br>***************************************************Step № " . $q;
+                echo "<br>***************************************************Step в„– " . $q;
 
                 // Time fromat: YYYY-MM-DD
                 //$restEndpoint = "candles/trade:" . $timeframe . ":t" . strtoupper($tableValue->asset_name) . "/hist?limit=1000&start=" . (strtotime("2017-01-01 +0 day") * 1000) . "&end=" . (strtotime("2017-01-05 +0 day") * 1000) . "&sort=1"; //
