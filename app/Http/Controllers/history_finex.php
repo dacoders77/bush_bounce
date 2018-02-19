@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
 require '..\vendor\autoload.php'; // Used for guzzle hookup
+use Illuminate\Http\Request;
 use GuzzleHttp\Client; // Guzzle is used to send http headers
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -144,7 +143,7 @@ class history_finex extends Controller
             $end = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_end')) * 1000);
 
             $tempEnd = $end;
-            $dayStep = 9; // Previous value 9. 1 for one day history loading
+            $dayStep = 1; // Previous value 9. 1 for one day history loading
 
             while ($tempEnd <= $end){
 

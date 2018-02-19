@@ -186,9 +186,9 @@ class loadJsonFromDB extends Controller
         // Local min max calculation
 
         $last = null;
-        $num = count($profit_diagram);
+        $num = count($profit_diagram); // Get quantity of bars in profit diagram
 
-        for($i=0;$i<$num - 1;$i++) {
+        for($i=0; $i<$num - 1; $i++) {
             $curr = $profit_diagram[$i][1]; // First value is datetime, second double
             if($last === null) {
                 $extremes[] = $curr;
@@ -212,9 +212,9 @@ class loadJsonFromDB extends Controller
         $extremes[] = $profit_diagram[$num - 1][1];
 
 
-        $drawDawnVals [] = [abs(max($extremes)) + abs(min($extremes))];
+        //$drawDawnVals [] = [abs(max($extremes)) + abs(min($extremes))];
         //$drawDawnVals [] = [5,77,88,123];
-
+        $drawDawnVals [] = $extremes;
 
         //$message [] = ["kopa"];
         //$arr2 = [1,9,11,2,5];
