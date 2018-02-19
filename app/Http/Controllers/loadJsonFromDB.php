@@ -209,10 +209,32 @@ class loadJsonFromDB extends Controller
             }
         }
         //add last point
-        $extremes[] = $profit_diagram[$num - 1][1];
+        $extremes[] = $profit_diagram[$num - 1][1]; // Add found extrema to the array
+
+        // Drawdown calculation
+        // We need to take the maximum of the array and subtract the lower value from it
+        // Three cases are possible:
+        // 1. Both values are positive. High - Low
+        // 2. One is positive, other is negative. High - (-Low) (low has - sign)
+        // 3. Both are negative. abs(high) - abs(low)
 
 
-        $drawDawnVals [] = [abs(max($extremes)) - abs(min($extremes))];
+            if (max($extremes) > 0 && (min($extremes) >= 0)){
+                $drawDawnVals [] = [1, max($extremes) - min($extremes)];
+            }
+
+            if (max($extremes) > 0 && (min($extremes) < 0)){
+                $drawDawnVals [] = [2, max($extremes) - min($extremes)];
+            }
+
+            if (min($extremes) <= 0 && (max($extremes) < 0)){
+                $drawDawnVals [] = [3, abs(min($extremes)) - max($extremes)];
+            }
+
+
+
+
+        //$drawDawnVals [] = [abs(max($extremes)) - abs(min($extremes))];
         //$drawDawnVals [] = [5,77,88,123];
         //$drawDawnVals [] = $extremes;
 
