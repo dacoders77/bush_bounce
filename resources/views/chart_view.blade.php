@@ -13,9 +13,9 @@
 
     request.done(function(response) { // ajax request if successful
 
-        //alert(response[6]);
+        //alert(response[8]);
         //console.log(response[3]); // Output message from the controller
-        //console.log(response[3]);
+        //console.log(response[1]);
         console.log("res_6: " + response[7]); // Extremes min, max. max - min = drawdown
 
 
@@ -31,9 +31,10 @@
             var net_profit_prc = (parseFloat(response[6]) * 100 / 10000).toFixed(2); // Net profit %
             $("#net_profit_prc").text(net_profit_prc);
 
-            $("#drawdown").text(parseFloat(response[7]).toFixed(2)); // Drawdown
+            //$("#drawdown").text(parseFloat(response[8]).toFixed(2)); // Drawdown
+            $("#drawdown").text(response[8][0][1] - response[8][1][1]);
 
-            var drawdown_prc = (parseFloat(response[7]) * 100 / 10000).toFixed(2); // Drawdown %
+            var drawdown_prc = (parseFloat((response[8][0][1] - response[8][1][1])) * 100 / 10000).toFixed(2); // Drawdown %
             $("#drawdown_prc").text(drawdown_prc);
 
             var trades_quan = response[3].length + response[4].length
@@ -94,6 +95,7 @@
 
                 {
                     name: 'ETH',
+                    visible: false,
                     enableMouseTracking: true,
                     type: 'candlestick',
                     data: response[0], // data response
@@ -108,7 +110,7 @@
                 },
                 {
                     name: 'Price channel high',
-                    visible: true,
+                    visible: false,
                     enableMouseTracking: true,
                     color: 'red',
                     lineWidth: 1,
@@ -120,7 +122,7 @@
                 },
                 {
                     name: 'Price channel low',
-                    //visible: false,
+                    visible: false,
                     enableMouseTracking: true,
                     color: 'blue',
                     lineWidth: 1,
@@ -131,6 +133,7 @@
                 },
                 {
                     name: 'Long markers',
+                    visible: false,
                     enableMouseTracking: true,
                     type: 'scatter',
                     color: 'purple',
@@ -154,6 +157,7 @@
                 },
                 {
                     name: 'Short markers',
+                    visible: false,
                     enableMouseTracking: true,
                     type: 'scatter',
                     //yAxis: 1, // To which of two y axis this series should be linked
@@ -183,7 +187,49 @@
                         enabled: false
                     },
 
+                },
+                {
+                    name: 'Extremums',
+                    //visible: false,
+                    enableMouseTracking: true,
+                    type: 'scatter',
+                    yAxis: 1, // To which of two y axis this series should be linked
+                    color: 'purple',
+                    //lineWidth: 3,
+                    data: response[7],
+                    dataGrouping: {
+                        enabled: false
+                    },
+                    marker: {
+                        fillColor: 'blue',
+                        lineColor: 'blue',
+                        lineWidth: 1,
+                        radius: 2,
+                        symbol: 'circle'
+                    },
                 }
+                ,
+                {
+                    name: 'Drawdown',
+                    //visible: false,
+                    enableMouseTracking: true,
+                    type: 'line',
+                    yAxis: 1, // To which of two y axis this series should be linked
+                    color: 'purple',
+                    //lineWidth: 3,
+                    data: response[8],
+                    dataGrouping: {
+                        enabled: false
+                    },
+                    marker: {
+                        fillColor: 'red',
+                        lineColor: 'blue',
+                        lineWidth: 1,
+                        radius: 5,
+                        symbol: 'circle'
+                    },
+                }
+
 
             ],
 

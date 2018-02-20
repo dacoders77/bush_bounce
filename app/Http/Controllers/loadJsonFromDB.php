@@ -171,9 +171,7 @@ class loadJsonFromDB extends Controller
         $ending_capital = $initial_capital + $accumulated_profit;
         $message [] = [$ending_capital];
 
-
-
-        // Record $ending_capital to DB. FIX IT!!!!!!!!!!!!
+        // Record $ending_capital to DB.
         $allTableValues1 = DB::table('assets')->get();
 
         // Loop through all found elements
@@ -187,33 +185,77 @@ class loadJsonFromDB extends Controller
 
         }
 
-        // Local min max calculation
 
+        /*
+        $extremes = array();
         $last = null;
-        $num = count($profit_diagram); // Get quantity of bars in profit diagram
-
-        for($i=0; $i<$num - 1; $i++) {
-            $curr = $profit_diagram[$i][1]; // First value is datetime, second double
+        $num = count($array);
+        for($i=0;$i<$num - 1;$i++) {
+            $curr = $array[$i];
             if($last === null) {
                 $extremes[] = $curr;
                 $last = $curr;
                 continue;
             }
+        */
 
+
+        $last  = null;
+        $min = 99999999;
+        $maxIndex = null;
+        $max = null;
+        $maxIndex = null;
+        $num = count($profit_diagram); // Get quantity of bars in profit diagram
+
+        for($i = 0; $i < $num - 1; $i++) {
+
+            //$alert = $profit_diagram[2][1]; // [index][0,1   0 - date; 1 - value]
+
+            $curr = $profit_diagram[$i][1]; // First value is datetime, second valur (double)
+            //$alert = $curr;
+
+            //break;
+
+            if($last === null) { // Added first bar to the extremums array
+                $extremes[] = [$profit_diagram[$i][0],$profit_diagram[$i][1]];
+                $last = $curr;
+                continue;
+            }
             //min
             if($last > $curr && $curr < $profit_diagram[$i + 1][1]) {
-                $extremes[] = $curr;
+                $extremes[] = [$profit_diagram[$i][0],$curr];
             }
             //max
             else if ($last < $curr && $curr > $profit_diagram[$i + 1][1]) {
-                $extremes[] = $curr;
+                $extremes[] = [$profit_diagram[$i][0],$curr];
             }
             if($last != $curr && $curr != $profit_diagram[$i + 1][1]) {
                 $last = $curr;
             }
+
         }
+
         //add last point
-        $extremes[] = $profit_diagram[$num - 1][1]; // Add found extrema to the array
+        $extremes[] = [$profit_diagram[$i][0],$profit_diagram[$num - 1][1]]; // Add found extrema to the array
+
+        for ($z = 0; $z < count($extremes); $z++){
+
+            if ($extremes[$z][1] > $max){
+                $max = $extremes[$z][1];
+                $maxIndex = $z;
+            }
+
+            if ($extremes[$z][1] < $min){
+                $min = $extremes[$z][1];
+                $minIndex = $z;
+            }
+
+
+        }
+
+
+
+
 
         // Drawdown calculation
         // We need to take the maximum of the array and subtract the lower value from it
@@ -222,6 +264,7 @@ class loadJsonFromDB extends Controller
         // 2. One is positive, other is negative. High - (-Low) (low has - sign)
         // 3. Both are negative. abs(high) - abs(low)
 
+        /*
         $num = count($extremes); // Count all found extremas
         for($i=0; $i<$num; $i++) // Start from second element
         {
@@ -251,7 +294,7 @@ class loadJsonFromDB extends Controller
         }
 
         $drawDawnVals [] = $tempDrawDown;
-
+*/
 
         //$drawDawnVals [] = [abs(max($extremes)) - abs(min($extremes))];
         //$drawDawnVals [] = [5,77,88,123];
@@ -259,12 +302,17 @@ class loadJsonFromDB extends Controller
 
         //$message [] = ["kopa"];
         //$arr2 = [1,9,11,2,5];
-        //$profit_diagram = 5;
+
+        //$drawDawnVals = $extremes;
+
+        $extremesHigh [] = [$extremes[$maxIndex][0],$max];
+        $extremesHigh [] = [$extremes[$minIndex][0],$min];
+
 
         if (Schema::hasTable('assets')) // If the table exists. If it does not - the historical data did not load due a error like "Too many requests"
         {
             //               0      1      2          3             4               5                 6                 7
-            $seriesData = [$data, $arr1, $arr2, $long_trades, $short_trades, $profit_diagram, $accumulated_profit, $drawDawnVals]; // $data candles, $arr1 and $arr2 - upper and lower price channel. $message - the variable for transfering messages and other
+            $seriesData = [$data, $arr1, $arr2, $long_trades, $short_trades, $profit_diagram, $accumulated_profit, $extremes, $extremesHigh]; // $data candles, $arr1 and $arr2 - upper and lower price channel. $message - the variable for transfering messages and other
             return $seriesData;
 
         }
