@@ -22,7 +22,7 @@ use Illuminate\Database\Schema\Blueprint;
 class history_finex extends Controller
 {
     /**
-     * The class request the historical data from www.bitfinex.com
+     * The class requests the historical data from www.bitfinex.com
      * The assets for which the historical data should be requested are stored in assets table in DB as well as start, end dates,
      * time frame and startup asset (shown when the page is loaded)
      *

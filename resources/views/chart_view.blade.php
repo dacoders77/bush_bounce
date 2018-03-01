@@ -3,28 +3,20 @@
 <script>
 
     var chart2; // Chart variable declaration
+    var request = $.get('jsonload'); // Request initiate. Controller call. AJAX request. jsonload/USDBTC
 
-    //$.getJSON('https://www.highcharts.com/samples/data/jsonp.php?filename=new-intraday.json&callback=?', function (data2) {
-    //    console.log(data2);
-    //}); // getJSON
-
-    // Calling the controller.
-    var request = $.get('jsonload'); // AJAX request. jsonload/USDBTC
-
-    request.done(function(response) { // ajax request if successful
+    request.done(function(response) { // Ajax request if successful
 
         //alert(response[8]);
-        //console.log(response[3]); // Output message from the controller
         //console.log(response[1]);
         console.log("res_6: " + response[7]); // Extremes min, max. max - min = drawdown
 
 
         $(document).ready(function(){
 
+            // Write values into html #divs on the page
             var ending_capital = (10000 + parseFloat(response[6])).toFixed(2); // Ending capital
             $("#ending_capital").text(ending_capital);
-
-
 
             $("#net_profit").text(parseFloat(response[6]).toFixed(2)); // Net profit
 
@@ -46,14 +38,9 @@
 
         }); // Works good
 
-        // $("zxc")
-        //console.log( $("zxc") );
-        //console.log(document.getElementById("zxc"));
 
 
-
-
-        // create the chart
+        // Create chart
         chart2 = new Highcharts.stockChart('container', {
 
             chart: {
@@ -221,13 +208,7 @@
                     dataGrouping: {
                         enabled: false
                     },
-                    marker: {
-                        fillColor: 'red',
-                        lineColor: 'blue',
-                        lineWidth: 1,
-                        radius: 5,
-                        symbol: 'circle'
-                    },
+
                 }
 
 
@@ -341,32 +322,7 @@
 
 </script>
 
-<!--
-<script>
-    $(function () {
-        var myChart = Highcharts.chart('container', {
-            chart: {
-                type: 'bar'
-            },
-            title: {
-                text: 'Fruit Consumption'
-            },
-            xAxis: {
-                categories: ['Apples', 'Bananas', 'Oranges']
-            },
-            yAxis: {
-                title: {
-                    text: 'Fruit eaten'
-                }
-            },
-            series: [{
-                name: 'Real values',
-                data: [1,2,3,4,5,6]
-            }]
-        });
-    });
-     </script>
-    -->
+
 
 <!-- Main Application (Can be VueJS or other JS framework) -->
 

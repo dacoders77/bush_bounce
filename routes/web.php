@@ -61,7 +61,7 @@ Route::get('/insert', 'insert_record@index'); // Working good
 Route::get('contact', 'ContactController@create')->name('contact.create'); // Both of these routes have the same url but different names
 Route::post('contact', 'ContactController@store')->name('contact.store'); // This one. contact.store is the name of the route. This name is used for accessing this route from the code not from the browser
 
-//Test json load from DB
+//Load historical data from DB
 route::get('/jsonload', 'loadJsonFromDB@get')->name('loadJsonFromDB'); // Controller call and passing {z} to it
 
 // Post test controller
@@ -70,7 +70,7 @@ Route::post('/post_controller', 'post_controller@index');
 //priceChannel_controller@index
 Route::post('/pricechannel', 'priceChannel_controller@index')->name('pricechannel');
 
-// Request tickrs from bitfinex
+// Request tickers from bitfinex
 Route::get('/tickers_request', 'tickers_request@index');
 
 // Tickers view
