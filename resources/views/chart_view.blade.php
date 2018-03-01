@@ -81,8 +81,8 @@
             series: [
 
                 {
-                    name: 'ETH',
-                    visible: false,
+                    name: 'Asset',
+                    visible: true,
                     enableMouseTracking: true,
                     type: 'candlestick',
                     data: response[0], // data response
@@ -97,7 +97,7 @@
                 },
                 {
                     name: 'Price channel high',
-                    visible: false,
+                    visible: true,
                     enableMouseTracking: true,
                     color: 'red',
                     lineWidth: 1,
@@ -109,7 +109,7 @@
                 },
                 {
                     name: 'Price channel low',
-                    visible: false,
+                    visible: true,
                     enableMouseTracking: true,
                     color: 'blue',
                     lineWidth: 1,
@@ -120,7 +120,7 @@
                 },
                 {
                     name: 'Long markers',
-                    visible: false,
+                    visible: true,
                     enableMouseTracking: true,
                     type: 'scatter',
                     color: 'purple',
@@ -144,7 +144,7 @@
                 },
                 {
                     name: 'Short markers',
-                    visible: false,
+                    visible: true,
                     enableMouseTracking: true,
                     type: 'scatter',
                     //yAxis: 1, // To which of two y axis this series should be linked
