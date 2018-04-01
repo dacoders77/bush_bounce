@@ -68,10 +68,10 @@ class history_finex extends Controller
                 $table->increments('id');
                 $table->dateTime('date')->nullable(); // Use nullable if this field can be blank
                 $table->bigInteger('time_stamp')->nullable();
-                $table->float('open')->nullable();
-                $table->float('close')->nullable();
-                $table->float('high')->nullable();
-                $table->float('low')->nullable();
+                $table->double('open')->nullable();
+                $table->double('close')->nullable();
+                $table->double('high')->nullable();
+                $table->double('low')->nullable();
                 $table->float('volume')->nullable();
             });
             echo "table created: " . $tableValue->asset_name;
