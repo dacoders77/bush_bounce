@@ -5,14 +5,14 @@
     var chart2; // Chart variable declaration
     var request = $.get('jsonload'); // Request initiate. Controller call. AJAX request. jsonload/USDBTC
 
-    request.done(function(response) { // Ajax request if successful
+    request.done(function(response) { // Ajax request if success
 
         //alert(response[8]);
         //console.log(response[1]);
         console.log("res_6: " + response[7]); // Extremes min, max. max - min = drawdown
 
 
-        $(document).ready(function(){
+        $(document).ready(function(){ // When the document is rendered and ready
 
             // Write values into html #divs on the page
             var ending_capital = (10000 + parseFloat(response[6])).toFixed(2); // Ending capital
@@ -37,7 +37,6 @@
             $("#loss_trades").text(response[4].length); // Profit trades
 
         }); // Works good
-
 
 
         // Create chart
@@ -287,8 +286,6 @@
                 }
 
             ],
-
-
 
         });
 

@@ -37,12 +37,6 @@ class loadJsonFromDB extends Controller
         // Variables for strategy testing parameters (results)
         $initial_capital = 0;
 
-        $profit_trades = 0;
-        $loss_trades = 0;
-
-         // Starting value for local drawdown
-        $tempDrawDown = 0;
-        $localDrawDown = 0;
 
 
 //************
@@ -55,13 +49,13 @@ class loadJsonFromDB extends Controller
 
         foreach ($all_table_values as $row_values) { // Go through all records loaded from the DB
 
-            // Add the candle to the array. Main candlestick chart data. Put all values from the table to this array
+            // Add a candle to the array. Main candlestick chart data. Put all values from the table to this array
             $data[] = [$row_values->time_stamp, $row_values->open, $row_values->high, $row_values->low, $row_values->close];
 
             // Start from $price_channel_interval - 1 element. - 1 because elements in arrays are named from 0. We don't start calculating price channel from the first candle
             if ($element_index >= $price_channel_interval - 1)
             {
-                // Cycle backwards through elements ($price_channel_interval) for calculating price channel
+                // Cycle backwards through elements ($price_channel_interval) for calculating min and max
                 for ($i = $element_index ; $i > $element_index - $price_channel_interval; $i--)
                 {
 
@@ -83,6 +77,7 @@ class loadJsonFromDB extends Controller
                 {
                     // Long && ($trade_flag == "all")
 
+                    // If close > price channel -> go long
                     if ($all_table_values[$element_index]->close > $arr1[$element_index - $price_channel_interval][1] && ($trade_flag == "all" || $trade_flag == "long")) {
 
                         $long_trades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added long marker
@@ -108,10 +103,8 @@ class loadJsonFromDB extends Controller
 
 
 
-
                     // Profit chart data calculation
                     // Strategiy testing parameters(results) calculation
-
 
                     if (count($long_trades) || count($short_trades)) // Start calculating profit values only after the trade has occurred. $short_trades or $long_trades array is not empty
                     {

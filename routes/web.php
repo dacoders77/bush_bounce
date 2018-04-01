@@ -49,7 +49,10 @@ Route::get('contact/verified/{category}', function($category) {
 
 
 // Chart2 @include test
-Route::get('/chart', function () { return View::make('master'); })->name('main.view'); // master.blade.php
+Route::get('/chart', function ()
+{
+    return View::make('master');
+})->name('main.view'); // master.blade.php
 
 // Api request to bitfinex
 Route::get('/history', 'history_finex@index')->name('history.get'); // Controller is called using the given name
@@ -81,7 +84,7 @@ Route::get('/tickers', function ()
 })->name('tickers.view');
 
 // Api request to bitfinex
-Route::post('/tickers_record_todb', 'tickers_record_todb@index')->name('tickers_record_todb.post'); // Controller is called using the given name
+Route::post('/tickers_record_todb', 'tickers_record_todb@index')->name('tickers_record_todb.post'); // Controller is called using given name
 
 // ChangeAsset
 route::get('/change_asset/{z}', 'ChangeAsset@index'); // Controller call and passing {z} to it

@@ -56,7 +56,7 @@ class tickers_request extends Controller
 
         return View::make('tickers')
             ->with('title', 'The list of all available tickers')
-            //->with('assets', Asset::all()); Asset is the elouent model located in app directory
+            //->with('assets', Asset::all()); Asset is the eloquent model located in app directory
             ->with('tickers', $json);
     }
 }

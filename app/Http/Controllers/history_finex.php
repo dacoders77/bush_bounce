@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
-use GuzzleHttp\Client; // Guzzle is used to send http headers
+use GuzzleHttp\Client; // Guzzle is used to send http headers http://docs.guzzlephp.org/en/stable/
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
@@ -103,7 +103,7 @@ class history_finex extends Controller
         //$start = (strtotime($request->get('start')) * 1000);
         //$end = (strtotime($request->get('end')) * 1000);
 
-        // Read start and end dates, timeframe from the DB. For this pero
+        // Read start and end dates, timeframe from the DB
         $start = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_start')) * 1000); // Timestamp
         $end = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_end')) * 1000);
         $timeframe = DB::table('assets')->where('id', 1)->value('timeframe');
@@ -126,7 +126,7 @@ class history_finex extends Controller
                 'timeout' => 50 // If make this value small - fatal error occurs
             ]);
 
-            // working end point! do not touch it!
+            // Working end point! do not touch it!
             //$restEndpoint = "candles/trade:" . $timeframe . ":tBTCUSD/hist?limit=1000&start=" . $start . "&end=" . $end . "&sort=1";
 
             DB::table('history_' . $tableValue->asset_name)->truncate(); // Drop all records in the table
@@ -150,8 +150,6 @@ class history_finex extends Controller
                 echo "<br><br>" . $q . " step: ";
                 $tempEnd = $start + 86400000 * $dayStep;
                 echo "GAP: " . gmdate ("d-m-Y G:i:s", ($start / 1000)) . " - " . gmdate ("d-m-Y G:i:s", ($tempEnd / 1000)) . "<br>";
-
-
 
 
             // delete }

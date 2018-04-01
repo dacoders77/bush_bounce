@@ -11,6 +11,8 @@ To: {!! Form::date('end', date_format(date_create(DB::table('assets')->where('id
 Time frame:<br>
 {{ Form::radio('radio1', '1m', false)}}
 {{ Form::label('1m')}}
+{{ Form::radio('radio1', '5m', false)}}
+{{ Form::label('5m')}}
 {{ Form::radio('radio1', '15m', false)}}
 {{ Form::label('15m')}}
 {{ Form::radio('radio1', '30m', false)}}
