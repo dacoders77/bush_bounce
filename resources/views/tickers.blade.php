@@ -4,8 +4,6 @@ Dataset configuration page<br>
 
 {{ Form::open(['route' => 'tickers_record_todb.post']) }} <!-- history.get is the name of the route -->
 
-
-
 History load period. From: {!! Form::date('start', date_format(date_create(DB::table('assets')->where('id', 1)->value('load_history_start')), 'Y-m-d')) !!}
 To: {!! Form::date('end', date_format(date_create(DB::table('assets')->where('id', 1)->value('load_history_end')), 'Y-m-d')) !!} <br>
 Time frame:<br>

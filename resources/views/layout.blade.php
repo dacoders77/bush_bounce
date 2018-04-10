@@ -1,3 +1,3 @@
 @include('header')
 
-<h1>Eto piztec!</h1>
+<h1>Hello from header</h1>

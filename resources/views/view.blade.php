@@ -9,6 +9,7 @@
             <div class="panel-heading">
                 <h3 class="panel-title">All availible aliens</h3>
             </div>
+
             <div class="panel-body">
                 <div class="table-responsive">
                     <table class="table table-striped tabel-bordered">
