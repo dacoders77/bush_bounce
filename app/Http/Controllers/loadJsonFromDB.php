@@ -52,7 +52,7 @@ class loadJsonFromDB extends Controller
                 ->where('id', 1)
                 ->value('default_stop_loss_shift');
 
-        $commission_value =
+        $commissionValueDb =
             DB::table('settings')
                 ->where('id', 1)
                 ->value('commission_value');
@@ -62,6 +62,11 @@ class loadJsonFromDB extends Controller
 
 
         foreach ($all_table_values as $row_values) { // Go through all records (bars) loaded from the DB
+
+            // Calculate commission value on each trade
+            $commissionValue = $all_table_values[$element_index]->close * $commissionValueDb / 100;
+
+            //echo  $commissionValue . "<br>";
 
             // Add a candle to the array. Main candlestick chart data. Put all values from the table to this array
             $chartBars[] = [$row_values->time_stamp, $row_values->open, $row_values->high, $row_values->low, $row_values->close];
@@ -175,28 +180,28 @@ class loadJsonFromDB extends Controller
                                     if ($isFirstEverTrade) // first ever trade
                                     {
                                         //echo "first ever: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
-                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, 0];
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, -$commissionValue]; // On the first ever trade we dont have any profit yet but the comission is already payed
                                     }
                                     if (!$isFirstEverTrade) // All trades except first ever
                                     {
                                         //echo "cc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
                                         if ($isFirstBarInTrade) // First bar in the trade and not the first trade ever
                                         {
-                                            // closed without a stop loss
+                                            // previous trade was closed without a stop loss
                                             if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "all")
                                             {
-                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close];
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close) - $commissionValue];
                                             }
-                                            // closed with a stop loss
+                                            // previous trade was closed with a stop loss
                                             if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "high")
                                             {
-                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1]];
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] - $commissionValue];
                                             }
                                         }
                                         else // All bars in the trade except first one
                                         {
                                             //echo "cccc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
-                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close];
+                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close) - $commissionValue];
                                         }
                                     }
                                     $isFirstBarInTrade = false;
@@ -231,7 +236,7 @@ class loadJsonFromDB extends Controller
                                 {
                                     if ($isFirstEverTrade) // first ever trade at the chart
                                     {
-                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, 0];
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, -$commissionValue];
                                     }
                                     if (!$isFirstEverTrade) // All trades except first ever
                                     {
@@ -239,16 +244,16 @@ class loadJsonFromDB extends Controller
                                         {
                                             if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "all") // Closed without a stop loss
                                             {
-                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close];
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close) - $commissionValue];
                                             }
                                             if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "low") // If closed with stop loss
                                             {
-                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1]];
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] - $commissionValue];
                                             }
                                         }
                                         else
                                         {
-                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close];
+                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close) - $commissionValue];
                                         }
                                     }
 
