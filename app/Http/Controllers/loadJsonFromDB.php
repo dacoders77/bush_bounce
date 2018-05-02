@@ -88,9 +88,21 @@ class loadJsonFromDB extends Controller
                 $priceChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value];
                 $priceChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value];
 
-                // Stop loss price channel. Price channel + shift
-                $stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value + ($max_value - $low_value) * $stopLossShift / 100];
-                $stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value - ($max_value - $low_value) * $stopLossShift / 100];
+                // Stop loss price channel. Price channel + shift. Uncomment it to go back to regular stop loss
+                //$stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value + ($max_value - $low_value) * $stopLossShift / 100];
+                //$stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value - ($max_value - $low_value) * $stopLossShift / 100];
+
+
+                // Fixed stop loss channel. Comment this code to get back to regular stop loss
+                if ($element_index == $price_channel_interval - 1) // The first bar for which the price channel is calculated
+                {
+                    //echo "cc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $trade_flag . "<br>";
+
+                    $stopLossHighValue = $max_value + ($max_value - $low_value) * $stopLossShift / 100;
+                    $stopLossLowValue = $low_value - ($max_value - $low_value) * $stopLossShift / 100;
+                }
+
+
 
 
                 // TRADES
@@ -106,6 +118,8 @@ class loadJsonFromDB extends Controller
                         $isFirstBarInTrade = true;
                         $stopLossFlag = "all"; // Reset stop loss flag
 
+                        // Calculation for fixed stop loss channel. Comment it to get back to regular stop loss
+                        $stopLossHighValue = $max_value + ($max_value - $low_value) * $stopLossShift / 100;
                     }
                     // LONG
                     if ($all_table_values[$element_index]->close < $priceChannelLowValues[$element_index - $price_channel_interval][1]
@@ -116,10 +130,15 @@ class loadJsonFromDB extends Controller
                         $isFirstBarInTrade = true;
                         $stopLossFlag = "all"; // Reset stop loss flag
 
-
+                        // Calculation for fixed stop loss channel. Comment it to get back to regular stop loss
+                        $stopLossLowValue = $low_value - ($max_value - $low_value) * $stopLossShift / 100;
                     }
 
-                    
+                    // Fixed stop loss calculation. Comment it to get back to regular
+                    $stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $stopLossHighValue];
+                    $stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $stopLossLowValue];
+
+
                     // STOP LOSS
 
                     // For short
@@ -182,7 +201,7 @@ class loadJsonFromDB extends Controller
                                         else // All bars in the trade except first one
                                         {
                                             //echo "cccc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
-                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close) - $commissionValue];
+                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close)];
                                         }
                                     }
                                     $isFirstBarInTrade = false;
@@ -234,7 +253,7 @@ class loadJsonFromDB extends Controller
                                         }
                                         else
                                         {
-                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close) - $commissionValue];
+                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + ($all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close)];
                                         }
                                     }
 
