@@ -33,15 +33,14 @@ class loadJsonFromDB extends Controller
         $shortTrades = [];
         $longTrades = [];
 
+
         // Variables for strategy testing parameters (results)
         $initial_capital = 0;
-
 
         $StartUpAsset =
             DB::table('assets')
                 ->where('show_on_startup', 1)
                 ->value('asset_name'); // We take only one asset from the DB. The one which has show_on_startup flag
-
 
         $price_channel_interval =
             DB::table('settings')
@@ -62,7 +61,7 @@ class loadJsonFromDB extends Controller
             DB::table('history_' . $StartUpAsset)->get(); // Read the whole table from BD to $all_table_values variable
 
 
-        foreach ($all_table_values as $row_values) { // Go through all records loaded from the DB
+        foreach ($all_table_values as $row_values) { // Go through all records (bars) loaded from the DB
 
             // Add a candle to the array. Main candlestick chart data. Put all values from the table to this array
             $chartBars[] = [$row_values->time_stamp, $row_values->open, $row_values->high, $row_values->low, $row_values->close];
@@ -80,13 +79,26 @@ class loadJsonFromDB extends Controller
                         $low_value = $all_table_values[$i]->low;
                 }
 
-                // Price channel. Added found max value to the array
+                // Price channel. Add found max value to the array
                 $priceChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value];
                 $priceChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value];
 
-                // Stop loss price channel. Price channel + shift
-                $stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value + ($max_value - $low_value) * $stopLossShift / 100];
-                $stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value - ($max_value - $low_value) * $stopLossShift / 100]; // - ($max_value - $low_value)
+                // Stop loss price channel. Price channel + shift. Uncomment it to go back to regular stop loss
+                //$stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value + ($max_value - $low_value) * $stopLossShift / 100];
+                //$stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value - ($max_value - $low_value) * $stopLossShift / 100];
+
+
+                // Fixed stop loss channel. Comment this code to get back to regular stop loss
+                if ($element_index == $price_channel_interval - 1) // The first bar for which the price channel is calculated
+                {
+                    //echo "cc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $trade_flag . "<br>";
+
+                    $stopLossHighValue = $max_value + ($max_value - $low_value) * $stopLossShift / 100;
+                    $stopLossLowValue = $low_value - ($max_value - $low_value) * $stopLossShift / 100;
+                }
+
+
+
 
                 // TRADES
                 // Trades testing. Adding trades to $longTrades[] and $shortTrades[] for output to the chart
@@ -95,27 +107,32 @@ class loadJsonFromDB extends Controller
                     // SHORT
                     if ($all_table_values[$element_index]->close > $priceChannelHighValues[$element_index - $price_channel_interval][1]
                         && ($trade_flag == "all" || $trade_flag == "long")) {
-
                         $shortTrades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added long marker
-
                         $trade_flag = "short";
                         $position = "short";
                         $isFirstBarInTrade = true;
                         $stopLossFlag = "all"; // Reset stop loss flag
-                        $isFirstBarInStopLoss = true; // First bar in stop loss position flag
+
+                        // Calculation for fixed stop loss channel. Comment it to get back to regular stop loss
+                        $stopLossHighValue = $max_value + ($max_value - $low_value) * $stopLossShift / 100;
                     }
                     // LONG
                     if ($all_table_values[$element_index]->close < $priceChannelLowValues[$element_index - $price_channel_interval][1]
                         && ($trade_flag == "all"  || $trade_flag == "short")) {
-
                         $longTrades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added short marker
-
                         $trade_flag = "long";
                         $position = "long";
                         $isFirstBarInTrade = true;
                         $stopLossFlag = "all"; // Reset stop loss flag
-                        $isFirstBarInStopLoss = true;
+
+                        // Calculation for fixed stop loss channel. Comment it to get back to regular stop loss
+                        $stopLossLowValue = $low_value - ($max_value - $low_value) * $stopLossShift / 100;
                     }
+
+                    // Fixed stop loss calculation. Comment it to get back to regular
+                    $stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $stopLossHighValue];
+                    $stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $stopLossLowValue];
+
 
                     // STOP LOSS
 
@@ -123,7 +140,7 @@ class loadJsonFromDB extends Controller
                     if ($all_table_values[$element_index]->close > $stoplossChannelHighValues[$element_index - $price_channel_interval][1]
                         && $position == "short"
                         && end($shortTrades)[0] != $all_table_values[$element_index]->time_stamp // Exclude stop loss at the bar when a trade was executed
-                        && ($stopLossFlag == "all"  || $stopLossFlag == "low")) // All - a condition for getting into this IF when the first ever stop loss occured
+                        && ($stopLossFlag == "all" || $stopLossFlag == "low")) // All - a condition for getting into this IF when the first ever stop loss occured
                     {
                         $stopLossHighValues[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added stop loss marker
                         $stopLossFlag = "high";
@@ -133,11 +150,11 @@ class loadJsonFromDB extends Controller
                     if ($all_table_values[$element_index]->close < $stoplossChannelLowValues[$element_index - $price_channel_interval][1]
                         && $position == "long"
                         && end($longTrades)[0] != $all_table_values[$element_index]->time_stamp
-                        && ($stopLossFlag == "all"  || $stopLossFlag == "high"))
-                    {
+                        && ($stopLossFlag == "all" || $stopLossFlag == "high")) {
                         $stopLossLowValues[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added short marker
                         $stopLossFlag = "low";
                     }
+
 
                     // PROFIT CALCULATION
 
