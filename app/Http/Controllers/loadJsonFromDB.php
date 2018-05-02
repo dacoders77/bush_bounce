@@ -21,36 +21,51 @@ class loadJsonFromDB extends Controller
         $element_index = 0; // Index for loop through all elements in interval for which price channel is calculated
         $max_value = 0;
         $low_value = 999999;
-        $accumulated_profit = 0; // At the beggining = 0 and recorded when the trade is closd. The nex trade's profit starts from this value
-        $long_trade_flag = true; // When the long trade is open this flag turns to false. When the long trade is open we must ignore all high price channel boundary and wait until it is closed
-        $short_trade_flag = true;
+        $accumulatedProfitValues = 0; // At the beggining = 0 and recorded when the trade is closd. The nex trade's profit starts from this value
+
         $trade_flag = "all";
-        $profit_diagram = null; // We have to make it null. Otherwise in cases when there is no trades at the chart and thus no $profit_diagram is calculated - the error is thrown.
+        $profitDiagramValues = null; // We have to make it null. Otherwise in cases when there is no trades at the chart and thus no $profitDiagramValues is calculated - the error is thrown.
 
-
-        $add_bar_long = true; // Count closed position on the same be the signal occurred. The problem is when the position is closed the close price of this bar goes to the next position
-        $add_bar_short = true;
-
-        $short_trades = [];
-        $long_trades = [];
+        $stopLossFlag = "all"; // Stop loss flag. Similar to long and short position. All state is for opening the first stop loss. Then it is high and low
+        $position = null;
+        $isFirstBarInTrade = true; // Count closed position on the same be the signal occurred. The problem is when the position is closed the close price of this bar goes to the next position
+        $isFirstEverTrade = true; // First ever trade flag. Works onr time at the first trade on the chart then turns to false
+        $shortTrades = [];
+        $longTrades = [];
 
         // Variables for strategy testing parameters (results)
         $initial_capital = 0;
 
 
+        $StartUpAsset =
+            DB::table('assets')
+                ->where('show_on_startup', 1)
+                ->value('asset_name'); // We take only one asset from the DB. The one which has show_on_startup flag
 
-//************
-        $StartUpAsset = DB::table('assets')->where('show_on_startup', 1)->value('asset_name'); // We take only one asset from the DB. The one which has show_on_startup flag
-        $price_channel_interval = DB::table('assets')->where('asset_name', $StartUpAsset)->value('price_channel_default_value');
-        $message [] = ["interval: " . $price_channel_interval]; // Add variable to the message array for debugging purpuse
 
-        $all_table_values = DB::table('history_' . $StartUpAsset)->get(); // Read the whole table from BD to $all_table_values variable
+        $price_channel_interval =
+            DB::table('settings')
+                ->where('id', 1)
+                ->value('default_price_channel_period');
+
+        $stopLossShift =
+            DB::table('settings')
+                ->where('id', 1)
+                ->value('default_stop_loss_shift');
+
+        $commission_value =
+            DB::table('settings')
+                ->where('id', 1)
+                ->value('commission_value');
+
+        $all_table_values =
+            DB::table('history_' . $StartUpAsset)->get(); // Read the whole table from BD to $all_table_values variable
 
 
         foreach ($all_table_values as $row_values) { // Go through all records loaded from the DB
 
             // Add a candle to the array. Main candlestick chart data. Put all values from the table to this array
-            $data[] = [$row_values->time_stamp, $row_values->open, $row_values->high, $row_values->low, $row_values->close];
+            $chartBars[] = [$row_values->time_stamp, $row_values->open, $row_values->high, $row_values->low, $row_values->close];
 
             // Start from $price_channel_interval - 1 element. - 1 because elements in arrays are named from 0. We don't start calculating price channel from the first candle
             if ($element_index >= $price_channel_interval - 1)
@@ -58,110 +73,199 @@ class loadJsonFromDB extends Controller
                 // Cycle backwards through elements ($price_channel_interval) for calculating min and max
                 for ($i = $element_index ; $i > $element_index - $price_channel_interval; $i--)
                 {
-
                     if ($all_table_values[$i]->high > $max_value) // Find max value in interval
                         $max_value = $all_table_values[$i]->high;
 
                     if ($all_table_values[$i]->low < $low_value) // Find low value in interval
                         $low_value = $all_table_values[$i]->low;
-
                 }
 
-                $arr1[] = [$all_table_values[$element_index]->time_stamp, $max_value]; // Added found max value to the array
-                $arr2[] = [$all_table_values[$element_index]->time_stamp, $low_value];
+                // Price channel. Added found max value to the array
+                $priceChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value];
+                $priceChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value];
 
+                // Stop loss price channel. Price channel + shift
+                $stoplossChannelHighValues[] = [$all_table_values[$element_index]->time_stamp, $max_value + ($max_value - $low_value) * $stopLossShift / 100];
+                $stoplossChannelLowValues[] = [$all_table_values[$element_index]->time_stamp, $low_value - ($max_value - $low_value) * $stopLossShift / 100]; // - ($max_value - $low_value)
 
-
-                // Trades testing. Adding trades to $long_trades[] and $short_trades[] for output to the chart
-                if ($element_index >= $price_channel_interval) // We start from the next element after which the high value(price channel) has been calculated
+                // TRADES
+                // Trades testing. Adding trades to $longTrades[] and $shortTrades[] for output to the chart
+                if ($element_index >= $price_channel_interval) // Start from the next element after which the high value(price channel) has been calculated
                 {
-                    // Long && ($trade_flag == "all")
+                    // SHORT
+                    if ($all_table_values[$element_index]->close > $priceChannelHighValues[$element_index - $price_channel_interval][1]
+                        && ($trade_flag == "all" || $trade_flag == "long")) {
 
-                    // If close > price channel -> go long
-                    if ($all_table_values[$element_index]->close > $arr1[$element_index - $price_channel_interval][1] && ($trade_flag == "all" || $trade_flag == "long")) {
-
-                        $long_trades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added long marker
-                        $long_trade_flag = false;
+                        $shortTrades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added long marker
 
                         $trade_flag = "short";
-                        $position = "long";
-                        $add_bar_long = true;
-                        //$message []  = [$all_table_values[$element_index]->close];
+                        $position = "short";
+                        $isFirstBarInTrade = true;
+                        $stopLossFlag = "all"; // Reset stop loss flag
+                        $isFirstBarInStopLoss = true; // First bar in stop loss position flag
                     }
+                    // LONG
+                    if ($all_table_values[$element_index]->close < $priceChannelLowValues[$element_index - $price_channel_interval][1]
+                        && ($trade_flag == "all"  || $trade_flag == "short")) {
 
-                    // Short
-                    if ($all_table_values[$element_index]->close < $arr2[$element_index - $price_channel_interval][1] && ($trade_flag == "all"  || $trade_flag == "short")) {
-
-                        $short_trades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added short marker
-                        $long_trade_flag = true;
+                        $longTrades[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added short marker
 
                         $trade_flag = "long";
-                        $position = "short";
-                        $add_bar_short = true;
-                        //$message []  = [$all_table_values[$element_index]->close];
+                        $position = "long";
+                        $isFirstBarInTrade = true;
+                        $stopLossFlag = "all"; // Reset stop loss flag
+                        $isFirstBarInStopLoss = true;
                     }
 
+                    // STOP LOSS
 
-
-                    // Profit chart data calculation
-                    // Strategiy testing parameters(results) calculation
-
-                    if (count($long_trades) || count($short_trades)) // Start calculating profit values only after the trade has occurred. $short_trades or $long_trades array is not empty
+                    // For short
+                    if ($all_table_values[$element_index]->close > $stoplossChannelHighValues[$element_index - $price_channel_interval][1]
+                        && $position == "short"
+                        && end($shortTrades)[0] != $all_table_values[$element_index]->time_stamp // Exclude stop loss at the bar when a trade was executed
+                        && ($stopLossFlag == "all"  || $stopLossFlag == "low")) // All - a condition for getting into this IF when the first ever stop loss occured
                     {
+                        $stopLossHighValues[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added stop loss marker
+                        $stopLossFlag = "high";
+                    }
 
+                    // For long
+                    if ($all_table_values[$element_index]->close < $stoplossChannelLowValues[$element_index - $price_channel_interval][1]
+                        && $position == "long"
+                        && end($longTrades)[0] != $all_table_values[$element_index]->time_stamp
+                        && ($stopLossFlag == "all"  || $stopLossFlag == "high"))
+                    {
+                        $stopLossLowValues[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close]; // Added short marker
+                        $stopLossFlag = "low";
+                    }
+
+                    // PROFIT CALCULATION
+
+                    // Find the presence of a stop loss between current bar and the previous trade (long or short)
+                    // stop loss flag?
+                    $stopLossStateTime = gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000));
+                    $stopLossStateValues[] = [$stopLossStateTime, $stopLossFlag];
+
+                    // Start calculating profit values only after the first trade. $shortTrades or $longTrades array are not empty
+                    if (count($longTrades) || count($shortTrades))
+                    {
                         if ($position == "long") // If the long position is open. $position
                         {
-                            // Position changes and this is not the first trade at the chart (count($short_trades) != 0)
+                            // Go backwards through the array of stop loss sates. We need to determine how the the previous trade was closed. With a stop loss or not
+                            foreach (array_reverse($stopLossStateValues) as $stopLossStateValue){
+                                if ($stopLossStateValue[1] == "all") // Regular exit or first enter. Checked at the currents bar
+                                {
+                                    if ($isFirstEverTrade) // first ever trade
+                                    {
+                                        //echo "first ever: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, 0];
+                                    }
+                                    if (!$isFirstEverTrade) // All trades except first ever
+                                    {
+                                        //echo "cc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
+                                        if ($isFirstBarInTrade) // First bar in the trade and not the first trade ever
+                                        {
+                                            // closed without a stop loss
+                                            if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "all")
+                                            {
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close];
+                                            }
+                                            // closed with a stop loss
+                                            if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "high")
+                                            {
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1]];
+                                            }
+                                        }
+                                        else // All bars in the trade except first one
+                                        {
+                                            //echo "cccc: " . gmdate("Y-m-d G:i:s", ($all_table_values[$element_index]->time_stamp / 1000)) . " fc: " . $isFirstBarInTrade . "<br>";
+                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close];
+                                        }
+                                    }
+                                    $isFirstBarInTrade = false;
+                                    $isFirstEverTrade = false;
+                                    break; // When the first match found - break the loop
+                                }
+                                if ($stopLossStateValue[1] == "low") // Stop loss exit
+                                {
+                                    // If the previous state of the stop loss is "all" - it means that this is the bar on which stop loss has occurred. We need to calculate profit for this bar
+                                    if (($stopLossStateValues[count($stopLossStateValues)-2][1] == "all"))
+                                    {
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close];
+                                    }
+                                    else // When the state is not "ALL" (in this case it is "low" because low stop loss has just happened) it means that we are on the second bar after the stop loss and we need just to copy the profit on each bar
+                                    {
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1]];
+                                    }
+                                    break;
+                                }
+                            }
                             // When the position is changed, on the bar on which the signal happened (close > max), we need to proceed this last bar with the same trade direction.
-                            // When the signal happens this bar is already in the oppoite trade direction (long to short, short to long) and we can not calculate profit for this bar correctly
-                            // Commenting this IF will result as a zero value on the bar on which the signal has happened
-                            if ($add_bar_short && (count($short_trades) != 0))
-                            {
-                                //$profit_diagram [] = [$all_table_values[$element_index]->time_stamp, end($short_trades)[1] - $all_table_values[$element_index]->close];
-                                $add_bar_short = false;
-
-                                $accumulated_profit = $accumulated_profit + end($short_trades)[1] - $all_table_values[$element_index]->close;
-                            }
-
-                            $profit_diagram [] = [$all_table_values[$element_index]->time_stamp, $accumulated_profit + ($all_table_values[$element_index]->close - end($long_trades)[1])];
-
+                            // When the signal happens this bar is already in the opposite trade direction (long to short, short to long) and we can not calculate profit for this bar correctly
+                            // Commenting this IF will result as a zero value on the bar on which the signal has occurred
                         }
-
-                        if ($position == "short") // If the short position is open
-                        {
-                            if ($add_bar_long && (count($long_trades) != 0)) // At the bar on which the position is closed - add a value to profit_diagram or otherwise it will be empty
-                            {
-                                //$profit_diagram [] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->close - end($long_trades)[1]];
-                                $add_bar_long = false;
-
-                                $accumulated_profit = $accumulated_profit + $all_table_values[$element_index]->close - end($long_trades)[1];
-                            }
-
-                            $profit_diagram [] = [$all_table_values[$element_index]->time_stamp, $accumulated_profit + (end($short_trades)[1] - $all_table_values[$element_index]->close)];
-                        }
-
                     }
 
+                        if ($position == "short") // If short position is open and at least one long trade was open
+                        {
+                            foreach (array_reverse($stopLossStateValues) as $stopLossStateValue){
+
+                                if ($stopLossStateValue[1] == "all")
+                                {
+                                    if ($isFirstEverTrade) // first ever trade at the chart
+                                    {
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, 0];
+                                    }
+                                    if (!$isFirstEverTrade) // All trades except first ever
+                                    {
+                                        if ($isFirstBarInTrade) // First bar in the trade
+                                        {
+                                            if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "all") // Closed without a stop loss
+                                            {
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index]->close - $all_table_values[$element_index - 1]->close];
+                                            }
+                                            if ($stopLossStateValues[count($stopLossStateValues)-2][1] == "low") // If closed with stop loss
+                                            {
+                                                $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1]];
+                                            }
+                                        }
+                                        else
+                                        {
+                                            $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close];
+                                        }
+                                    }
+
+                                    $isFirstBarInTrade = false;
+                                    $isFirstEverTrade = false;
+                                    break; // When the first match found - break the loop
+                                }
+
+                                if ($stopLossStateValue[1] == "high") // Stop loss exit
+                                {
+                                    if (($stopLossStateValues[count($stopLossStateValues)-2][1] == "all")) // Previous stop loss state is "all"
+                                    {
+
+                                        //echo "zzz: " . $stopLossStateValue[0] . " " . $stopLossStateValue[1] . "<br>";
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1] + $all_table_values[$element_index - 1]->close - $all_table_values[$element_index]->close];
+                                    }
+                                    else // is "high"
+                                    {
+
+                                        $profitDiagramValues [] = [$all_table_values[$element_index]->time_stamp, end($profitDiagramValues)[1]];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                 }
-
-
-                //$message[] = 'jopa'; // Variable for info messages
                 $max_value = 0; // Reset to 0 the max value after loop through the interval
                 $low_value = 999999; // Reset the low value
-
-
             }
-            else // Add values to the array while max and low are not yet calculated. If values are added in this code - the quantity of values in $arr1[] and $arr2[] will be = $data[]
-            {
-                //$arr1[] = [$all_table_values[$element_index]->time_stamp, $all_table_values[$element_index]->high];
-                //$message[] = 100;
-            }
-
             $element_index++;
         }
 
         // Ending capital
-        $ending_capital = $initial_capital + $accumulated_profit;
+        $ending_capital = $initial_capital + $accumulatedProfitValues;
         $message [] = [$ending_capital];
 
         // Record $ending_capital to DB.
@@ -175,146 +279,39 @@ class loadJsonFromDB extends Controller
                 ->update([
                     'ending_capital' => $ending_capital
                 ]);
-
         }
-
-
-        /*
-        $extremes = array();
-        $last = null;
-        $num = count($array);
-        for($i=0;$i<$num - 1;$i++) {
-            $curr = $array[$i];
-            if($last === null) {
-                $extremes[] = $curr;
-                $last = $curr;
-                continue;
-            }
-        */
-
 
         $last  = null;
         $min = 99999999;
         $maxIndex = null;
         $max = null;
         $maxIndex = null;
-        $num = count($profit_diagram); // Get quantity of bars in profit diagram
 
-        for($i = 0; $i < $num - 1; $i++) {
-
-            //$alert = $profit_diagram[2][1]; // [index][0,1   0 - date; 1 - value]
-
-            $curr = $profit_diagram[$i][1]; // First value is datetime, second valur (double)
-            //$alert = $curr;
-
-            //break;
-
-            if($last === null) { // Added first bar to the extremums array
-                $extremes[] = [$profit_diagram[$i][0],$profit_diagram[$i][1]];
-                $last = $curr;
-                continue;
-            }
-            //min
-            if($last > $curr && $curr < $profit_diagram[$i + 1][1]) {
-                $extremes[] = [$profit_diagram[$i][0],$curr];
-            }
-            //max
-            else if ($last < $curr && $curr > $profit_diagram[$i + 1][1]) {
-                $extremes[] = [$profit_diagram[$i][0],$curr];
-            }
-            if($last != $curr && $curr != $profit_diagram[$i + 1][1]) {
-                $last = $curr;
-            }
-
-        }
-
-        //add last point
-        $extremes[] = [$profit_diagram[$i][0],$profit_diagram[$num - 1][1]]; // Add found extrema to the array
-
-        for ($z = 0; $z < count($extremes); $z++){
-
-            if ($extremes[$z][1] > $max){
-                $max = $extremes[$z][1];
-                $maxIndex = $z;
-            }
-
-            if ($extremes[$z][1] < $min){
-                $min = $extremes[$z][1];
-                $minIndex = $z;
-            }
-
-
-        }
-
-
-
-
-
-        // Drawdown calculation
-        // We need to take the maximum of the array and subtract the lower value from it
-        // Three cases are possible:
-        // 1. Both values are positive. High - Low
-        // 2. One is positive, other is negative. High - (-Low) (low has - sign)
-        // 3. Both are negative. abs(high) - abs(low)
-
-        /*
-        $num = count($extremes); // Count all found extremas
-        for($i=0; $i<$num; $i++) // Start from second element
-        {
-            if ($i > 0) { // Do not take first element. Otherwise we will no be able the take the previous element
-                if ($extremes[$i - 1] > $extremes[$i]) { // We start from second element. If the previous is higher than current meaning that we are going down
-                        if (max($extremes) > 0 && (min($extremes) >= 0)){
-                            //$drawDawnVals [] = [1, max($extremes) - min($extremes)];
-                            $localDrawDown = $extremes[$num - 1] - $extremes[$num]; // Previous - current
-                        }
-
-                        if (max($extremes) > 0 && (min($extremes) < 0)){
-                            //$drawDawnVals [] = [2, max($extremes) - min($extremes)];
-                            //$localDrawDown = max($extremes) - min($extremes);
-                            $localDrawDown = $extremes[$i - 1] - $extremes[$i];
-                        }
-
-                        if (min($extremes) <= 0 && (max($extremes) < 0)){
-                            //$drawDawnVals [] = [3, abs(min($extremes)) - max($extremes)];
-                            //$localDrawDown = abs(min($extremes)) - max($extremes);
-                            $localDrawDown = abs($extremes[$i]) - abs($extremes[$i - 1]);
-                        }
-                    }
-            }
-
-            if ($localDrawDown > $tempDrawDown) // Find the biggest value of drawdown
-                $tempDrawDown = $localDrawDown;
-        }
-
-        $drawDawnVals [] = $tempDrawDown;
-*/
-
-        //$drawDawnVals [] = [abs(max($extremes)) - abs(min($extremes))];
-        //$drawDawnVals [] = [5,77,88,123];
-        //$drawDawnVals [] = $tempDrawDown;
-
-        //$message [] = ["kopa"];
-        //$arr2 = [1,9,11,2,5];
-
-        //$drawDawnVals = $extremes;
-
-        $extremesHigh [] = [$extremes[$maxIndex][0],$max];
-        $extremesHigh [] = [$extremes[$minIndex][0],$min];
-
+        $accumulatedProfitValues = last($profitDiagramValues)[1]; // Last value of the the profit diagram - is resulted financial result (ending capital)
 
         if (Schema::hasTable('assets')) // If the table exists. If it does not - the historical data did not load due a error like "Too many requests"
         {
-            //               0      1      2          3             4               5                 6                 7
-            $seriesData = [$data, $arr1, $arr2, $long_trades, $short_trades, $profit_diagram, $accumulated_profit, $extremes, $extremesHigh]; // $data candles, $arr1 and $arr2 - upper and lower price channel. $message - the variable for transfering messages and other
-            return $seriesData;
+            $chartVariables = [
+                $chartBars, // 0 Chart
+                $priceChannelHighValues, // 1 Price channel high
+                $priceChannelLowValues, // 2 Price channel low
+                $longTrades, // 3 Long trades markers
+                $shortTrades, // 4 Short trades markers
+                $profitDiagramValues, // 5
+                $accumulatedProfitValues, // 6
+                $stoplossChannelHighValues, // 7 Stopp loss high channel
+                $stoplossChannelLowValues, // 8 Stopp loss high channel
+                $stopLossHighValues, // 9 Stop loss high markers
+                $stopLossLowValues, // 10 Stop loss low markers
+                $message // 11 Info message
+            ]; // $chartBars candles, $priceChannelHighValues and $priceChannelLowValues - upper and lower price channel. $message - the variable for transfering messages and other
 
+            return $chartVariables;
         }
         else
         {
             return (new \Illuminate\Http\Response)->setStatusCode(400, 'Error loading AJAX request. Table does not exists. LoadJsonFromDB.php');
         }
-
-
 
     }
 

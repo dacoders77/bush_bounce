@@ -36,7 +36,7 @@ class RatchetPawlSocket extends Command
      */
     public function handle()
     {
-        echo "*****Ratchet websocket console command started!*****\n";
+        echo "*****Ratchet websocket bush bounce console app started!*****\n";
 
         // The code from: https://github.com/ratchetphp/Pawl
 

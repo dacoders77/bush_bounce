@@ -8,7 +8,6 @@
 {!! Form::close() !!}
 
 
-
 <!-- Errors handling -->
 @if ($errors->any())
     <div style="color: red">

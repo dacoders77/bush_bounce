@@ -7,9 +7,11 @@
 
     request.done(function(response) { // Ajax request if success
 
-        //alert(response[8]);
+        //alert(response[9]);
         //console.log(response[1]);
-        console.log("res_6: " + response[7]); // Extremes min, max. max - min = drawdown
+        //console.log("res_6: " + response[7]);
+        console.log('message from php: ');
+        console.log(response[11]);
 
 
         $(document).ready(function(){ // When the document is rendered and ready
@@ -24,10 +26,10 @@
             $("#net_profit_prc").text(net_profit_prc);
 
             //$("#drawdown").text(parseFloat(response[8]).toFixed(2)); // Drawdown
-            $("#drawdown").text(response[8][0][1] - response[8][1][1]);
+            //$("#drawdown").text(response[8][0][1] - response[8][1][1]);
 
-            var drawdown_prc = (parseFloat((response[8][0][1] - response[8][1][1])) * 100 / 10000).toFixed(2); // Drawdown %
-            $("#drawdown_prc").text(drawdown_prc);
+            //var drawdown_prc = (parseFloat((response[8][0][1] - response[8][1][1])) * 100 / 10000).toFixed(2); // Drawdown %
+            //$("#drawdown_prc").text(drawdown_prc);
 
             var trades_quan = response[3].length + response[4].length
             $("#trades_quan").text(trades_quan); // Trades quantity 3 4
@@ -118,6 +120,30 @@
                     }
                 },
                 {
+                    name: 'Stop loss channel high',
+                    visible: true,
+                    enableMouseTracking: true,
+                    color: 'red',
+                    lineWidth: 1,
+                    data: response[7],
+                    dashStyle: 'longdash',
+                    dataGrouping: {
+                        enabled: false
+                    }
+                },
+                {
+                    name: 'Stop loss channel low',
+                    visible: true,
+                    enableMouseTracking: true,
+                    color: 'blue',
+                    lineWidth: 1,
+                    data: response[8],
+                    dashStyle: 'longdash',
+                    dataGrouping: {
+                        enabled: false
+                    }
+                },
+                {
                     name: 'Long markers',
                     visible: true,
                     enableMouseTracking: true,
@@ -162,6 +188,40 @@
                     },
                 },
                 {
+                    name: 'Stop loss high',
+                    visible: true,
+                    enableMouseTracking: true,
+                    type: 'scatter',
+                    data: response[9],
+                    dataGrouping: {
+                        enabled: false
+                    },
+                    marker: {
+                        fillColor: 'purple',
+                        lineColor: 'purple',
+                        lineWidth: 1,
+                        radius: 6,
+                        symbol: 'square'
+                    },
+                },
+                {
+                    name: 'Stop loss low',
+                    visible: true,
+                    enableMouseTracking: true,
+                    type: 'scatter',
+                    data: response[10],
+                    dataGrouping: {
+                        enabled: false
+                    },
+                    marker: {
+                        fillColor: 'yellow',
+                        lineColor: 'yellow',
+                        lineWidth: 1,
+                        radius: 6,
+                        symbol: 'square'
+                    },
+                },
+                {
                     name: 'Profit diagram',
                     enableMouseTracking: true,
                     type: 'column', // 'area'
@@ -174,42 +234,6 @@
                     },
 
                 },
-                {
-                    name: 'Extremums',
-                    //visible: false,
-                    enableMouseTracking: true,
-                    type: 'scatter',
-                    yAxis: 1, // To which of two y axis this series should be linked
-                    color: 'purple',
-                    //lineWidth: 3,
-                    data: response[7],
-                    dataGrouping: {
-                        enabled: false
-                    },
-                    marker: {
-                        fillColor: 'blue',
-                        lineColor: 'blue',
-                        lineWidth: 1,
-                        radius: 2,
-                        symbol: 'circle'
-                    },
-                }
-                ,
-                {
-                    name: 'Drawdown',
-                    //visible: false,
-                    enableMouseTracking: true,
-                    type: 'line',
-                    yAxis: 1, // To which of two y axis this series should be linked
-                    color: 'purple',
-                    //lineWidth: 3,
-                    data: response[8],
-                    dataGrouping: {
-                        enabled: false
-                    },
-
-                }
-
 
             ],
 

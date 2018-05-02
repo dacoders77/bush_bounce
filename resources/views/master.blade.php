@@ -6,8 +6,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE-edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bush crypto tester</title>
-    <script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.9.0.min.js" type="text/javascript"></script>
+    <title>Bush bounce crypto tester</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>
     <script src="http://code.highcharts.com/stock/highstock.js"></script>
     <script src="http://code.highcharts.com/stock/modules/exporting.js"></script>
 
@@ -26,7 +26,7 @@
     @endif
 
     <div style="color: white; border-width: 1px; border-color: green; border-style: solid; width: 99.2%; background-color: #0d3625; margin: 0 0 10px 0; padding: 5px">
-        Bush CRYPTO Price channel strategy tester
+        Bush CRYPTO BOUNCE Price channel strategy tester
     </div>
 
         <div id="container" style="width: 73%; height: 570px; border: 1px solid blue; float: left; text-align: center; display: table-cell; vertical-align: middle">

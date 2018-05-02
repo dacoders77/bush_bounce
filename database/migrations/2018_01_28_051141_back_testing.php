@@ -24,8 +24,7 @@ class BackTesting extends Migration
             $table->dateTime('load_history_start')->nullable();
             $table->dateTime('load_history_end')->nullable();
             $table->integer('price_channel_default_value')->nullable();
-            $table->integer('price_channel_start')->nullable();
-            $table->integer('price_channel_end')->nullable();
+            $table->integer('stop_loss_shift')->nullable();
             $table->boolean('reinvest')->nullable();
             $table->float('initial_capital')->nullable();
             $table->float('ending_capital')->nullable();
@@ -36,7 +35,7 @@ class BackTesting extends Migration
             $table->integer('trades_quantity')->nullable();
             $table->integer('profit_trades')->nullable();
             $table->integer('los_quantity')->nullable();
-
+            $table->float('commission_value')->nullable();
         });
     }
 

@@ -1,22 +1,20 @@
 @if (Schema::hasTable('assets'))
 
 {{ Form::open(['route' => 'pricechannel']) }} <!-- pricechannel is the name of the route. controller: priceChannel_controller@index -->
-
-{!! Form::label('xx', 'Price channel period: ') !!}
-
+{!! Form::label('xx', 'Price chan. period(bar) / stop loss chan. shift(%): ') !!}
 <br>
-
-{!! Form::number('channel_period', DB::table('assets')->where('asset_name', 'btcusd')->value('price_channel_default_value'), array('min'=>1, 'max'=>100))  !!}
-
--
-{{ Form::number('channel_period_start', DB::table('assets')->where('asset_name', 'btcusd')->value('price_channel_start'), array('min'=>1, 'max'=>100))}}
--
-{{ Form::number('channel_period_end', DB::table('assets')->where('asset_name', 'btcusd')->value('price_channel_end'), array('min'=>1, 'max'=>100))}}
-
+{!! Form::number('channel_period',
+    DB::table('settings')
+        ->where('id', '1')
+        ->value('default_price_channel_period'), array('min'=>1, 'max'=>100))  !!}
+/
+{{ Form::number('stop_loss_shift',
+    DB::table('settings')
+    ->where('id', '1')
+    ->value('default_stop_loss_shift'), array('min'=>1, 'max'=>100))}}
 
 {!! Form::submit('Submit') !!}
 {!! Form::close() !!}
-
 @endif
 
 <!-- Errors handling -->
@@ -50,6 +48,6 @@ types of input: https://www.w3schools.com/Html/tryit.asp?filename=tryhtml_input_
 
 echo Form::open(['route' => 'route.name'])
 echo Form::open(['action' => 'Controller@method'])
-    {{Form::label('name','Name')}}
+{{Form::label('name','Name')}}
 {{Form::text('name')}}
         -->

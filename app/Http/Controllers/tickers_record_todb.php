@@ -19,8 +19,6 @@ class tickers_record_todb extends Controller
      */
     public function index(Request $request)
     {
-        //echo "date " . DB::table('assets')->where('id', 1)->value('load_history_start');
-        //echo "<br>";
 
         DB::table('assets')->truncate(); // Drop all records in the table
 
@@ -35,8 +33,7 @@ class tickers_record_todb extends Controller
                     'asset_name' => $x,
                     'show_on_startup' => 0,
                     'price_channel_default_value' => 10,
-                    'price_channel_start' => 5,
-                    'price_channel_end' => 24,
+                    'stop_loss_shift' => 5
                 ));
             }
 
@@ -47,7 +44,7 @@ class tickers_record_todb extends Controller
                     ->where('asset_name', $x_value)
                     ->update([
                         'show_on_startup' => 1
-                    ]); // works good
+                    ]);
             }
 
             if ($x == "start") // Get start date from the input

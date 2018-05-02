@@ -10,24 +10,21 @@ class priceChannel_controller extends Controller
     Public function index(Request $request){
 
         // Get all records from assets table
-        $allTableValues1 = DB::table('assets')->get();
+        //$allTableValues1 = DB::table('assets')->get();
 
-        // Loop through all found elements
-        foreach ($allTableValues1 as $tableValue){
+        // Loop through all assets and update values
+        //foreach ($allTableValues1 as $tableValue){
 
-            DB::table('assets')
-                ->where('asset_name', $tableValue->asset_name)
+            DB::table('settings')
+                ->where('id', '1')
                 ->update([
-                    'price_channel_default_value' => $request->get('channel_period'),
-                    'price_channel_start' => $request->get('channel_period_start'),
-                    'price_channel_end' => $request->get('channel_period_end')
+                    'default_price_channel_period' => $request->get('channel_period'),
+                    'default_stop_loss_shift' => $request->get('stop_loss_shift'),
                 ]);
-        }
+        //}
 
-
-        //return redirect()->route('main.view');
         return View::make('master');
-
+//
 
     }
 

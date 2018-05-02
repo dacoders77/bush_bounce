@@ -16,14 +16,6 @@
         <td id="net_profit_prc">-</td>
     </tr>
     <tr>
-        <td>Drawdown: </td>
-        <td id="drawdown">-</td>
-    </tr>
-    <tr>
-        <td>Drawdown %: </td>
-        <td id="drawdown_prc">-</td>
-    </tr>
-    <tr>
         <td>Trades quantity: </td>
         <td id="trades_quan"></td>
     </tr>
