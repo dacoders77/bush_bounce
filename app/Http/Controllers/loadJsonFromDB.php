@@ -33,7 +33,9 @@ class loadJsonFromDB extends Controller
         $shortTrades = [];
         $longTrades = [];
 
-
+        $stopLossHighValues = null; // Make these variables null otherwise in case when the history data is loaded but no trades were executed, no data loaded error can be thrown
+        $stopLossLowValues = null;
+        
         // Variables for strategy testing parameters (results)
         $initial_capital = 0;
 
