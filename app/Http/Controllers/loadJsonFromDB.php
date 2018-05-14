@@ -35,7 +35,7 @@ class loadJsonFromDB extends Controller
 
         $stopLossHighValues = null; // Make these variables null otherwise in case when the history data is loaded but no trades were executed, no data loaded error can be thrown
         $stopLossLowValues = null;
-        
+
         // Variables for strategy testing parameters (results)
         $initial_capital = 0;
 
@@ -45,17 +45,17 @@ class loadJsonFromDB extends Controller
                 ->value('asset_name'); // We take only one asset from the DB. The one which has show_on_startup flag
 
         $price_channel_interval =
-            DB::table('settings')
+            DB::table('settings_tester')
                 ->where('id', 1)
                 ->value('default_price_channel_period');
 
         $stopLossShift =
-            DB::table('settings')
+            DB::table('settings_tester')
                 ->where('id', 1)
                 ->value('default_stop_loss_shift');
 
         $commissionValueDb =
-            DB::table('settings')
+            DB::table('settings_tester')
                 ->where('id', 1)
                 ->value('commission_value');
 

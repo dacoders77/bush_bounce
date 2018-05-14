@@ -4,12 +4,12 @@
 {!! Form::label('xx', 'Price chan. period(bar) / stop loss chan. shift(%): ') !!}
 <br>
 {!! Form::number('channel_period',
-    DB::table('settings')
+    DB::table('settings_tester')
         ->where('id', '1')
         ->value('default_price_channel_period'), array('min'=>1, 'max'=>100))  !!}
 /
 {{ Form::number('stop_loss_shift',
-    DB::table('settings')
+    DB::table('settings_tester')
     ->where('id', '1')
     ->value('default_stop_loss_shift'), array('min'=>1, 'max'=>100))}}
 

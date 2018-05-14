@@ -13,6 +13,7 @@ class BtcHistory extends Migration
      */
     public function up()
     {
+        /* DELETE THIS MIGRATION
         Schema::create('btc_history', function (Blueprint $table) {
             $table->increments('id');
             $table->dateTime('date')->nullable(); // Use nullable if this field can be blank
@@ -23,6 +24,7 @@ class BtcHistory extends Migration
             $table->float('low')->nullable();
             $table->float('volume')->nullable();
         });
+        */
     }
 
 
@@ -33,6 +35,6 @@ class BtcHistory extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('btc_history');
+        //Schema::dropIfExists('btc_history');
     }
 }

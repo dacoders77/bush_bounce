@@ -13,7 +13,7 @@ class SettingsTableCreate extends Migration
      */
     public function up()
     {
-        Schema::create('settings', function (Blueprint $table) {
+        Schema::create('settings_tester', function (Blueprint $table) {
             $table->increments('id');
             $table->string('default_time_frame');
             $table->integer('default_price_channel_period');
@@ -21,7 +21,7 @@ class SettingsTableCreate extends Migration
             $table->float('commission_value')->nullable();
         });
 
-        DB::table('settings')->insert(array(
+        DB::table('settings_tester')->insert(array(
             'default_time_frame' => "15m",
             'default_price_channel_period' => 10,
             'default_stop_loss_shift' => 10,
@@ -36,6 +36,6 @@ class SettingsTableCreate extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('settings');
+        Schema::dropIfExists('settings_tester');
     }
 }
