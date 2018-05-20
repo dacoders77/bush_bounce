@@ -48234,6 +48234,25 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48243,7 +48262,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             netProfit: 0,
             requestedBars: '',
             commission: '',
-            tradingAllowed: ''
+            tradingAllowed: '',
+            basketAssets: null,
+            items: null
         };
     },
 
@@ -48253,10 +48274,26 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             alert('Truncate table and load new historical data');
             axios.get('/tabletruncate').then(function (response) {
                 console.log('ChartControl.vue. Tabletruncate controller response: ');
-            }) // Output returned data by controller
-            .catch(function (error) {
+            }).catch(function (error) {
                 console.log('ChartControl.vue Tabletruncate controller error: ');
-                console.log('');
+                console.log(error.response);
+            });
+        },
+        // Start laravel Ratchet:start command. Button handler
+        startbroadcast: function startbroadcast(event) {
+            axios.get('/startbroadcast').then(function (response) {
+                console.log('ChartControl.vue. startbroadcast controller response: ');
+            }).catch(function (error) {
+                console.log('ChartControl.vue startbroadcast controller error: ');
+                console.log(error.response);
+            });
+        },
+        // http://bounce.kk/public/stopbroadcast
+        stopbroadcast: function stopbroadcast(event) {
+            axios.get('/stopbroadcast').then(function (response) {
+                console.log('ChartControl.vue. stopbroadcast controller response: ');
+            }).catch(function (error) {
+                console.log('ChartControl.vue stopbroadcast controller error: ');
                 console.log(error.response);
             });
         }
@@ -48279,6 +48316,25 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             console.log('ChartControl.vue ChartInfo controller error: ');
             console.log(error.response);
         });
+    },
+    created: function created() {
+        var _this2 = this;
+
+        // Console messages output
+        var arr = new Array();
+        this.items = arr;
+
+        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
+
+            //console.log(e.update["tradePrice"]);
+
+            if (_this2.items.length < 20) {
+                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            } else {
+                _this2.items.shift();
+                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            }
+        });
     }
 });
 
@@ -48290,26 +48346,48 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "container" }, [
-    _vm._v(
-      "\n    Symbol: " +
-        _vm._s(_vm.symbol) +
-        ".\n    Net profit: " +
-        _vm._s(_vm.netProfit) +
-        ".\n    Requested bars: " +
-        _vm._s(_vm.requestedBars) +
-        ".\n    Commission: " +
-        _vm._s(_vm.commission) +
-        ".\n    Trading allowed: " +
-        _vm._s(_vm.tradingAllowed) +
-        ".\n    "
-    ),
-    _c(
-      "button",
-      { attrs: { id: "initial-start" }, on: { click: _vm.initialstart } },
-      [_vm._v("Initial start")]
-    )
-  ])
+  return _c(
+    "div",
+    { staticClass: "container" },
+    [
+      _vm._v("\n    Symbol: " + _vm._s(_vm.symbol)),
+      _c("br"),
+      _vm._v("\n    Net profit: " + _vm._s(_vm.netProfit)),
+      _c("br"),
+      _vm._v("\n    Requested bars: " + _vm._s(_vm.requestedBars) + "."),
+      _c("br"),
+      _vm._v("\n    Commission: " + _vm._s(_vm.commission) + "."),
+      _c("br"),
+      _vm._v("\n    Trading allowed: " + _vm._s(_vm.tradingAllowed) + "."),
+      _c("br"),
+      _vm._v(" "),
+      _c(
+        "button",
+        { attrs: { id: "initial-start" }, on: { click: _vm.initialstart } },
+        [_vm._v("Initial start")]
+      ),
+      _c("br"),
+      _vm._v(" "),
+      _c(
+        "button",
+        { attrs: { id: "start-broadcast" }, on: { click: _vm.startbroadcast } },
+        [_vm._v("Start broadcast")]
+      ),
+      _vm._v(" "),
+      _c(
+        "button",
+        { attrs: { id: "stop-broadcast" }, on: { click: _vm.stopbroadcast } },
+        [_vm._v("Stop broadcast")]
+      ),
+      _vm._v(" "),
+      _c("br"),
+      _vm._v(" "),
+      _vm._l(_vm.items, function(item) {
+        return _c("span", [_vm._v("\n            " + _vm._s(item)), _c("br")])
+      })
+    ],
+    2
+  )
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -48492,6 +48570,49 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     }
                 }]
             });
+
+            // Websocket event listener
+            Echo.channel('Bush-channel').listen('BushBounce', function (e) {
+                //console.log(e.update);
+                var last = chart1.series[0].data[chart1.series[0].data.length - 1];
+                last.update({
+                    //'open': 1000,
+                    'high': e.update["tradeBarHigh"],
+                    'low': e.update["tradeBarLow"],
+                    'close': e.update["tradePrice"]
+                }, true);
+
+                // New bar is issued. Flag sent from RatchetWebSocket.php
+                if (e.update["flag"]) {
+                    // e.update["flag"] = true
+                    console.log('new bar is added');
+                    // Add bar to the chart
+                    chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
+
+                    /*
+                    // Update price channel
+                    var request2 = $.get('loaddata');
+                    request2.done(function(response) {
+                        console.log("Chart.vue: loading data request worked ok");
+                        chart.series[0].setData(response[0],true); // true - redraw the series. Candles
+                        chart.series[1].setData(response[1],true);// Precancel high
+                        chart.series[2].setData(response[2],true);// Price channel low
+                    });
+                    */
+                }
+
+                // buy flag
+                if (e.update["flag"] == "buy") {
+                    console.log('buy');
+                    chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]], true, false);
+                }
+
+                // buy flag
+                if (e.update["flag"] == "sell") {
+                    console.log('buy');
+                    chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]], true, false);
+                }
+            });
         }) // Output returned data by controller
         .catch(function (error) {
             console.log('Chart.vue ChartInfo  controller error: ');
@@ -48500,7 +48621,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
     created: function created() {
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            alert(e.updte);
+            //console.log(e.update);
+
+
+            /*
+            var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
+            last.update({
+                //'open': 1000,
+                'high': e.update["tradeBarHigh"],
+                'low': e.update["tradeBarLow"],
+                'close': e.update["tradePrice"]
+            }, true);
+            */
+
         });
     }
 });

@@ -113,3 +113,18 @@ route::get('/tabletruncate', 'Table@truncate');
 Route::get('event', function () {
     event(new \App\Events\BushBounce('How are you?'));
 });
+
+// Startbroadcast
+Route::get('/startbroadcast', function () {
+    $exitCode = Artisan::call('ratchet:start');
+    return("web.php: startbroadcast exit code: " . $exitCode);
+});
+
+// Stop broadcast (console command)
+Route::get('/stopbroadcast', function () {
+    DB::table("settings_realtime")
+        ->where('id', 1) // id of the last record. desc - descent order
+        ->update([
+            'broadcast_stop' => 1
+        ]);
+});

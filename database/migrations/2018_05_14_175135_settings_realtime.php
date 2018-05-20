@@ -15,6 +15,7 @@ class SettingsRealtime extends Migration
     {
         Schema::create('settings_realtime', function (Blueprint $table) {
             $table->increments('id');
+            $table->boolean('broadcast_start');
             $table->boolean('initial_start');
             $table->string('symbol');
             $table->integer('time_frame');
@@ -26,6 +27,7 @@ class SettingsRealtime extends Migration
 
         DB::table('settings_realtime')->insert(array(
             'initial_start' => 1,
+            'broadcast_start' => 0,
             'time_frame' => 15,
             'symbol' => "BTCUSD",
             'request_bars' => 30,

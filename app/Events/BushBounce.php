@@ -33,6 +33,6 @@ class BushBounce implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new Channel('Bush-channel'); // private-Bush-channel  Bush-channel
+        return new Channel('Bush-channel');
     }
 }

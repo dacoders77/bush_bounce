@@ -8,6 +8,7 @@
 
 namespace App\Classes;
 
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Events\eventTrigger;
 
@@ -28,13 +29,9 @@ use App\Events\eventTrigger;
  * 'hb' - Heart beating. If there is no new message in the channel for 1 second, Websocket server will send you an heartbeat message in this format
  * SNAPSHOT (the initial message)
  * @link https://docs.bitfinex.com/docs/ws-general
- *
- * @package App\Classes
- * @return void
  */
 class Chart
 {
-
 
     public $dateCompeareFlag = true;
     public $tt; // Time
@@ -50,10 +47,6 @@ class Chart
     public $firstPositionEver = true; // Skip the first trade record. When it occurs we ignore calculations and make accumulated_profit = 0. On the next step (next bar) there will be the link to this value
     public $firstEverTradeFlag = true; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
 
-    /**
-     * Chart constructor.
-     * @return void
-     */
     public function __construct()
     {
         $this->timeFrame =
@@ -72,9 +65,8 @@ class Chart
     /**
      * @param \Ratchet\RFC6455\Messaging\MessageInterface $socketMessage
      */
-    public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message)
+    public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message, Command $command)
     {
-
         //echo "socket message" . $message . "\n";
 
         // First time ever application run check
@@ -84,6 +76,7 @@ class Chart
                 ->value('initial_start')))
         {
             echo "Chart.php Application first ever run. Load history data. History::index()";
+            //event(new \App\Events\BushBounce('Bot first ever run'));
             History::load();
         }
 
@@ -109,12 +102,19 @@ class Chart
                 // current trade(tick): $nojsonMessage[2][3]
                 // volume: $nojsonMessage[2][2]
 
+
                 // Take seconds off and add 1 min. Do it only once per interval (for example 1min)
                 if ($this->dateCompeareFlag) {
                     $x = date("Y-m-d H:i", $nojsonMessage[2][1] / 1000) . "\n"; // Take seconds off. Convert timestamp to date
-                    $this->tt = strtotime($x . $this->timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
+                    //$this->tt = strtotime($x . $this->timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
+                    $this->tt = strtotime($x . '+1 minute'); // Time frame. Added 1 minute. Timestamp
                     $this->dateCompeareFlag = false;
                 }
+
+                //echo "x: " . $x;
+                //echo " this->tt: " . ($this->tt) . "\n";
+                //echo " tt: " . gmdate("Y-m-d G:i:s", ($this->tt));
+                //die();
 
                 // Make a signal when value reaches over added 1 minute
                 echo
@@ -124,6 +124,14 @@ class Chart
                     " vol: " . $nojsonMessage[2][2] .
                     " pos: " . $this->position . "\n";
 
+                /*
+                event(new \App\Events\BushBounce(
+                    $this->symbol .
+                    " / " . gmdate("G:i:s", ($nojsonMessage[2][1] / 1000)) .
+                    " price: " . $nojsonMessage[2][3] .
+                    " pos: " . $this->position
+                ));
+                */
 
                 // Calculate high and low of the bar then pass it to the chart in $messageArray
                 if ($nojsonMessage[2][3] > $this->barHigh) // High
@@ -159,10 +167,12 @@ class Chart
                     }
                     catch(Exception $e) {
                         echo 'Error while DB record update: ' .$e->getMessage();
+                        //event(new \App\Events\BushBounce('Error while DB record update: ' .$e->getMessage()));
                     }
 
 
-
+                echo "current tick: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
+                echo " time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt / 1000));
 
                 // NEW BAR IS ISSUED
                 if (floor(($nojsonMessage[2][1] / 1000)) >= $this->tt){
@@ -187,7 +197,6 @@ class Chart
                             ->value('trade_price'); // get trade price value
 
 
-
                     // Calculate trade profit
                     $tradeProfit = ($this->position != null ? (($this->position == "long" ? ($nojsonMessage[2][3] - $lastTradePrice) * $this->volume : ($lastTradePrice - $nojsonMessage[2][3]) * $this->volume)) : false); // Calculate trade profit only if the position is open. Because we reach this code all the time when high or low price channel boundary is exceeded
 
@@ -200,8 +209,8 @@ class Chart
                             ]);
                     }
 
-
-                    echo "\n************************************** new bar issued";
+                    $command->error("\n************************************** new bar issued");
+                    //event(new \App\Events\BushBounce('New bar issued'));
                     $messageArray['flag'] = true; // Added true flag which will inform JS that new bar is issued
                     $this->dateCompeareFlag = true;
 
@@ -238,6 +247,7 @@ class Chart
                     // price > price channel
                     if (($nojsonMessage[2][3] > $price_channel_high_value) && ($this->trade_flag == "all" || $this->trade_flag == "long")){
                         echo "####### HIGH TRADE!\n";
+                        //event(new \App\Events\BushBounce('Long trade has occurred!'));
 
                         // trading allowed?
                         if ($allow_trading == 1){
@@ -246,6 +256,7 @@ class Chart
                             if ($this->firstEverTradeFlag){
                                 // open order buy vol = vol
                                 echo "---------------------- FIRST EVER TRADE\n";
+                                //event(new \App\Events\BushBounce('First ever trade'));
                                 app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
                                 $this->firstEverTradeFlag = false;
                             }
@@ -253,6 +264,7 @@ class Chart
                             {
                                 // open order buy vol = vol * 2
                                 echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2\n";
+                                //event(new \App\Events\BushBounce('Not the first ever trade'));
                                 app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
                                 app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
                             }
@@ -260,6 +272,7 @@ class Chart
                         else{ // trading is not allowed
                             $this->firstEverTradeFlag = true;
                             echo "---------------------- TRADING NOT ALLOWED\n";
+                            //event(new \App\Events\BushBounce('Trading is not allowed'));
                         }
 
 
@@ -299,6 +312,7 @@ class Chart
                     // If < low price channel. SELL
                     if (($nojsonMessage[2][3] < $price_channel_low_value) && ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
                         echo "####### LOW TRADE!\n";
+                        //event(new \App\Events\BushBounce('Short trade!'));
 
                         // trading allowed?
                         if ($allow_trading == 1){
@@ -307,6 +321,7 @@ class Chart
                             if ($this->firstEverTradeFlag){
                                 // open order buy vol = vol
                                 echo "---------------------- FIRST EVER TRADE\n";
+                                //event(new \App\Events\BushBounce('First ever trade'));
                                 app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
                                 $this->firstEverTradeFlag = false;
                             }
@@ -314,6 +329,7 @@ class Chart
                             {
                                 // open order buy vol = vol * 2
                                 echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2\n";
+                                //event(new \App\Events\BushBounce('Not first ever trade'));
                                 app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
                                 app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
                             }
@@ -321,6 +337,7 @@ class Chart
                         else{ // trading is not allowed
                             $this->firstEverTradeFlag = true;
                             echo "---------------------- TRADING NOT ALLOWED\n";
+                            //event(new \App\Events\BushBounce('Trading is not allowed'));
                         }
 
                         $this->trade_flag = "long";
@@ -379,6 +396,7 @@ class Chart
 
                         echo "Bar with no trade";
                         echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit;
+                        //event(new \App\Events\BushBounce('Bar with no trade'));
                         //die();
                     }
 
@@ -401,6 +419,7 @@ class Chart
                             ]);
 
                         echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
+                        //event(new \App\Events\BushBounce('Bar with trade. Direction: ' . $nextToLastDirection));
                     }
 
                     /** 1. Skip the first trade. Record 0 to accumulated_profit cell. This code fires once only at the first trade */
@@ -413,6 +432,7 @@ class Chart
                             ]);
 
                         echo "firstPositionEver!";
+                        //event(new \App\Events\BushBounce('First position(trade) ever'));
                         $this->firstPositionEver = false;
 
                     }
@@ -458,8 +478,10 @@ class Chart
                 $messageArray['tradeBarHigh'] = $this->barHigh; // Bar high
                 $messageArray['tradeBarLow'] = $this->barLow; // Bar Low
 
-                /** Send filled associated array in the event */
-                event(new eventTrigger($messageArray)); // Fire new event. Events are located in app/Events
+
+                /** Send filled associated array in the event as the parameter */
+                event(new \App\Events\BushBounce($messageArray));
+                //event(new eventTrigger($messageArray));
 
                 /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
                 if ($this->dateCompeareFlag == true){

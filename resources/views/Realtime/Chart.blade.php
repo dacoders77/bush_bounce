@@ -17,19 +17,27 @@
 </head>
 <body>
 
-<!-- Vue components -->
-<div id="chart-control">
-    <chart-control></chart-control>
-</div>
 
+<!-- Unknown element -->
 <div id="chart">
     <chart></chart>
 </div>
 
-<!-- Highstock chart -->
+<div style="border-color: red; border-width: 0px; border-style: solid; display: grid; grid-template-columns: 80% 20%">
+    <!-- High charts chart -->
+    <div style="border-color: green; border-width: 0px; border-style: solid;" id="container">
+    </div>
+    <div style="height: 600px;" id="chart-control">
+        <!-- Vue Chart-control component -->
+        <chart-control></chart-control>
+    </div>
+</div>
+
+<!-- Highstock chart
 <div id="container"
      style="width: 100%; height: 600px; border: 1px solid transparent; float: left; text-align: center; display: table-cell; vertical-align: middle">
 </div>
+-->
 
 
 <script src="js/app.js" charset="ut8-8"></script>

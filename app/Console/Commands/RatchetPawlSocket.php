@@ -30,6 +30,8 @@ class RatchetPawlSocket extends Command
     public function __construct()
     {
         parent::__construct();
+        // DO NOT PLACE CODE IN THE CONSTRUCTOR
+        // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS AND MY CAUSE DIFFERENT PROBLEMS
         //$chart = new Classes\Chart();
         //$this->chart = new Classes\Chart(); // New instance of Chart class
     }
@@ -42,6 +44,7 @@ class RatchetPawlSocket extends Command
     public function handle(Classes\Chart $chart)
     {
         echo "*****Ratchet websocket console command(app) started!*****\n";
+        //event(new \App\Events\BushBounce('*** Ratchet websocket console app started ***'));
 
 
         // Code from: https://github.com/ratchetphp/Pawl
@@ -54,13 +57,24 @@ class RatchetPawlSocket extends Command
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
         $connector('wss://api.bitfinex.com/ws/2', [], ['Origin' => 'http://localhost'])
-            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart) {
-                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart) {
-                    //RatchetWebSocket::out($socketMessage); // Call the function when the event is received
+            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $loop) {
+                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $loop) {
+                    $chart->index($socketMessage, $this); // Call the method when the event is received
 
-                    event(new \App\Events\BushBounce('How are you?')); // Sample event
-                    $chart->index($socketMessage); // Call the method when the event is received
-                    //echo $socketMessage;
+                    /** Stop the broadcast */
+                    if (DB::table('settings_realtime')
+                            ->where('id', 1)
+                            ->value('broadcast_stop') == 1)
+                    {
+                        DB::table("settings_realtime")
+                            ->where('id', 1) // id of the last record. desc - descent order
+                            ->update([
+                                'broadcast_stop' => 0
+                            ]);
+                        $this->alert('The broadcast is being stopped!');
+                        $loop->stop();
+                    }
+
 
                 });
                 $conn->on('close', function($code = null, $reason = null) {
@@ -96,6 +110,7 @@ class RatchetPawlSocket extends Command
                 $loop->stop();
             });
         $loop->run();
+
     }
 
 }
