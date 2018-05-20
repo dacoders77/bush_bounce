@@ -10,6 +10,9 @@ class HistoryBars extends Controller
 
     public function load(){
 
+        echo "";
+        echo ""; // Delete 
+
         $longTradeMarkers[] = "";
         $shortTradeMarkers[] = "";
 
