@@ -77,11 +77,11 @@ class RatchetPawlSocket extends Command
 
 
                 });
-                $conn->on('close', function($code = null, $reason = null) {
+                $conn->on('close', function($code = null, $reason = null) use ($chart) {
                     echo "Connection closed ({$code} - {$reason})\n";
                     $this->info("line 82. connection closed");
                     $this->error("Reconnecting back!");
-                    $this->handle();
+                    $this->handle($chart);
                 });
 
                 //$conn->send(['event' => 'ping']);
