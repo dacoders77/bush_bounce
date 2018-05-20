@@ -26,7 +26,7 @@ class SettingsRealtime extends Migration
 
         DB::table('settings_realtime')->insert(array(
             'initial_start' => 1,
-            'time_frame' => 5,
+            'time_frame' => 15,
             'symbol' => "BTCUSD",
             'request_bars' => 30,
             'price_channel_period' => 1,

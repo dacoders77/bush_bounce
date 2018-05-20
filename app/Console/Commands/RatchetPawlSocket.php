@@ -31,7 +31,7 @@ class RatchetPawlSocket extends Command
     {
         parent::__construct();
         //$chart = new Classes\Chart();
-        $this->chart = new Classes\Chart(); // New instance of Chart class
+        //$this->chart = new Classes\Chart(); // New instance of Chart class
     }
 
     /**
@@ -39,9 +39,10 @@ class RatchetPawlSocket extends Command
      *
      * @return mixed
      */
-    public function handle()
+    public function handle(Classes\Chart $chart)
     {
         echo "*****Ratchet websocket console command(app) started!*****\n";
+
 
         // Code from: https://github.com/ratchetphp/Pawl
         $loop = \React\EventLoop\Factory::create();
@@ -53,12 +54,12 @@ class RatchetPawlSocket extends Command
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
         $connector('wss://api.bitfinex.com/ws/2', [], ['Origin' => 'http://localhost'])
-            ->then(function(\Ratchet\Client\WebSocket $conn) {
-                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn) {
+            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart) {
+                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart) {
                     //RatchetWebSocket::out($socketMessage); // Call the function when the event is received
 
                     event(new \App\Events\BushBounce('How are you?')); // Sample event
-                    $this->chart->index($socketMessage); // Call the method when the event is received
+                    $chart->index($socketMessage); // Call the method when the event is received
                     //echo $socketMessage;
 
                 });
