@@ -70,7 +70,7 @@ route::get('/jsonload', 'loadJsonFromDB@get')->name('loadJsonFromDB'); // Contro
 // Post test controller
 Route::post('/post_controller', 'post_controller@index');
 
-//priceChannel_controller@index
+// PriceChannel_controller@index
 Route::post('/pricechannel', 'priceChannel_controller@index')->name('pricechannel');
 
 // Request tickers from bitfinex
@@ -91,3 +91,25 @@ route::get('/change_asset/{z}', 'ChangeAsset@index'); // Controller call and pas
 
 // ChangeAsset
 //route::get('/minmax', 'controller@index'); // Test controller for local min max search
+
+// Realtime
+
+// Chart page
+Route::get('/realtime', function ()
+{
+    return View::make('/Realtime/Chart');
+})->name('main.view'); // realtime.blade.php
+
+// Chart Info. Trading symbol, net profit, commission value etc.
+Route::get('/chartinfo', 'ChartInfo@load')->name('ChartInfo');
+
+// Load history bars from local DB (not www.bitfinex.com)
+route::get('/historybarsload', 'HistoryBars@load');
+
+// Truncate history data table
+route::get('/tabletruncate', 'Table@truncate');
+
+// Test pusher event DELETE IT
+Route::get('event', function () {
+    event(new \App\Events\BushBounce('How are you?'));
+});

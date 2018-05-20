@@ -31,7 +31,7 @@ class RatchetPawlSocket extends Command
     {
         parent::__construct();
         //$chart = new Classes\Chart();
-        $this->chart = new Classes\Chart();
+        $this->chart = new Classes\Chart(); // New instance of Chart class
     }
 
     /**
@@ -42,20 +42,6 @@ class RatchetPawlSocket extends Command
     public function handle()
     {
         echo "*****Ratchet websocket console command(app) started!*****\n";
-
-        /*
-        $this->timeFrame =
-            DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
-                ->value('time_frame');
-
-        // Get traded symbol from DB. String must look like: tBTCUSD
-        // MAKE IT UPPER CASE!
-        $this->symbol = "t" .
-            DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
-                ->value('symbol');
-        */
 
         // Code from: https://github.com/ratchetphp/Pawl
         $loop = \React\EventLoop\Factory::create();
@@ -70,15 +56,15 @@ class RatchetPawlSocket extends Command
             ->then(function(\Ratchet\Client\WebSocket $conn) {
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn) {
                     //RatchetWebSocket::out($socketMessage); // Call the function when the event is received
-                    //Classes\Chart::index($socketMessage);
 
-                    //$this->chart->index($socketMessage); // Call the method when the event is received
-                    echo $socketMessage;
+                    event(new \App\Events\BushBounce('How are you?')); // Sample event
+                    $this->chart->index($socketMessage); // Call the method when the event is received
+                    //echo $socketMessage;
 
                 });
                 $conn->on('close', function($code = null, $reason = null) {
                     echo "Connection closed ({$code} - {$reason})\n";
-                    $this->error("line 67. connection closed");
+                    $this->info("line 82. connection closed");
                     $this->error("Reconnecting back!");
                     $this->handle();
                 });
@@ -91,17 +77,21 @@ class RatchetPawlSocket extends Command
                     'symbol' => 'tBTCUSD'  // tBTCUSD tETHUSD tETHBTC $this->symbol $this->symbol
                 ]);
 
+                /* Multiple symbols subscription
                 $x = json_encode([
                     //'event' => 'ping', // 'event' => 'ping'
                     'event' => 'subscribe',
                     'channel' => 'trades',
                     'symbol' => 'tETHUSD'  // tBTCUSD tETHUSD tETHBTC $this->symbol $this->symbol
                 ]);
+                */
 
                 $conn->send($z);
-                $conn->send($x);
+                //$conn->send($x);
+
+                /** @todo Add sleep function, for example 1 minute, after which recconection attempt will be performed */
             }, function(\Exception $e) use ($loop) {
-                echo "Could not connect: {$e->getMessage()}\n";
+                echo "RatchetPawlSocket.php: Could not connect: \n {$e->getMessage()}\n";
                 $loop->stop();
             });
         $loop->run();

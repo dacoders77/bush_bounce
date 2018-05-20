@@ -1,4 +1,3 @@
-
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
@@ -15,8 +14,22 @@ window.Vue = require('vue');
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
+/*
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
-
 const app = new Vue({
     el: '#app'
 });
+*/
+
+// Chart control component
+Vue.component('chart-control', require('./components/ChartControl.vue'));
+const app2 = new Vue({
+    el: '#chart-control'
+});
+
+// Chart component
+Vue.component('chart', require('./components/Chart.vue'));
+const app3 = new Vue({
+    el: '#chart'
+});
+

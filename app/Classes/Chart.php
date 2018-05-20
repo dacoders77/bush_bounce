@@ -7,7 +7,11 @@
  */
 
 namespace App\Classes;
+
 use Illuminate\Support\Facades\DB;
+use App\Events\eventTrigger;
+
+
 
 /**
  * Chart class provides collection preparation for chart drawing functionality:
@@ -30,6 +34,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Chart
 {
+
 
     public $dateCompeareFlag = true;
     public $tt; // Time
@@ -69,7 +74,18 @@ class Chart
      */
     public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message)
     {
+
         //echo "socket message" . $message . "\n";
+
+        // First time ever application run check
+        // If so - load historical data first
+        if ((DB::table('settings_realtime')
+                ->where('id', env("SETTING_ID"))
+                ->value('initial_start')))
+        {
+            echo "Chart.php Application first ever run. Load history data. History::index()";
+            History::load();
+        }
 
         $jsonMessage = json_decode($message->getPayload(), true); // Methods http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html
         //print_r($jsonMessage);
@@ -77,10 +93,11 @@ class Chart
         //echo $message->__toString() . "\n"; // Decode each message
 
         if (array_key_exists('chanId',$jsonMessage)){
-            $chanId = $jsonMessage['chanId']; // Parsed channel ID then we are gonna listen exactley to this channel number. It changes each time you make a new connection
+            $chanId = $jsonMessage['chanId']; // Parsed channel ID then we are gonna listen exactly to this channel number. It changes each time you make a new connection
         }
 
         $nojsonMessage = json_decode($message->getPayload());
+
         if (!array_key_exists('event',$jsonMessage)){ // All messages except first two associated arrays
             if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
             {
@@ -95,12 +112,17 @@ class Chart
                 // Take seconds off and add 1 min. Do it only once per interval (for example 1min)
                 if ($this->dateCompeareFlag) {
                     $x = date("Y-m-d H:i", $nojsonMessage[2][1] / 1000) . "\n"; // Take seconds off. Convert timestamp to date
-                    $this->tt = strtotime($x . $this->timeFrame . 'minute'); // Timeframe. Added 1 minute. Timestamp
+                    $this->tt = strtotime($x . $this->timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
                     $this->dateCompeareFlag = false;
                 }
 
                 // Make a signal when value reaches over added 1 minute
-                echo "Ticker: " . $this->symbol . " time: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)) ." price: " . $nojsonMessage[2][3] . " vol: " . $nojsonMessage[2][2] . " pos: " . $this->position . "\n";
+                echo
+                    "Ticker: " . $this->symbol .
+                    " time: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)) .
+                    " price: " . $nojsonMessage[2][3] .
+                    " vol: " . $nojsonMessage[2][2] .
+                    " pos: " . $this->position . "\n";
 
 
                 // Calculate high and low of the bar then pass it to the chart in $messageArray
@@ -114,15 +136,19 @@ class Chart
                     $this->barLow = $nojsonMessage[2][3];
                 }
 
-                // RATCHET ERROR GOES HERE, WHILE INITIAL START FROM GIU. trying to property of non-object
+                // RATCHET ERROR GOES HERE, WHILE INITIAL START FROM GIU. trying to get property of non-object
                 // Update high, low and close of the current bar in DB. Update the record on each trade.
                 // Then the new bar will be issued - we will have actual values updated in the DB
 
-                // ERROR: Trying to property of non object
-                // Occures when ratchet:start is run for the first time and the history table is empty - no record to update
+                // ERROR: Trying to get property of non object
+                // Occurs when ratchet:start is run for the first time and the history table is empty - no record to update
                 // Start GIU first and then rathcet:start
                 // Updating last bar in the table. At the first run the table is not empty. Historical bars were loaded
-                try {
+
+
+
+
+                    try {
                     DB::table(env("ASSET_TABLE"))
                         ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
                         ->update([
@@ -130,10 +156,10 @@ class Chart
                             'high' => $this->barHigh,
                             'low' => $this->barLow,
                         ]);
-                }
-                catch(Exception $e) {
-                    echo 'Error when truncate the table on initial start: ' .$e->getMessage();
-                }
+                    }
+                    catch(Exception $e) {
+                        echo 'Error while DB record update: ' .$e->getMessage();
+                    }
 
 
 
@@ -175,7 +201,7 @@ class Chart
                     }
 
 
-                    $this->line("\n************************************** new bar issued");
+                    echo "\n************************************** new bar issued";
                     $messageArray['flag'] = true; // Added true flag which will inform JS that new bar is issued
                     $this->dateCompeareFlag = true;
 
@@ -198,12 +224,12 @@ class Chart
                             ->value('price_channel_low_value');
 
                     $allow_trading =
-                        DB::table('settings')
+                        DB::table('settings_realtime')
                             ->where('id', env("SETTING_ID"))
                             ->value('allow_trading');
 
                     $commisionValue =
-                        DB::table('settings')
+                        DB::table('settings_tester')
                             ->where('id', env("SETTING_ID"))
                             ->value('commission_value');
 
@@ -255,9 +281,9 @@ class Chart
                                 'accumulated_commission' => DB::table(env("ASSET_TABLE"))->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
                             ]);
 
-                        echo "nojsonMessage[2][3]" . $nojsonMessage[2][3] . "\n";
-                        echo "commisionValue" . $commisionValue . "\n";
-                        echo "this colume" . $this->volume . "\n";
+                        echo "nojsonMessage[2][3]: " . $nojsonMessage[2][3] . "\n";
+                        echo "commisionValue: " . $commisionValue . "\n";
+                        echo "this volume: " . $this->volume . "\n";
                         echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
                         echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
                         echo "sum: " . DB::table(env("ASSET_TABLE"))->sum('trade_commission') . "\n";
@@ -315,12 +341,12 @@ class Chart
                                 'accumulated_commission' => DB::table(env("ASSET_TABLE"))->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
                             ]);
 
-                        //echo "nojsonMessage[2][3]" . $nojsonMessage[2][3] . "\n";
-                        //echo "commisionValue" . $commisionValue . "\n";
-                        //echo "this colume" . $this->volume . "\n";
-                        //echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
-                        //echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
-                        //echo "sum: " . DB::table(env("ASSET_TABLE"))->sum('trade_commission') . "\n";
+                        echo "nojsonMessage[2][3]: " . $nojsonMessage[2][3] . "\n";
+                        echo "commisionValue: " . $commisionValue . "\n";
+                        echo "this volume: " . $this->volume . "\n";
+                        echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
+                        echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
+                        echo "sum: " . DB::table(env("ASSET_TABLE"))->sum('trade_commission') . "\n";
 
                         $messageArray['flag'] = "sell"; // Send flag to VueJS app.js
 
@@ -330,9 +356,8 @@ class Chart
 
 
                     // ****RECALCULATED ACCUMULATED PROFIT****
-                    // Get the the if of last row where trade direction is not null
+                    // Get the if of last row where trade direction is not null
 
-                    // if trade direction == null
                     $tradeDirection =
                         DB::table(env("ASSET_TABLE"))
                             ->where('id', (DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id))
@@ -352,8 +377,8 @@ class Chart
                                 //'accumulated_profit' => 789789
                             ]);
 
-                        $this->error("Bar with no trade");
-                        $this->info("lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit);
+                        echo "Bar with no trade";
+                        echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit;
                         //die();
                     }
 
@@ -375,10 +400,10 @@ class Chart
                                 'accumulated_profit' => $nextToLastDirection + $tradeProfit
                             ]);
 
-                        $this->error("Bar with trade. nextToLastDirection: " . $nextToLastDirection);
+                        echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
                     }
 
-                    // 1. Skip the first trade. Record 0 to accumulated_profit cell. This code fires once only at the first trade
+                    /** 1. Skip the first trade. Record 0 to accumulated_profit cell. This code fires once only at the first trade */
                     if ($tradeDirection != null && $this->firstPositionEver == true){
 
                         DB::table(env("ASSET_TABLE"))
@@ -387,7 +412,7 @@ class Chart
                                 'accumulated_profit' => 0
                             ]);
 
-                        $this->error("firstPositionEver!");
+                        echo "firstPositionEver!";
                         $this->firstPositionEver = false;
 
                     }
@@ -420,12 +445,12 @@ class Chart
 
 
 
-                    // Recalculate price channel. Controller call as a method
-                    app('App\Http\Controllers\indicatorPriceChannel')->index();
+                    /** Recalculate price channel. Controller call as a method */
+                    //app('App\Http\Controllers\indicatorPriceChannel')->index();
 
                 } // New bar is issued
 
-                // Add calculated values to associative array
+                /** Add calculated values to associative array */
                 $messageArray['tradeId'] = $nojsonMessage[2][0]; // $messageArray['flag'] = true; And all these values will be sent to VueJS
                 $messageArray['tradeDate'] = $nojsonMessage[2][1];
                 $messageArray['tradeVolume'] = $nojsonMessage[2][2];
@@ -433,10 +458,10 @@ class Chart
                 $messageArray['tradeBarHigh'] = $this->barHigh; // Bar high
                 $messageArray['tradeBarLow'] = $this->barLow; // Bar Low
 
-                // Send filled associated array in the event
+                /** Send filled associated array in the event */
                 event(new eventTrigger($messageArray)); // Fire new event. Events are located in app/Events
 
-                // Reset high, low of the bar but do not out put these values to the chart
+                /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
                 if ($this->dateCompeareFlag == true){
                     $this->barHigh = 0;
                     $this->barLow = 9999999;
