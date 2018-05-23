@@ -23,11 +23,22 @@
     <chart></chart>
 </div>
 
+
+
+
 <div style="border-color: red; border-width: 0px; border-style: solid; display: grid; grid-template-columns: 80% 20%">
+    <!-- Event bus vue component -->
+    <div style="display: none;"><event-bus></event-bus></div>
     <!-- High charts chart -->
     <div style="border-color: green; border-width: 0px; border-style: solid;" id="container">
     </div>
     <div style="height: 600px;" id="chart-control">
+
+        <!-- Event bus test event rise -->
+        <div>
+            <button @click="$bus.$emit('my-event')">Click to trigger event</button>
+        </div>
+
         <!-- Vue Chart-control component -->
         <chart-control></chart-control>
     </div>

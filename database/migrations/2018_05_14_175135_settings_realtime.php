@@ -31,7 +31,7 @@ class SettingsRealtime extends Migration
             'time_frame' => 15,
             'symbol' => "BTCUSD",
             'request_bars' => 30,
-            'price_channel_period' => 1,
+            'price_channel_period' => 10,
             'allow_trading' => 0,
             'commission_value' => 0.2
         ));

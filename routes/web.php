@@ -104,7 +104,7 @@ Route::get('/realtime', function ()
 Route::get('/chartinfo', 'ChartInfo@load')->name('ChartInfo');
 
 // Load history bars from local DB (not www.bitfinex.com)
-route::get('/historybarsload', 'HistoryBars@load');
+route::get('/historybarsload', 'realtime\HistoryBars@load');
 
 // Truncate history data table
 route::get('/tabletruncate', 'Table@truncate');
@@ -128,3 +128,9 @@ Route::get('/stopbroadcast', function () {
             'broadcast_stop' => 1
         ]);
 });
+
+// Calculate price channel
+route::get('/pricechannelcalc', 'realtime\PriceChannel@calculate');
+
+// Chart control form fields update
+Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');

@@ -47,7 +47,10 @@ class RatchetPawlSocket extends Command
         //event(new \App\Events\BushBounce('*** Ratchet websocket console app started ***'));
 
 
-        // Code from: https://github.com/ratchetphp/Pawl
+        /**
+         * Ratchet/pawl websocket lib
+         * @see https://github.com/ratchetphp/Pawl
+         */
         $loop = \React\EventLoop\Factory::create();
         $reactConnector = new \React\Socket\Connector($loop, [
             'dns' => '8.8.8.8', // Does not work through OKADO internet provider. Timeout error
@@ -67,7 +70,7 @@ class RatchetPawlSocket extends Command
                             ->value('broadcast_stop') == 1)
                     {
                         DB::table("settings_realtime")
-                            ->where('id', 1) // id of the last record. desc - descent order
+                            ->where('id', 1) // Id of the last record. Desc - descent order
                             ->update([
                                 'broadcast_stop' => 0
                             ]);
@@ -104,7 +107,7 @@ class RatchetPawlSocket extends Command
                 $conn->send($z);
                 //$conn->send($x);
 
-                /** @todo Add sleep function, for example 1 minute, after which recconection attempt will be performed */
+                /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed */
             }, function(\Exception $e) use ($loop) {
                 echo "RatchetPawlSocket.php: Could not connect: \n {$e->getMessage()}\n";
                 $loop->stop();

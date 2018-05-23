@@ -1077,8 +1077,9 @@ module.exports = __webpack_require__(47);
 
 /***/ }),
 /* 11 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
@@ -1113,6 +1114,29 @@ Vue.component('chart', __webpack_require__(44));
 var app3 = new Vue({
     el: '#chart'
 });
+
+Object.defineProperties(Vue.prototype, { // Attached bus
+    $bus: {
+        get: function get() {
+            return EventBus;
+        }
+    }
+});
+
+var EventBus = new Vue({
+    created: function created() {
+        this.$on('my-event', this.handleMyEvent);
+    },
+
+    methods: {
+        handleMyEvent: function handleMyEvent($event) {
+            console.log('app.js. My event caught in global event bus', $event);
+        }
+    }
+});
+
+//Event bus component (http://vuetips.com/global-event-bus)
+//Vue.component('event-bus', require('./components/EventBus.vue'));
 
 /***/ }),
 /* 12 */
@@ -48248,11 +48272,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
-//
-//
-//
-//
-//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48264,7 +48283,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             commission: '',
             tradingAllowed: '',
             basketAssets: null,
-            items: null
+            items: null,
+            priceChannelPeriod: null
         };
     },
 
@@ -48288,51 +48308,68 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log(error.response);
             });
         },
-        // http://bounce.kk/public/stopbroadcast
+        // Stop broadcast button handler
         stopbroadcast: function stopbroadcast(event) {
             axios.get('/stopbroadcast').then(function (response) {
-                console.log('ChartControl.vue. stopbroadcast controller response: ');
+                //console.log('ChartControl.vue. stopbroadcast controller response: ');
             }).catch(function (error) {
-                console.log('ChartControl.vue stopbroadcast controller error: ');
+                console.log('ChartControl.vue. stopbroadcast controller error: ');
+                console.log(error.response);
+            });
+        },
+        // Form fields changed
+        onControlValueChanged: function onControlValueChanged() {
+            var _this = this;
+
+            //console.log('ChartControl. Form filed value changed event:');
+            //console.log(this.$data);
+            axios.post('/chartcontrolupdate', this.$data).then(function (response) {
+                console.log(response.data);
+
+                // Load price channel recalculated data
+                _this.$bus.$emit('my-event', {}); // WORKS GOOD!
+            }).catch(function (error) {
+                console.log('ChartControl.vue. Form filed value changed event error:');
                 console.log(error.response);
             });
         }
     },
     mounted: function mounted() {
-        var _this = this;
+        var _this2 = this;
 
         console.log('Component ChartControl.vue mounted.');
         axios.get('/chartinfo').then(function (response) {
-            console.log('ChartControl.vue. ChartInfo controller response: ');
-            //console.log(response['data']);
-            //this.basketName = response.data['basketName'];
-            _this.symbol = response.data['symbol'];
-            _this.netProfit = response.data['netProfit'];
-            _this.requestedBars = response.data['requestedBars'];
-            _this.commission = response.data['commissionValue'];
-            _this.tradingAllowed = response.data['tradingAllowed'];
+            //console.log('ChartControl.vue. ChartInfo controller response: ');
+            _this2.symbol = response.data['symbol'];
+            _this2.netProfit = response.data['netProfit'];
+            _this2.requestedBars = response.data['requestedBars'];
+            _this2.commission = response.data['commissionValue'];
+            _this2.tradingAllowed = response.data['tradingAllowed'];
+            _this2.priceChannelPeriod = response.data['priceChannelPeriod'];
         }) // Output returned data by controller
         .catch(function (error) {
-            console.log('ChartControl.vue ChartInfo controller error: ');
+            console.log('ChartControl.vue. chartinfo controller error: ');
             console.log(error.response);
         });
     },
     created: function created() {
-        var _this2 = this;
+        var _this3 = this;
+
+        //Event bus test
+        this.$bus.$on('my-event', function ($event) {
+            console.log('My event has been triggered', $event);
+        });
 
         // Console messages output
         var arr = new Array();
         this.items = arr;
 
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-
-            //console.log(e.update["tradePrice"]);
-
-            if (_this2.items.length < 20) {
-                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            if (_this3.items.length < 20) {
+                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this2.items.shift();
-                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this3.items.shift();
+                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
     }
@@ -48381,9 +48418,37 @@ var render = function() {
       ),
       _vm._v(" "),
       _c("br"),
+      _vm._v("\n    Price channel period:\n    "),
+      _c("form", [
+        _c("input", {
+          directives: [
+            {
+              name: "model",
+              rawName: "v-model",
+              value: _vm.priceChannelPeriod,
+              expression: "priceChannelPeriod"
+            }
+          ],
+          staticClass: "form-control",
+          domProps: { value: _vm.priceChannelPeriod },
+          on: {
+            input: [
+              function($event) {
+                if ($event.target.composing) {
+                  return
+                }
+                _vm.priceChannelPeriod = $event.target.value
+              },
+              _vm.onControlValueChanged
+            ]
+          }
+        }),
+        _vm._v(" "),
+        _c("br")
+      ]),
       _vm._v(" "),
       _vm._l(_vm.items, function(item) {
-        return _c("span", [_vm._v("\n            " + _vm._s(item)), _c("br")])
+        return _c("span", [_vm._v("\n        " + _vm._s(item)), _c("br")])
       })
     ],
     2
@@ -48477,7 +48542,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             chart1 = Highcharts.stockChart('container', {
                 chart: {
                     animation: false,
-                    renderTo: 'container' // DIV where the chart will be rendered
+                    renderTo: 'container', // div where the chart will be rendered
+                    height: document.height // Use window height to set height of the chart
                 },
                 yAxis: [{ // Primary yAxis
                     title: {
@@ -48515,7 +48581,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     enableMouseTracking: true,
                     color: 'red',
                     lineWidth: 1,
-                    data: '',
+                    data: response.data['priceChannelHighValues'],
                     dataGrouping: {
                         enabled: false
                     }
@@ -48526,7 +48592,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     enableMouseTracking: true,
                     color: 'red',
                     lineWidth: 1,
-                    data: '',
+                    data: response.data['priceChannelLowValues'],
                     dataGrouping: {
                         enabled: false
                     }
@@ -48538,7 +48604,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     type: 'scatter',
                     color: 'purple',
                     //lineWidth: 3,
-                    data: '',
+                    data: response.data['longTradeMarkers'],
                     dataGrouping: {
                         enabled: false
                     },
@@ -48557,7 +48623,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     //yAxis: 1, // To which of two y axis this series should be linked
                     color: 'purple',
                     //lineWidth: 3,
-                    data: '',
+                    data: response.data['shortTradeMarkers'],
                     dataGrouping: {
                         enabled: false
                     },
@@ -48589,6 +48655,29 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     // Add bar to the chart
                     chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
 
+
+                    axios.get('/pricechannelcalc') // Recalculate price channel
+                    .then(function (response) {
+                        //console.log('ChartControl.vue. pricechannelcalc controller response: ');
+                        //console.log(response);
+                    }).catch(function (error) {
+                        console.log('ChartControl.vue. pricechannelcalc controller error: ');
+                        console.log(error.response);
+                    });
+
+                    axios.get('/historybarsload') // Start load history data controller but get only price channel values out of it
+                    .then(function (response) {
+                        console.log('ChartControl.vue. historybarsload controller response: ');
+                        console.log(response.data['candles']);
+
+                        chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                        chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                        chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                    }).catch(function (error) {
+                        console.log('ChartControl.vue. /historybarsload controller error: ');
+                        console.log(error.response);
+                    });
+
                     /*
                     // Update price channel
                     var request2 = $.get('loaddata');
@@ -48601,17 +48690,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     */
                 }
 
+                /*
                 // buy flag
                 if (e.update["flag"] == "buy") {
                     console.log('buy');
-                    chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]], true, false);
+                    chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
                 }
-
-                // buy flag
+                 // buy flag
                 if (e.update["flag"] == "sell") {
                     console.log('buy');
-                    chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]], true, false);
+                    chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
                 }
+                */
             });
         }) // Output returned data by controller
         .catch(function (error) {
@@ -48620,21 +48710,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         });
     },
     created: function created() {
-        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            //console.log(e.update);
+
+        //Echo.channel('Bush-channel').listen('BushBounce', (e) => {
+        //console.log(e.update);
 
 
-            /*
-            var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
-            last.update({
-                //'open': 1000,
-                'high': e.update["tradeBarHigh"],
-                'low': e.update["tradeBarLow"],
-                'close': e.update["tradePrice"]
-            }, true);
-            */
+        /*
+        var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
+        last.update({
+            //'open': 1000,
+            'high': e.update["tradeBarHigh"],
+            'low': e.update["tradeBarLow"],
+            'close': e.update["tradePrice"]
+        }, true);
+        */
 
-        });
+        //});
+
+
     }
 });
 

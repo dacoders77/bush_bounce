@@ -5,22 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 /**
- * Returns chart property values like Asset symbol, profit, commission vale etc.
- * This controller is called when start page with the chart loads
  * Class ChartInfo
+ * Returns chart property values like Asset symbol, profit, commission vale etc.
+ * This controller is called when start page with the chart loads.
+ * Values are returned to ChartControl.vue
  * @package App\Http\Controllers
  */
 class ChartInfo extends Controller
 {
     public function load()
     {
-        /*
-        Asset name
-        Net profit (updates in realtime)
-        Requested historical bars
-        Commission value
-        Trading allowed flag
-        */
 
         $response = array();
         $response = ChartInfo::arrayPush($response, 'symbol',
@@ -52,7 +46,10 @@ class ChartInfo extends Controller
                 ->where('id', env("SETTING_ID"))
                 ->value('allow_trading'));
 
-        //dump ($response);
+        $response = ChartInfo::arrayPush($response, 'priceChannelPeriod',
+            DB::table('settings_realtime')
+                ->where('id', env("SETTING_ID"))
+                ->value('price_channel_period'));
 
         return json_encode($response);
     }

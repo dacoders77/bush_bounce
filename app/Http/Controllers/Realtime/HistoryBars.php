@@ -1,17 +1,19 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Realtime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
+use Illuminate\Http;
 
-class HistoryBars extends Controller
+
+class HistoryBars extends \App\Http\Controllers\Controller
 {
 
     public function load(){
 
         echo "";
-        echo ""; // Delete 
+        echo ""; // Delete
 
         $longTradeMarkers[] = "";
         $shortTradeMarkers[] = "";
@@ -31,12 +33,12 @@ class HistoryBars extends Controller
             //$rowValue->price_channel_high_value,
             //$rowValue->price_channel_low_value
 
-            $priceChannelHighValue[] = [
+            $priceChannelHighValues[] = [
                 $rowValue->time_stamp,
                 $rowValue->price_channel_high_value
             ];
 
-            $priceChannelLowValue[] = [
+            $priceChannelLowValues[] = [
                 $rowValue->time_stamp,
                 $rowValue->price_channel_low_value
             ];
@@ -60,8 +62,8 @@ class HistoryBars extends Controller
 
         $seriesData = array(
             "candles" => $candles,
-            //"priceChannelHighValue" => $priceChannelHighValue,
-            //"priceChannelLowValue" => $priceChannelLowValue,
+            "priceChannelHighValues" => $priceChannelHighValues,
+            "priceChannelLowValues" => $priceChannelLowValues,
             //"longTradeMarkers" => $longTradeMarkers,
             //"shortTradeMarkers" => $shortTradeMarkers
         );

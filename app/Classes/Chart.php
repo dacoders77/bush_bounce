@@ -11,7 +11,7 @@ namespace App\Classes;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Events\eventTrigger;
-
+use PhpParser\Node\Expr\Variable;
 
 
 /**
@@ -23,16 +23,16 @@ use App\Events\eventTrigger;
  * Index method is called on each tick occurrence in RatchetPawlSocket class which reads the trades broadcast stream
  *
  * Tick types in websocket channel:
- * 'te', 'tu' Flags explained http://blog.bitfinex.com/api/websocket-api-update/
+ * 'te', 'tu' Flags explained
  * 'te' - When the trades is rearrested at the exchange
  * 'tu' - When the actual trade has happened. Delayed for 1-2 seconds from 'te'
  * 'hb' - Heart beating. If there is no new message in the channel for 1 second, Websocket server will send you an heartbeat message in this format
  * SNAPSHOT (the initial message)
- * @link https://docs.bitfinex.com/docs/ws-general
+ * @see http://blog.bitfinex.com/api/websocket-api-update/
+ * @see https://docs.bitfinex.com/docs/ws-general
  */
 class Chart
 {
-
     public $dateCompeareFlag = true;
     public $tt; // Time
 
@@ -63,21 +63,28 @@ class Chart
     }
 
     /**
+     * Received message in websocket channel is sent to this method as an argument.
+     * A message is precessed, bars and trades are calculated.
+     *
      * @param \Ratchet\RFC6455\Messaging\MessageInterface $socketMessage
+     * @param Command Variable type for colored and formatted console messages like alert, warning, error etc.
+     * @return array $messageArray Array which has OHLC of the bar, new bar flag and other parameters. The array is
+     * generated on each tick (each websocket message) and then passed as an event to the browser. These messages
+     * are transmitted over websocket pusher broadcast service.
+     * @see https://pusher.com/
      */
     public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message, Command $command)
     {
-        //echo "socket message" . $message . "\n";
-
-        // First time ever application run check
-        // If so - load historical data first
+        /** First time ever application run check. If so - load historical data first */
         if ((DB::table('settings_realtime')
                 ->where('id', env("SETTING_ID"))
                 ->value('initial_start')))
         {
-            echo "Chart.php Application first ever run. Load history data. History::index()";
+            echo "Chart.php Application first ever run. Load history data. History::index()\n";
             //event(new \App\Events\BushBounce('Bot first ever run'));
-            History::load();
+            History::load(); /** After the history is loaded - get price channel calculated (indicator) */
+            // Calculate price channel
+            \App\Http\Controllers\Realtime\PriceChannel::calculate();
         }
 
         $jsonMessage = json_decode($message->getPayload(), true); // Methods http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html
@@ -171,8 +178,8 @@ class Chart
                     }
 
 
-                echo "current tick: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
-                echo " time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt / 1000));
+                //echo "current tick: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
+                //echo " time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt / 1000));
 
                 // NEW BAR IS ISSUED
                 if (floor(($nojsonMessage[2][1] / 1000)) >= $this->tt){
@@ -396,14 +403,11 @@ class Chart
 
                         echo "Bar with no trade";
                         echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit;
-                        //event(new \App\Events\BushBounce('Bar with no trade'));
-                        //die();
+
                     }
 
                     if ($tradeDirection != null && $this->firstPositionEver == false) // Means that at this bar trade has occurred
                     {
-
-                        //transition::orderBy('created_at', 'desc')->skip(1)->take(1)->get();
 
                         $nextToLastDirection =
                             DB::table(env("ASSET_TABLE"))

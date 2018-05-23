@@ -15,6 +15,7 @@
                 tradingAllowed: ''
             }
         },
+
         mounted() {
             console.log('Component Chart.vue mounted');
             axios.get('/historybarsload')
@@ -24,7 +25,8 @@
                     chart1 = Highcharts.stockChart('container', {
                         chart: {
                             animation: false,
-                            renderTo: 'container' // DIV where the chart will be rendered
+                            renderTo: 'container', // div where the chart will be rendered
+                            height: document.height, // Use window height to set height of the chart
                         },
                         yAxis: [{ // Primary yAxis
                             title: {
@@ -64,7 +66,7 @@
                                 enableMouseTracking: true,
                                 color: 'red',
                                 lineWidth: 1,
-                                data: '',
+                                data: response.data['priceChannelHighValues'],
                                 dataGrouping: {
                                     enabled: false
                                 }
@@ -76,7 +78,7 @@
                                 enableMouseTracking: true,
                                 color: 'red',
                                 lineWidth: 1,
-                                data: '',
+                                data: response.data['priceChannelLowValues'],
                                 dataGrouping: {
                                     enabled: false
                                 }
@@ -89,7 +91,7 @@
                                 type: 'scatter',
                                 color: 'purple',
                                 //lineWidth: 3,
-                                data: '',
+                                data: response.data['longTradeMarkers'],
                                 dataGrouping: {
                                     enabled: false
                                 },
@@ -109,7 +111,7 @@
                                 //yAxis: 1, // To which of two y axis this series should be linked
                                 color: 'purple',
                                 //lineWidth: 3,
-                                data: '',
+                                data: response.data['shortTradeMarkers'],
                                 dataGrouping: {
                                     enabled: false
                                 },
@@ -140,6 +142,34 @@
                             // Add bar to the chart
                             chart1.series[0].addPoint([e.update["tradeDate"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"]],true, false); // Works good
 
+
+
+                            axios.get('/pricechannelcalc') // Recalculate price channel
+                                .then(response => {
+                                    //console.log('ChartControl.vue. pricechannelcalc controller response: ');
+                                    //console.log(response);
+                                })
+                                .catch(error => {
+                                    console.log('ChartControl.vue. pricechannelcalc controller error: ');
+                                    console.log(error.response);
+                                })
+
+                            axios.get('/historybarsload') // Start load history data controller but get only price channel values out of it
+                                .then(response => {
+                                    console.log('ChartControl.vue. historybarsload controller response: ');
+                                    console.log(response.data['candles']);
+
+                                    chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
+                                    chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
+                                    chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                                })
+                                .catch(error => {
+                                    console.log('ChartControl.vue. /historybarsload controller error: ');
+                                    console.log(error.response);
+                                })
+
+
+
                             /*
                             // Update price channel
                             var request2 = $.get('loaddata');
@@ -152,6 +182,7 @@
                             */
                         }
 
+                        /*
                         // buy flag
                         if (e.update["flag"] == "buy") {
                             console.log('buy');
@@ -163,6 +194,7 @@
                             console.log('buy');
                             chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
                         }
+                        */
 
                     });
 
@@ -171,10 +203,15 @@
                     console.log('Chart.vue ChartInfo  controller error: ');
                     console.log(error.response);
                 })
+
         },
 
         created() {
-            Echo.channel('Bush-channel').listen('BushBounce', (e) => {
+
+
+
+
+            //Echo.channel('Bush-channel').listen('BushBounce', (e) => {
                 //console.log(e.update);
 
 
@@ -188,8 +225,12 @@
                 }, true);
                 */
 
-                });
+                //});
+
+
+
         },
+
 
     }
 </script>

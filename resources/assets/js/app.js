@@ -33,3 +33,33 @@ const app3 = new Vue({
     el: '#chart'
 });
 
+
+Object.defineProperties(Vue.prototype, { // Attached bus
+    $bus: {
+        get: function () {
+            return EventBus
+        }
+    },
+});
+
+const EventBus = new Vue({
+    created(){
+        this.$on('my-event', this.handleMyEvent)
+    },
+    methods:{
+        handleMyEvent ($event) {
+            console.log('app.js. My event caught in global event bus', $event)
+        }
+    }
+})
+
+
+
+//Event bus component (http://vuetips.com/global-event-bus)
+//Vue.component('event-bus', require('./components/EventBus.vue'));
+
+
+
+
+
+
