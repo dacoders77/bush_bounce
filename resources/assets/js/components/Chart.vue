@@ -1,6 +1,8 @@
 <template>
+    <!--
     <div class="container">
     </div>
+    -->
 </template>
 
 <script>
@@ -18,10 +20,12 @@
 
         mounted() {
             console.log('Component Chart.vue mounted');
+        },
+        created() {
+            var chart1; // globally available
             axios.get('/historybarsload')
                 .then(response => {
-                    //console.log('Chart.vue. Historybarsload controller response: ');
-                    var chart1; // globally available
+
                     chart1 = Highcharts.stockChart('container', {
                         chart: {
                             animation: false,
@@ -154,19 +158,8 @@
                                     console.log(error.response);
                                 })
 
-                            axios.get('/historybarsload') // Start load history data controller but get only price channel values out of it
-                                .then(response => {
-                                    console.log('ChartControl.vue. historybarsload controller response: ');
-                                    console.log(response.data['candles']);
+                            HistoryBarsLoad(); // Load history data from BR
 
-                                    chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
-                                    chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
-                                    chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
-                                })
-                                .catch(error => {
-                                    console.log('ChartControl.vue. /historybarsload controller error: ');
-                                    console.log(error.response);
-                                })
 
 
 
@@ -204,16 +197,39 @@
                     console.log(error.response);
                 })
 
-        },
-
-        created() {
 
 
+            //Event bus listener
+            this.$bus.$on('my-event', ($event) => {
+                console.log('Chart.vue. My event has been triggered', $event)
 
+                HistoryBarsLoad(); // Load history data from BR
+
+            });
+
+
+
+            // Load history bars and price channel from DB. This functions is called in each new bar or on update price channel
+            // Button from ChartControl.vue component
+            function HistoryBarsLoad() {
+                console.log('Chart.vue. HistoryBarsLoad() function worked');
+                axios.get('/historybarsload') // Load history data from BR
+                    .then(response => {
+                        console.log('Chart.vue. historybarsload controller response (from function): ');
+
+                        chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
+                        chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
+                        chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                    })
+                    .catch(error => {
+                        console.log('Chart.vue. /historybarsload controller error (from function): ');
+                        console.log(error.response);
+                    })
+
+            }
 
             //Echo.channel('Bush-channel').listen('BushBounce', (e) => {
                 //console.log(e.update);
-
 
                 /*
                 var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
@@ -224,12 +240,9 @@
                     'close': e.update["tradePrice"]
                 }, true);
                 */
-
                 //});
-
-
-
         },
+
 
 
     }

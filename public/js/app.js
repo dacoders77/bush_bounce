@@ -1103,18 +1103,6 @@ const app = new Vue({
 });
 */
 
-// Chart control component
-Vue.component('chart-control', __webpack_require__(41));
-var app2 = new Vue({
-    el: '#chart-control'
-});
-
-// Chart component
-Vue.component('chart', __webpack_require__(44));
-var app3 = new Vue({
-    el: '#chart'
-});
-
 Object.defineProperties(Vue.prototype, { // Attached bus
     $bus: {
         get: function get() {
@@ -1130,10 +1118,51 @@ var EventBus = new Vue({
 
     methods: {
         handleMyEvent: function handleMyEvent($event) {
-            console.log('app.js. My event caught in global event bus', $event);
+            //console.log('app.js. My event caught in global event bus', $event) // Works good
         }
     }
 });
+
+Vue.component('chart-control', __webpack_require__(41));
+Vue.component('chart', __webpack_require__(44));
+
+var app = new Vue({
+    el: '#vue-app' // This #.. covers the whole code
+});
+
+/*
+// Chart control component
+Vue.component('chart-control', require('./components/ChartControl.vue'));
+const app2 = new Vue({
+    el: '#chart-control'
+});
+
+// Chart component
+Vue.component('chart', require('./components/Chart.vue'));
+const app3 = new Vue({
+    el: '#chart'
+});
+
+
+Object.defineProperties(Vue.prototype, { // Attached bus
+    $bus: {
+        get: function () {
+            return EventBus
+        }
+    },
+});
+
+const EventBus = new Vue({
+    created(){
+        this.$on('my-event', this.handleMyEvent)
+    },
+    methods:{
+        handleMyEvent ($event) {
+            console.log('app.js. My event caught in global event bus', $event)
+        }
+    }
+})
+*/
 
 //Event bus component (http://vuetips.com/global-event-bus)
 //Vue.component('event-bus', require('./components/EventBus.vue'));
@@ -48272,6 +48301,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48282,9 +48312,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             requestedBars: '',
             commission: '',
             tradingAllowed: '',
-            basketAssets: null,
-            items: null,
-            priceChannelPeriod: null
+            priceChannelPeriod: null,
+            items: ''
         };
     },
 
@@ -48317,19 +48346,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log(error.response);
             });
         },
-        // Form fields changed
-        onControlValueChanged: function onControlValueChanged() {
+        // Price channel update button click
+        priceChannelUpdate: function priceChannelUpdate() {
             var _this = this;
 
-            //console.log('ChartControl. Form filed value changed event:');
-            //console.log(this.$data);
-            axios.post('/chartcontrolupdate', this.$data).then(function (response) {
+            axios.post('/chartcontrolupdate', this.$data) // Recalculate price channel
+            .then(function (response) {
                 console.log(response.data);
 
                 // Load price channel recalculated data
                 _this.$bus.$emit('my-event', {}); // WORKS GOOD!
             }).catch(function (error) {
-                console.log('ChartControl.vue. Form filed value changed event error:');
+                console.log('ChartControl.vue. Form field changed event error:');
                 console.log(error.response);
             });
         }
@@ -48338,39 +48366,40 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         var _this2 = this;
 
         console.log('Component ChartControl.vue mounted.');
-        axios.get('/chartinfo').then(function (response) {
-            //console.log('ChartControl.vue. ChartInfo controller response: ');
-            _this2.symbol = response.data['symbol'];
-            _this2.netProfit = response.data['netProfit'];
-            _this2.requestedBars = response.data['requestedBars'];
-            _this2.commission = response.data['commissionValue'];
-            _this2.tradingAllowed = response.data['tradingAllowed'];
-            _this2.priceChannelPeriod = response.data['priceChannelPeriod'];
-        }) // Output returned data by controller
-        .catch(function (error) {
-            console.log('ChartControl.vue. chartinfo controller error: ');
-            console.log(error.response);
+
+        // Console messages output to the page
+        var arr = new Array();
+        this.items = arr;
+
+        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
+            if (_this2.items.length < 20) {
+                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            } else {
+                _this2.items.shift();
+                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            }
         });
     },
     created: function created() {
         var _this3 = this;
 
-        //Event bus test
+        //Event bus tlistener
         this.$bus.$on('my-event', function ($event) {
-            console.log('My event has been triggered', $event);
+            //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
         });
 
-        // Console messages output
-        var arr = new Array();
-        this.items = arr;
-
-        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this3.items.length < 20) {
-                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
-            } else {
-                _this3.items.shift();
-                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
-            }
+        axios.get('/chartinfo').then(function (response) {
+            //console.log('ChartControl.vue. ChartInfo controller response: ');
+            _this3.symbol = response.data['symbol'];
+            _this3.netProfit = response.data['netProfit'];
+            _this3.requestedBars = response.data['requestedBars'];
+            _this3.commission = response.data['commissionValue'];
+            _this3.tradingAllowed = response.data['tradingAllowed'];
+            _this3.priceChannelPeriod = response.data['priceChannelPeriod'];
+        }) // Output returned data by controller
+        .catch(function (error) {
+            console.log('ChartControl.vue. chartinfo controller error: ');
+            console.log(error.response);
         });
     }
 });
@@ -48385,7 +48414,6 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    { staticClass: "container" },
     [
       _vm._v("\n    Symbol: " + _vm._s(_vm.symbol)),
       _c("br"),
@@ -48419,33 +48447,43 @@ var render = function() {
       _vm._v(" "),
       _c("br"),
       _vm._v("\n    Price channel period:\n    "),
-      _c("form", [
-        _c("input", {
-          directives: [
-            {
-              name: "model",
-              rawName: "v-model",
-              value: _vm.priceChannelPeriod,
-              expression: "priceChannelPeriod"
-            }
-          ],
-          staticClass: "form-control",
-          domProps: { value: _vm.priceChannelPeriod },
+      _c(
+        "form",
+        {
           on: {
-            input: [
-              function($event) {
+            submit: function($event) {
+              $event.preventDefault()
+              return _vm.priceChannelUpdate($event)
+            }
+          }
+        },
+        [
+          _c("input", {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.priceChannelPeriod,
+                expression: "priceChannelPeriod"
+              }
+            ],
+            staticClass: "form-control",
+            domProps: { value: _vm.priceChannelPeriod },
+            on: {
+              input: function($event) {
                 if ($event.target.composing) {
                   return
                 }
                 _vm.priceChannelPeriod = $event.target.value
-              },
-              _vm.onControlValueChanged
-            ]
-          }
-        }),
-        _vm._v(" "),
-        _c("br")
-      ]),
+              }
+            }
+          }),
+          _vm._v(" "),
+          _c("button", [_vm._v("Upd")]),
+          _vm._v(" "),
+          _c("br")
+        ]
+      ),
       _vm._v(" "),
       _vm._l(_vm.items, function(item) {
         return _c("span", [_vm._v("\n        " + _vm._s(item)), _c("br")])
@@ -48522,6 +48560,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48536,9 +48576,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
     mounted: function mounted() {
         console.log('Component Chart.vue mounted');
+    },
+    created: function created() {
+        var chart1; // globally available
         axios.get('/historybarsload').then(function (response) {
-            //console.log('Chart.vue. Historybarsload controller response: ');
-            var chart1; // globally available
+
             chart1 = Highcharts.stockChart('container', {
                 chart: {
                     animation: false,
@@ -48665,18 +48707,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         console.log(error.response);
                     });
 
-                    axios.get('/historybarsload') // Start load history data controller but get only price channel values out of it
-                    .then(function (response) {
-                        console.log('ChartControl.vue. historybarsload controller response: ');
-                        console.log(response.data['candles']);
+                    HistoryBarsLoad(); // Load history data from BR
 
-                        chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
-                        chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
-                        chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
-                    }).catch(function (error) {
-                        console.log('ChartControl.vue. /historybarsload controller error: ');
-                        console.log(error.response);
-                    });
 
                     /*
                     // Update price channel
@@ -48708,12 +48740,33 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             console.log('Chart.vue ChartInfo  controller error: ');
             console.log(error.response);
         });
-    },
-    created: function created() {
+
+        //Event bus listener
+        this.$bus.$on('my-event', function ($event) {
+            console.log('Chart.vue. My event has been triggered', $event);
+
+            HistoryBarsLoad(); // Load history data from BR
+        });
+
+        // Load history bars and price channel from DB. This functions is called in each new bar or on update price channel
+        // Button from ChartControl.vue component
+        function HistoryBarsLoad() {
+            console.log('Chart.vue. HistoryBarsLoad() function worked');
+            axios.get('/historybarsload') // Load history data from BR
+            .then(function (response) {
+                console.log('Chart.vue. historybarsload controller response (from function): ');
+
+                chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+            }).catch(function (error) {
+                console.log('Chart.vue. /historybarsload controller error (from function): ');
+                console.log(error.response);
+            });
+        }
 
         //Echo.channel('Bush-channel').listen('BushBounce', (e) => {
         //console.log(e.update);
-
 
         /*
         var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
@@ -48724,10 +48777,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             'close': e.update["tradePrice"]
         }, true);
         */
-
         //});
-
-
     }
 });
 
@@ -48739,7 +48789,7 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "container" })
+  return _c("div")
 }
 var staticRenderFns = []
 render._withStripped = true

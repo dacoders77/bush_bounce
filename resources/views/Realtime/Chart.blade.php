@@ -18,30 +18,25 @@
 <body>
 
 
-<!-- Unknown element -->
-<div id="chart">
-    <chart></chart>
-</div>
 
+<div style="border-color: red; border-width: 1px; border-style: solid; display: grid; grid-template-columns: 60% 40%" id="vue-app">
 
-
-
-<div style="border-color: red; border-width: 0px; border-style: solid; display: grid; grid-template-columns: 80% 20%">
-    <!-- Event bus vue component -->
-    <div style="display: none;"><event-bus></event-bus></div>
     <!-- High charts chart -->
-    <div style="border-color: green; border-width: 0px; border-style: solid;" id="container">
+    <div style="border-color: green; border-width: 1px; border-style: solid;" id="container">
+        <chart></chart>
     </div>
-    <div style="height: 600px;" id="chart-control">
 
-        <!-- Event bus test event rise -->
-        <div>
+
+    <div style="height: 600px; padding: 10px">
+
+        <!-- Event bus test event rise. Not a component! -->
+        <div style="display: none;">
             <button @click="$bus.$emit('my-event')">Click to trigger event</button>
         </div>
-
         <!-- Vue Chart-control component -->
         <chart-control></chart-control>
     </div>
+
 </div>
 
 <!-- Highstock chart

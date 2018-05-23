@@ -1,5 +1,5 @@
 <template>
-    <div class="container">
+    <div>
         Symbol: {{ symbol }}<br>
         Net profit: {{ netProfit }}<br>
         Requested bars: {{ requestedBars }}.<br>
@@ -10,8 +10,9 @@
         <button v-on:click="stopbroadcast" id="stop-broadcast">Stop broadcast</button>
         <br>
         Price channel period:
-        <form>
-            <input class="form-control" v-model="priceChannelPeriod" @input="onControlValueChanged" />
+        <form v-on:submit.prevent="priceChannelUpdate">
+            <input class="form-control" v-model="priceChannelPeriod"/>
+            <button>Upd</button>
             <br>
         </form>
 
@@ -33,9 +34,8 @@
                 requestedBars: '',
                 commission: '',
                 tradingAllowed: '',
-                basketAssets: null,
-                items: null,
-                priceChannelPeriod: null
+                priceChannelPeriod: null,
+                items: ''
             }
         },
         methods: {
@@ -73,11 +73,9 @@
                         console.log(error.response);
                     })
             },
-            // Form fields changed
-            onControlValueChanged() {
-                //console.log('ChartControl. Form filed value changed event:');
-                //console.log(this.$data);
-                axios.post('/chartcontrolupdate', this.$data)
+            // Price channel update button click
+            priceChannelUpdate() {
+                axios.post('/chartcontrolupdate', this.$data) // Recalculate price channel
                     .then(response => {
                         console.log(response.data);
 
@@ -86,13 +84,40 @@
 
                     })
                     .catch(error => {
-                        console.log('ChartControl.vue. Form filed value changed event error:');
+                        console.log('ChartControl.vue. Form field changed event error:');
                         console.log(error.response);})
 
             },
         },
         mounted() {
             console.log('Component ChartControl.vue mounted.');
+
+            // Console messages output to the page
+            var arr = new Array();
+            this.items = arr;
+
+            Echo.channel('Bush-channel').listen('BushBounce', (e) => {
+                if (this.items.length < 20)
+                {
+                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                }
+                else
+                {
+                    this.items.shift();
+                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                }
+            });
+
+        },
+        created() {
+
+            //Event bus tlistener
+            this.$bus.$on('my-event', ($event) => {
+                //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
+            });
+
+
+
             axios.get('/chartinfo')
                 .then(response => {
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
@@ -109,31 +134,6 @@
                     console.log(error.response);
                 });
 
-
-
-        },
-        created() {
-
-            //Event bus test
-            this.$bus.$on('my-event', ($event) => {
-                console.log('My event has been triggered', $event)
-            });
-
-            // Console messages output
-            var arr = new Array();
-            this.items = arr;
-
-            Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-                if (this.items.length < 20)
-                {
-                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
-                }
-                else
-                {
-                    this.items.shift();
-                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
-                }
-            });
         },
     }
 </script>

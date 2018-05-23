@@ -31,7 +31,7 @@ class PriceChannel extends \App\Http\Controllers\Controller
         /** @var int $priceChannelLowValue Base value for low value search. Really big value is needed at the beginning.
         Then we compare current value with 999999. It is, $priceChannelLowValue = current value*/
         $priceChannelLowValue = 999999;
-        echo "PriceChannel.php Indicator recalculation started\n";
+        //echo "PriceChannel.php Indicator recalculation started\n";
 
         /**
          * desc - from big values to small. asc - from small to big

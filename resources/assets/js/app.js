@@ -21,6 +21,40 @@ const app = new Vue({
 });
 */
 
+
+
+Object.defineProperties(Vue.prototype, { // Attached bus
+    $bus: {
+        get: function () {
+            return EventBus
+        }
+    },
+});
+
+const EventBus = new Vue({
+    created(){
+        this.$on('my-event', this.handleMyEvent)
+    },
+    methods:{
+        handleMyEvent ($event) {
+            //console.log('app.js. My event caught in global event bus', $event) // Works good
+        }
+    }
+})
+
+
+Vue.component('chart-control', require('./components/ChartControl.vue'));
+Vue.component('chart', require('./components/Chart.vue'));
+
+const app = new Vue({
+    el: '#vue-app', // This #.. covers the whole code
+});
+
+
+
+
+
+/*
 // Chart control component
 Vue.component('chart-control', require('./components/ChartControl.vue'));
 const app2 = new Vue({
@@ -52,7 +86,7 @@ const EventBus = new Vue({
         }
     }
 })
-
+*/
 
 
 //Event bus component (http://vuetips.com/global-event-bus)
