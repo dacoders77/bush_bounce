@@ -8,32 +8,6 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
-/**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
- */
-
-/*
-Vue.component('example-component', require('./components/ExampleComponent.vue'));
-const app = new Vue({
-    el: '#app'
-});
-*/
-
-// Chart control component
-Vue.component('chart-control', require('./components/ChartControl.vue'));
-const app2 = new Vue({
-    el: '#chart-control'
-});
-
-// Chart component
-Vue.component('chart', require('./components/Chart.vue'));
-const app3 = new Vue({
-    el: '#chart'
-});
-
-
 Object.defineProperties(Vue.prototype, { // Attached bus
     $bus: {
         get: function () {
@@ -53,13 +27,20 @@ const EventBus = new Vue({
     }
 })
 
+/**
+ * Next, we will create a fresh Vue application instance and attach it to
+ * the page. Then, you may begin adding components to this application
+ * or customize the JavaScript scaffolding to fit your unique needs.
+ */
 
+/*
+Vue.component('example-component', require('./components/ExampleComponent.vue'));
+const app = new Vue({
+    el: '#app'
+});
+*/
 
-//Event bus component (http://vuetips.com/global-event-bus)
-//Vue.component('event-bus', require('./components/EventBus.vue'));
-
-
-
-
-
-
+// Chart control component
+Vue.component('chart-control', require('./components/ChartControl.vue'));
+// Chart component
+Vue.component('chart', require('./components/Chart.vue'));
