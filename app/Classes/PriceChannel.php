@@ -26,7 +26,7 @@ class PriceChannel
     {
         /** @var int $priceChannelPeriod */
         $priceChannelPeriod = DB::table('settings')
-            ->where('id', env("SETTING_ID"))
+            ->where('id', 1)
             ->value('price_channel_period');
         /**
          * @var int elementIndex Loop index. If the price channel period is 5 the loop will go from 0 to 4.
@@ -43,7 +43,7 @@ class PriceChannel
          * desc - from big values to small. asc - from small to big
          * in this case: desc. [0] element is the last record in DB. and it's id - quantity of records
          * @var json object $allDbRows Contains all DB data in json format*/
-        $allDbRows = DB::table(env("ASSET_TABLE"))
+        $allDbRows = DB::table('asset_1')
             ->orderBy('time_stamp', 'desc')
             ->get(); // desc, asc - order. Read the whole table from BD to $allDbRows
 
@@ -57,7 +57,7 @@ class PriceChannel
             /** We must stop before $requestBars reaches the end of the array */
             if ($elementIndex <=
                 DB::table('settings')
-                    ->where('id', env("SETTING_ID"))
+                    ->where('id', 1)
                     ->value('request_bars') - $priceChannelPeriod - 1)
             {
                 for ($i = $elementIndex ; $i < $elementIndex + $priceChannelPeriod; $i++)
@@ -70,7 +70,7 @@ class PriceChannel
                 }
 
                 /** Update high and low values */
-                DB::table(env("ASSET_TABLE"))
+                DB::table(env('')
                     ->where('time_stamp', $allDbRows[$elementIndex]->time_stamp)
                     ->update([
                         'price_channel_high_value' => $priceChannelHighValue,

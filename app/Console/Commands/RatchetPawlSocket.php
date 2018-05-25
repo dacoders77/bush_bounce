@@ -63,12 +63,12 @@ class RatchetPawlSocket extends Command
             ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $loop) {
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $loop) {
                     $chart->index($socketMessage, $this); // Call the method when the event is received
-
                     /** Stop the broadcast */
                     if (DB::table('settings_realtime')
                             ->where('id', 1)
                             ->value('broadcast_stop') == 1)
                     {
+
                         DB::table("settings_realtime")
                             ->where('id', 1) // Id of the last record. Desc - descent order
                             ->update([
@@ -76,6 +76,15 @@ class RatchetPawlSocket extends Command
                             ]);
                         $this->alert('The broadcast is being stopped!');
                         $loop->stop();
+
+                        /**
+                         * 1. connection starts with assets list request from DB. ALWAYS
+                         * 2. stop connection
+                         * 3. start connection
+                         *
+                         *  scenario 2
+                         * 1.  connection restart
+                         */
                     }
 
 
@@ -107,7 +116,7 @@ class RatchetPawlSocket extends Command
                 $conn->send($z);
                 //$conn->send($x);
 
-                /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed */
+                /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed again */
             }, function(\Exception $e) use ($loop) {
                 echo "RatchetPawlSocket.php: Could not connect: \n {$e->getMessage()}\n";
                 $loop->stop();

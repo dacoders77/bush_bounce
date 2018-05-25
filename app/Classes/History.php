@@ -24,6 +24,7 @@ class History
      */
 
     static public function load(){
+
         /**
          * If initial start is true
          * True is set by default or by Initial start button click at the start page
@@ -41,7 +42,7 @@ class History
                     ->value('request_bars');
             */
 
-            DB::table(env("ASSET_TABLE")) // Drop all records in the table
+            DB::table('asset_1') // Drop all records in the table
                 ->truncate();
 
             $timeframe =
@@ -86,7 +87,7 @@ class History
             {
                 /** Add candles to DB */
                 foreach (array_reverse($json) as $z) { // The first element in array is the youngest - first from the left on the chart. Go through the array backwards. This is the order how points will be read from DB and outputed to the chart
-                    DB::table(env("ASSET_TABLE"))->insert(array( // Record to DB
+                    DB::table('asset_1')->insert(array( // Record to DB
                         'date' => gmdate("Y-m-d G:i:s", ($z[0] / 1000)), // Date in regular format. Converted from unix timestamp
                         'time_stamp' => $z[0],
                         'open' => $z[1],
@@ -107,7 +108,7 @@ class History
 
             /** Ste Initial start flag to false */
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 1)
                 ->update([
                     'initial_start' => 0,
                 ]);

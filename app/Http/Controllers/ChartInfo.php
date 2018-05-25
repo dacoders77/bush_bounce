@@ -19,7 +19,7 @@ class ChartInfo extends Controller
         $response = array();
         $response = ChartInfo::arrayPush($response, 'symbol',
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 1)
                 ->value('symbol'));
 
         /** @todo Add not null check. after table is truncated - getting the error. There is not net profit yet*/
@@ -31,27 +31,32 @@ class ChartInfo extends Controller
                 ->value('accumulated_profit'));
         */
 
+        /*
         $response = ChartInfo::arrayPush($response, 'requestedBars',
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 1)
                 ->value('request_bars'));
 
         $response = ChartInfo::arrayPush($response, 'commissionValue',
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 1)
                 ->value('commission_value'));
 
         $response = ChartInfo::arrayPush($response, 'tradingAllowed',
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 1)
                 ->value('allow_trading'));
 
         $response = ChartInfo::arrayPush($response, 'priceChannelPeriod',
-            DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
-                ->value('price_channel_period'));
 
-        return json_encode($response);
+        */
+        return
+            (array)DB::table('settings_realtime')
+                ->where('id', 1)
+                //->value('price_channel_period'));
+                ->first();
+
+
     }
 
     function arrayPush($array, $key, $value){

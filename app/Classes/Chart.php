@@ -51,14 +51,14 @@ class Chart
     {
         $this->timeFrame =
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 'asset_1')
                 ->value('time_frame');
 
         // Get traded symbol from DB. String must look like: tBTCUSD
         // MAKE IT UPPER CASE!
         $this->symbol = "t" .
             DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 'asset_1')
                 ->value('symbol');
     }
 
@@ -77,7 +77,7 @@ class Chart
     {
         /** First time ever application run check. If so - load historical data first */
         if ((DB::table('settings_realtime')
-                ->where('id', env("SETTING_ID"))
+                ->where('id', 1)
                 ->value('initial_start')))
         {
             echo "Chart.php Application first ever run. Load history data. History::index()\n";
@@ -164,8 +164,8 @@ class Chart
 
 
                     try {
-                    DB::table(env("ASSET_TABLE"))
-                        ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
+                    DB::table('asset_1')
+                        ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
                         ->update([
                             'close' => $nojsonMessage[2][3],
                             'high' => $this->barHigh,
@@ -186,7 +186,7 @@ class Chart
 
                     // Experiment
                     // Add new bar to the DB
-                    DB::table(env("ASSET_TABLE"))->insert(array( // Record to DB
+                    DB::table('asset_1')->insert(array( // Record to DB
                         'date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)), // Date in regular format. Converted from unix timestamp
                         'time_stamp' => $nojsonMessage[2][1],
                         'open' => $nojsonMessage[2][3],
@@ -198,7 +198,7 @@ class Chart
 
                     // Get the price of the last trade
                     $lastTradePrice = // Last trade price
-                        DB::table(env("ASSET_TABLE"))
+                        DB::table('asset_1')
                             ->whereNotNull('trade_price') // not null trade price value
                             ->orderBy('id', 'desc') // form biggest to smallest values
                             ->value('trade_price'); // get trade price value
@@ -208,8 +208,8 @@ class Chart
                     $tradeProfit = ($this->position != null ? (($this->position == "long" ? ($nojsonMessage[2][3] - $lastTradePrice) * $this->volume : ($lastTradePrice - $nojsonMessage[2][3]) * $this->volume)) : false); // Calculate trade profit only if the position is open. Because we reach this code all the time when high or low price channel boundary is exceeded
 
                     if ($this->position != null){ // Do not calculate progit if there is not open position. If do not do this check - zeros in table occurs
-                        DB::table(env("ASSET_TABLE"))
-                            ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id)
+                        DB::table('asset_1')
+                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id)
                             ->update([
                                 // Calculate trade profit only if the position is open. Because we reach this code all the time when high or low price channel boundary is exceeded
                                 'trade_profit' => $tradeProfit,
@@ -225,28 +225,28 @@ class Chart
 
                     // Trades watch
                     // Quantity of all records in DB
-                    $x = (DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->get())[0]->id;
+                    $x = (DB::table('asset_1')->orderBy('time_stamp', 'desc')->get())[0]->id;
 
                     // Get price
                     // Channel value of previous (penultimate bar)
                     $price_channel_high_value =
-                        DB::table(env("ASSET_TABLE"))
+                        DB::table('asset_1')
                             ->where('id', ($x - 1)) // Penultimate record. One before last
                             ->value('price_channel_high_value');
 
                     $price_channel_low_value =
-                        DB::table(env("ASSET_TABLE"))
+                        DB::table('asset_1')
                             ->where('id', ($x - 1)) // Penultimate record. One before last
                             ->value('price_channel_low_value');
 
                     $allow_trading =
                         DB::table('settings_realtime')
-                            ->where('id', env("SETTING_ID"))
+                            ->where('id', 'asset_1')
                             ->value('allow_trading');
 
                     $commisionValue =
                         DB::table('settings_tester')
-                            ->where('id', env("SETTING_ID"))
+                            ->where('id', 'asset_1')
                             ->value('commission_value');
 
 
@@ -290,7 +290,7 @@ class Chart
 
 
                         // Add(update) trade info to the last(current) bar(record)
-                        DB::table(env("ASSET_TABLE"))
+                        DB::table('asset_1')
                             ->where('id', $x)
                             ->update([
                                 'trade_date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)),
@@ -298,7 +298,7 @@ class Chart
                                 'trade_direction' => "buy",
                                 'trade_volume' => $this->volume,
                                 'trade_commission' => ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
-                                'accumulated_commission' => DB::table(env("ASSET_TABLE"))->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
+                                'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
                             ]);
 
                         echo "nojsonMessage[2][3]: " . $nojsonMessage[2][3] . "\n";
@@ -306,7 +306,7 @@ class Chart
                         echo "this volume: " . $this->volume . "\n";
                         echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
                         echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
-                        echo "sum: " . DB::table(env("ASSET_TABLE"))->sum('trade_commission') . "\n";
+                        echo "sum: " . DB::table('asset_1')->sum('trade_commission') . "\n";
 
                         $messageArray['flag'] = "buy"; // Send flag to VueJS app.js. On this event VueJS is informed that the trade occurred
 
@@ -354,7 +354,7 @@ class Chart
 
                         // Add(update) trade info to the last(current) bar(record)
                         // EXCLUDE THIS CODE TO SEPARATE CLASS!!!!!!!!!!!!!!!!!!!
-                        DB::table(env("ASSET_TABLE"))
+                        DB::table('asset_1')
                             ->where('id', $x)
                             ->update([
                                 'trade_date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)),
@@ -362,7 +362,7 @@ class Chart
                                 'trade_direction' => "sell",
                                 'trade_volume' => $this->volume,
                                 'trade_commission' => ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
-                                'accumulated_commission' => DB::table(env("ASSET_TABLE"))->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
+                                'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
                             ]);
 
                         echo "nojsonMessage[2][3]: " . $nojsonMessage[2][3] . "\n";
@@ -370,7 +370,7 @@ class Chart
                         echo "this volume: " . $this->volume . "\n";
                         echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
                         echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
-                        echo "sum: " . DB::table(env("ASSET_TABLE"))->sum('trade_commission') . "\n";
+                        echo "sum: " . DB::table('asset_1')->sum('trade_commission') . "\n";
 
                         $messageArray['flag'] = "sell"; // Send flag to VueJS app.js
 
@@ -383,19 +383,19 @@ class Chart
                     // Get the if of last row where trade direction is not null
 
                     $tradeDirection =
-                        DB::table(env("ASSET_TABLE"))
-                            ->where('id', (DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id))
+                        DB::table('asset_1')
+                            ->where('id', (DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id))
                             ->value('trade_direction');
 
                     if ($tradeDirection == null && $this->position != null){
 
                         $lastAccumProfitValue =
-                            DB::table(env("ASSET_TABLE"))
+                            DB::table('asset_1')
                                 ->whereNotNull('trade_direction')
                                 ->orderBy('id', 'desc')
                                 ->value('accumulated_profit');
-                        DB::table(env("ASSET_TABLE"))
-                            ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
+                        DB::table('asset_1')
+                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
                             ->update([
                                 'accumulated_profit' => $lastAccumProfitValue + $tradeProfit
                                 //'accumulated_profit' => 789789
@@ -410,14 +410,14 @@ class Chart
                     {
 
                         $nextToLastDirection =
-                            DB::table(env("ASSET_TABLE"))
+                            DB::table('asset_1')
                                 ->whereNotNull('trade_direction')
                                 ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
                                 ->value('accumulated_profit');
 
 
-                        DB::table(env("ASSET_TABLE"))
-                            ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
+                        DB::table('asset_1')
+                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
                             ->update([
                                 'accumulated_profit' => $nextToLastDirection + $tradeProfit
                             ]);
@@ -429,8 +429,8 @@ class Chart
                     /** 1. Skip the first trade. Record 0 to accumulated_profit cell. This code fires once only at the first trade */
                     if ($tradeDirection != null && $this->firstPositionEver == true){
 
-                        DB::table(env("ASSET_TABLE"))
-                            ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
+                        DB::table('asset_1')
+                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
                             ->update([
                                 'accumulated_profit' => 0
                             ]);
@@ -450,17 +450,17 @@ class Chart
                     if ($this->position != null){
 
                         $accumulatedProfit =
-                            DB::table(env("ASSET_TABLE"))
-                                ->where('id', (DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id))
+                            DB::table('asset_1')
+                                ->where('id', (DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id))
                                 ->value('accumulated_profit');
 
                         $accumulatedCommission =
-                            DB::table(env("ASSET_TABLE"))
-                                ->where('id', (DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id))
+                            DB::table('asset_1')
+                                ->where('id', (DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id))
                                 ->value('accumulated_commission');
 
-                        DB::table(env("ASSET_TABLE"))
-                            ->where('id', DB::table(env("ASSET_TABLE"))->orderBy('time_stamp', 'desc')->first()->id) // Quantity of all records in DB
+                        DB::table('asset_1')
+                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // Quantity of all records in DB
                             ->update([
                                 'net_profit' => $accumulatedProfit - $accumulatedCommission
                             ]);

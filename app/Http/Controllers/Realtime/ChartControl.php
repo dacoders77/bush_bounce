@@ -10,12 +10,11 @@ use Illuminate\Http;
 
 /**
  * Class ChartControl
- * Updates ChartControl.vue form filed values
+ * Updates price channel value and DB and then recalculates price channel via PriceChannel::calculate() method call
  * @package App\Http\Controllers\Realtime
  */
 class ChartControl extends \App\Http\Controllers\Controller
 {
-
     public function update(Request $request){
 
         DB::table('settings_realtime')
@@ -27,7 +26,7 @@ class ChartControl extends \App\Http\Controllers\Controller
 
         // Calculate price channel
         //\App\Http\Controllers\Realtime\PriceChannel::calculate();
-        PriceChannel::calculate();
+        //PriceChannel::calculate();
 
         //return json_encode($seriesData);
     }

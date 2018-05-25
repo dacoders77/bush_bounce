@@ -1,25 +1,34 @@
 <template>
     <div>
-        Symbol: {{ symbol }}<br>
-        Net profit: {{ netProfit }}<br>
-        Requested bars: {{ requestedBars }}.<br>
-        Commission: {{ commission }}.<br>
-        Trading allowed: {{ tradingAllowed }}.<br>
-        <button v-on:click="initialstart" id="initial-start">Initial start</button><br>
-        <button v-on:click="startbroadcast" id="start-broadcast">Start broadcast</button>
-        <button v-on:click="stopbroadcast" id="stop-broadcast">Stop broadcast</button>
-        <br>
-        Price channel period:
-        <form v-on:submit.prevent="priceChannelUpdate">
-            <input class="form-control" v-model="priceChannelPeriod"/>
-            <button>Upd</button>
+        <div style="border: thin solid green; padding: 5px">
+            Symbol: {{ symbol }}<br>
+            Net profit: {{ netProfit }}<br>
+            Requested bars: {{ requestedBars }}.<br>
+            Commission: {{ commission }}.<br>
+            Trading allowed: {{ tradingAllowed }}.<br>
+        </div>
+        <div style="border: thin solid darkgray; padding: 5px; margin-top: 5px">
+            Initial start:
+            <button v-on:click="initialstart" id="initial-start">Run</button>
             <br>
-        </form>
-
-        <!-- Output records to the page -->
-        <span v-for="item in items">
+            Broadcast:
+            <button v-on:click="startbroadcast" id="start-broadcast">Start</button>
+            <button v-on:click="stopbroadcast" id="stop-broadcast">Stop</button>
+            <br>
+            <form v-on:submit.prevent="priceChannelUpdate">
+                Price channel / Stop channel period:<br>
+                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" @input="priceChannelUpdate"/>
+                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" @input="priceChannelUpdate"/>
+                <button>Upd</button>
+                <br>
+            </form>
+        </div>
+        <div style="border: thin solid salmon; padding: 5px; margin-top: 5px">
+            <!-- Output records to the page -->
+            <span v-for="item in items">
             {{ item }}<br>
         </span>
+        </div>
 
     </div>
 </template>
@@ -74,18 +83,29 @@
                     })
             },
             // Price channel update button click
+            // First price channel recalculation started then when the response is received
+            // the Event BUS event is generated
             priceChannelUpdate() {
-                axios.post('/chartcontrolupdate', this.$data) // Recalculate price channel
+                // Update price channel in DB
+                // In this controller price channel recalculation is called automatically
+                axios.post('/chartcontrolupdate', this.$data)
                     .then(response => {
-                        console.log(response.data);
-
-                        // Load price channel recalculated data
-                        this.$bus.$emit('my-event', {}) // WORKS GOOD!
-
                     })
                     .catch(error => {
                         console.log('ChartControl.vue. Form field changed event error:');
-                        console.log(error.response);})
+                        console.log(error.response);
+                    })
+
+                axios.get('/pricechannelcalc' ) // + /this.priceChannelPeriod
+                    .then(response => {
+                        console.log('ChartControl.vue. pricechannelcalc response');
+                        this.$bus.$emit('my-event', {}) // When price channel is recalculated, raise the event
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. pricechannelcalc controller error:');
+                        console.log(error.response);
+                    })
+
 
             },
         },
@@ -93,40 +113,36 @@
             console.log('Component ChartControl.vue mounted.');
 
             // Console messages output to the page
+            // Messages are streamed from php via websocket
             var arr = new Array();
             this.items = arr;
-
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-                if (this.items.length < 20)
-                {
+                if (this.items.length < 20) {
                     this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
                 }
-                else
-                {
+                else {
                     this.items.shift();
                     this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
                 }
             });
 
-        },
-        created() {
 
-            //Event bus tlistener
+
+            // Event bus listener
             this.$bus.$on('my-event', ($event) => {
                 //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
             });
 
-
-
+            // Chart info values from DB load
             axios.get('/chartinfo')
                 .then(response => {
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
-                    this.netProfit = response.data['netProfit'];
-                    this.requestedBars = response.data['requestedBars'];
-                    this.commission = response.data['commissionValue'];
-                    this.tradingAllowed = response.data['tradingAllowed'];
-                    this.priceChannelPeriod = response.data['priceChannelPeriod'];
+                    this.netProfit = 'not ready yet';
+                    this.requestedBars = response.data['request_bars'];
+                    this.commission = response.data['commission_value'];
+                    this.tradingAllowed = response.data['allow_trading'];
+                    this.priceChannelPeriod = response.data['price_channel_period'];
 
                 }) // Output returned data by controller
                 .catch(error => {

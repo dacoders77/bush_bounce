@@ -29,7 +29,7 @@ Route::get('/view', 'RecordController@showALL');
 Route::get('/new', 'RecordController@showNew');
 Route::get('/edit', 'RecordController@showEdit');
 
-
+/*
 // Or when accessing /new the view can be called directly without a controller call
 Route::get('/new', function() {
     return view('new');
@@ -46,6 +46,7 @@ Route::get('contact/{category}', function($category) {
 Route::get('contact/verified/{category}', function($category) {
     return 'Hello from zz '. $category .' CATEGORY';
 });
+*/
 
 
 // Chart2 @include test

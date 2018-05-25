@@ -9,18 +9,13 @@ use Illuminate\Http;
 
 class HistoryBars extends \App\Http\Controllers\Controller
 {
-
     public function load(){
-
-        echo "";
-        echo ""; // Delete
 
         $longTradeMarkers[] = "";
         $shortTradeMarkers[] = "";
 
         $allDbValues = DB::table("asset_1")->get(); // Read the whole table from BD to $allDbValues
-
-        foreach ($allDbValues as $rowValue) { // Go through the records read from DB
+        foreach ($allDbValues as $rowValue) { // Go through all DB reacords
 
             $candles[] = [
                 $rowValue->time_stamp,

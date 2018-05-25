@@ -199,10 +199,10 @@
 
 
 
-            //Event bus listener
+            // Event bus listener
+            // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
                 console.log('Chart.vue. My event has been triggered', $event)
-
                 HistoryBarsLoad(); // Load history data from BR
 
             });
@@ -217,7 +217,7 @@
                     .then(response => {
                         console.log('Chart.vue. historybarsload controller response (from function): ');
 
-                        chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
+                        //chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
                         chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
                         chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
                     })

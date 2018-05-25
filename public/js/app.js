@@ -1077,9 +1077,8 @@ module.exports = __webpack_require__(47);
 
 /***/ }),
 /* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
@@ -48302,6 +48301,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48347,17 +48355,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
         },
         // Price channel update button click
+        // First price channel recalculation started then when the response is received
+        // the Event BUS event is generated
         priceChannelUpdate: function priceChannelUpdate() {
             var _this = this;
 
-            axios.post('/chartcontrolupdate', this.$data) // Recalculate price channel
-            .then(function (response) {
-                console.log(response.data);
-
-                // Load price channel recalculated data
-                _this.$bus.$emit('my-event', {}); // WORKS GOOD!
-            }).catch(function (error) {
+            // Update price channel in DB
+            // In this controller price channel recalculation is called automatically
+            axios.post('/chartcontrolupdate', this.$data).then(function (response) {}).catch(function (error) {
                 console.log('ChartControl.vue. Form field changed event error:');
+                console.log(error.response);
+            });
+
+            axios.get('/pricechannelcalc') // + /this.priceChannelPeriod
+            .then(function (response) {
+                console.log('ChartControl.vue. pricechannelcalc response');
+                _this.$bus.$emit('my-event', {}); // When price channel is recalculated, raise the event
+            }).catch(function (error) {
+                console.log('ChartControl.vue. pricechannelcalc controller error:');
                 console.log(error.response);
             });
         }
@@ -48368,9 +48383,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         console.log('Component ChartControl.vue mounted.');
 
         // Console messages output to the page
+        // Messages are streamed from php via websocket
         var arr = new Array();
         this.items = arr;
-
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
             if (_this2.items.length < 20) {
                 _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
@@ -48379,23 +48394,21 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
-    },
-    created: function created() {
-        var _this3 = this;
 
-        //Event bus tlistener
+        // Event bus listener
         this.$bus.$on('my-event', function ($event) {
             //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
         });
 
+        // Chart info values from DB load
         axios.get('/chartinfo').then(function (response) {
             //console.log('ChartControl.vue. ChartInfo controller response: ');
-            _this3.symbol = response.data['symbol'];
-            _this3.netProfit = response.data['netProfit'];
-            _this3.requestedBars = response.data['requestedBars'];
-            _this3.commission = response.data['commissionValue'];
-            _this3.tradingAllowed = response.data['tradingAllowed'];
-            _this3.priceChannelPeriod = response.data['priceChannelPeriod'];
+            _this2.symbol = response.data['symbol'];
+            _this2.netProfit = 'not ready yet';
+            _this2.requestedBars = response.data['request_bars'];
+            _this2.commission = response.data['commission_value'];
+            _this2.tradingAllowed = response.data['allow_trading'];
+            _this2.priceChannelPeriod = response.data['price_channel_period'];
         }) // Output returned data by controller
         .catch(function (error) {
             console.log('ChartControl.vue. chartinfo controller error: ');
@@ -48412,85 +48425,142 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c(
-    "div",
-    [
-      _vm._v("\n    Symbol: " + _vm._s(_vm.symbol)),
+  return _c("div", [
+    _c("div", { staticStyle: { border: "thin solid green", padding: "5px" } }, [
+      _vm._v("\n        Symbol: " + _vm._s(_vm.symbol)),
       _c("br"),
-      _vm._v("\n    Net profit: " + _vm._s(_vm.netProfit)),
+      _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
       _c("br"),
-      _vm._v("\n    Requested bars: " + _vm._s(_vm.requestedBars) + "."),
+      _vm._v("\n        Requested bars: " + _vm._s(_vm.requestedBars) + "."),
       _c("br"),
-      _vm._v("\n    Commission: " + _vm._s(_vm.commission) + "."),
+      _vm._v("\n        Commission: " + _vm._s(_vm.commission) + "."),
       _c("br"),
-      _vm._v("\n    Trading allowed: " + _vm._s(_vm.tradingAllowed) + "."),
-      _c("br"),
-      _vm._v(" "),
-      _c(
-        "button",
-        { attrs: { id: "initial-start" }, on: { click: _vm.initialstart } },
-        [_vm._v("Initial start")]
-      ),
-      _c("br"),
-      _vm._v(" "),
-      _c(
-        "button",
-        { attrs: { id: "start-broadcast" }, on: { click: _vm.startbroadcast } },
-        [_vm._v("Start broadcast")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        { attrs: { id: "stop-broadcast" }, on: { click: _vm.stopbroadcast } },
-        [_vm._v("Stop broadcast")]
-      ),
-      _vm._v(" "),
-      _c("br"),
-      _vm._v("\n    Price channel period:\n    "),
-      _c(
-        "form",
-        {
-          on: {
-            submit: function($event) {
-              $event.preventDefault()
-              return _vm.priceChannelUpdate($event)
-            }
-          }
-        },
-        [
-          _c("input", {
-            directives: [
-              {
-                name: "model",
-                rawName: "v-model",
-                value: _vm.priceChannelPeriod,
-                expression: "priceChannelPeriod"
-              }
-            ],
-            staticClass: "form-control",
-            domProps: { value: _vm.priceChannelPeriod },
+      _vm._v("\n        Trading allowed: " + _vm._s(_vm.tradingAllowed) + "."),
+      _c("br")
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticStyle: {
+          border: "thin solid darkgray",
+          padding: "5px",
+          "margin-top": "5px"
+        }
+      },
+      [
+        _vm._v("\n        Initial start:\n        "),
+        _c(
+          "button",
+          { attrs: { id: "initial-start" }, on: { click: _vm.initialstart } },
+          [_vm._v("Run")]
+        ),
+        _vm._v(" "),
+        _c("br"),
+        _vm._v("\n        Broadcast:\n        "),
+        _c(
+          "button",
+          {
+            attrs: { id: "start-broadcast" },
+            on: { click: _vm.startbroadcast }
+          },
+          [_vm._v("Start")]
+        ),
+        _vm._v(" "),
+        _c(
+          "button",
+          { attrs: { id: "stop-broadcast" }, on: { click: _vm.stopbroadcast } },
+          [_vm._v("Stop")]
+        ),
+        _vm._v(" "),
+        _c("br"),
+        _vm._v(" "),
+        _c(
+          "form",
+          {
             on: {
-              input: function($event) {
-                if ($event.target.composing) {
-                  return
-                }
-                _vm.priceChannelPeriod = $event.target.value
+              submit: function($event) {
+                $event.preventDefault()
+                return _vm.priceChannelUpdate($event)
               }
             }
-          }),
-          _vm._v(" "),
-          _c("button", [_vm._v("Upd")]),
-          _vm._v(" "),
-          _c("br")
-        ]
-      ),
-      _vm._v(" "),
+          },
+          [
+            _vm._v("\n            Price channel / Stop channel period:"),
+            _c("br"),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.priceChannelPeriod,
+                  expression: "priceChannelPeriod"
+                }
+              ],
+              staticClass: "form-control",
+              attrs: { type: "number", min: "1", max: "100" },
+              domProps: { value: _vm.priceChannelPeriod },
+              on: {
+                input: [
+                  function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.priceChannelPeriod = $event.target.value
+                  },
+                  _vm.priceChannelUpdate
+                ]
+              }
+            }),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.priceChannelPeriod,
+                  expression: "priceChannelPeriod"
+                }
+              ],
+              staticClass: "form-control",
+              attrs: { type: "number", min: "1", max: "100" },
+              domProps: { value: _vm.priceChannelPeriod },
+              on: {
+                input: [
+                  function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.priceChannelPeriod = $event.target.value
+                  },
+                  _vm.priceChannelUpdate
+                ]
+              }
+            }),
+            _vm._v(" "),
+            _c("button", [_vm._v("Upd")]),
+            _vm._v(" "),
+            _c("br")
+          ]
+        )
+      ]
+    ),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticStyle: {
+          border: "thin solid salmon",
+          padding: "5px",
+          "margin-top": "5px"
+        }
+      },
       _vm._l(_vm.items, function(item) {
         return _c("span", [_vm._v("\n        " + _vm._s(item)), _c("br")])
       })
-    ],
-    2
-  )
+    )
+  ])
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -48741,10 +48811,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             console.log(error.response);
         });
 
-        //Event bus listener
+        // Event bus listener
+        // This event is received from ChartControl.vue component when price channel update button is clicked
         this.$bus.$on('my-event', function ($event) {
             console.log('Chart.vue. My event has been triggered', $event);
-
             HistoryBarsLoad(); // Load history data from BR
         });
 
@@ -48756,7 +48826,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             .then(function (response) {
                 console.log('Chart.vue. historybarsload controller response (from function): ');
 
-                chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                //chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
                 chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
                 chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
             }).catch(function (error) {
