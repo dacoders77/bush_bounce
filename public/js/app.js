@@ -48310,6 +48310,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48321,7 +48322,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             commission: '',
             tradingAllowed: '',
             priceChannelPeriod: null,
-            items: ''
+            items: '',
+            broadcastAllowed: ''
         };
     },
 
@@ -48344,6 +48346,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log('ChartControl.vue startbroadcast controller error: ');
                 console.log(error.response);
             });
+            this.broadcastAllowed = 'on';
         },
         // Stop broadcast button handler
         stopbroadcast: function stopbroadcast(event) {
@@ -48353,6 +48356,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log('ChartControl.vue. stopbroadcast controller error: ');
                 console.log(error.response);
             });
+            this.broadcastAllowed = 'off';
         },
         // Price channel update button click
         // First price channel recalculation started then when the response is received
@@ -48375,10 +48379,32 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log('ChartControl.vue. pricechannelcalc controller error:');
                 console.log(error.response);
             });
+        },
+
+        chartInfo: function chartInfo() {
+            var _this2 = this;
+
+            // Chart info values from DB load
+            axios.get('/chartinfo').then(function (response) {
+                //console.log('ChartControl.vue. ChartInfo controller response: ');
+                _this2.symbol = response.data['symbol'];
+                _this2.netProfit = 'not ready yet';
+                _this2.requestedBars = response.data['request_bars'];
+                _this2.commission = response.data['commission_value'];
+                _this2.tradingAllowed = response.data['allow_trading'];
+                _this2.priceChannelPeriod = response.data['price_channel_period'];
+                _this2.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
+
+                //var isTrueSet = (myValue == 'true');
+            }) // Output returned data by controller
+            .catch(function (error) {
+                console.log('ChartControl.vue. chartinfo controller error: ');
+                console.log(error.response);
+            });
         }
     },
     mounted: function mounted() {
-        var _this2 = this;
+        var _this3 = this;
 
         console.log('Component ChartControl.vue mounted.');
 
@@ -48387,11 +48413,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         var arr = new Array();
         this.items = arr;
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this2.items.length < 20) {
-                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            if (_this3.items.length < 20) {
+                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this2.items.shift();
-                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this3.items.shift();
+                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
 
@@ -48400,20 +48426,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
         });
 
-        // Chart info values from DB load
-        axios.get('/chartinfo').then(function (response) {
-            //console.log('ChartControl.vue. ChartInfo controller response: ');
-            _this2.symbol = response.data['symbol'];
-            _this2.netProfit = 'not ready yet';
-            _this2.requestedBars = response.data['request_bars'];
-            _this2.commission = response.data['commission_value'];
-            _this2.tradingAllowed = response.data['allow_trading'];
-            _this2.priceChannelPeriod = response.data['price_channel_period'];
-        }) // Output returned data by controller
-        .catch(function (error) {
-            console.log('ChartControl.vue. chartinfo controller error: ');
-            console.log(error.response);
-        });
+        // Load chart info values from DB
+        this.chartInfo();
     }
 });
 
@@ -48431,11 +48445,13 @@ var render = function() {
       _c("br"),
       _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
       _c("br"),
-      _vm._v("\n        Requested bars: " + _vm._s(_vm.requestedBars) + "."),
+      _vm._v("\n        Requested bars: " + _vm._s(_vm.requestedBars)),
       _c("br"),
-      _vm._v("\n        Commission: " + _vm._s(_vm.commission) + "."),
+      _vm._v("\n        Commission: " + _vm._s(_vm.commission)),
       _c("br"),
-      _vm._v("\n        Trading allowed: " + _vm._s(_vm.tradingAllowed) + "."),
+      _vm._v("\n        Trading allowed: " + _vm._s(_vm.tradingAllowed)),
+      _c("br"),
+      _vm._v("\n        Broadcast: " + _vm._s(_vm.broadcastAllowed)),
       _c("br")
     ]),
     _vm._v(" "),

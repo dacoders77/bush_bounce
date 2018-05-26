@@ -62,13 +62,16 @@ class RatchetPawlSocket extends Command
         $connector('wss://api.bitfinex.com/ws/2', [], ['Origin' => 'http://localhost'])
             ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $loop) {
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $loop) {
-                    $chart->index($socketMessage, $this); // Call the method when the event is received
+
                     /** Stop the broadcast */
                     if (DB::table('settings_realtime')
                             ->where('id', 1)
-                            ->value('broadcast_stop') == 1)
+                            ->value('broadcast_stop') == 0)
                     {
 
+                        $chart->index($socketMessage, $this); // Call the method when the event is received
+
+                        /*
                         DB::table("settings_realtime")
                             ->where('id', 1) // Id of the last record. Desc - descent order
                             ->update([
@@ -76,6 +79,7 @@ class RatchetPawlSocket extends Command
                             ]);
                         $this->alert('The broadcast is being stopped!');
                         $loop->stop();
+                        */
 
                         /**
                          * 1. connection starts with assets list request from DB. ALWAYS
@@ -85,6 +89,10 @@ class RatchetPawlSocket extends Command
                          *  scenario 2
                          * 1.  connection restart
                          */
+                    }
+                    else
+                    {
+                        echo "Broadcast is stopped \n";
                     }
 
 

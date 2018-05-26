@@ -3,9 +3,10 @@
         <div style="border: thin solid green; padding: 5px">
             Symbol: {{ symbol }}<br>
             Net profit: {{ netProfit }}<br>
-            Requested bars: {{ requestedBars }}.<br>
-            Commission: {{ commission }}.<br>
-            Trading allowed: {{ tradingAllowed }}.<br>
+            Requested bars: {{ requestedBars }}<br>
+            Commission: {{ commission }}<br>
+            Trading allowed: {{ tradingAllowed }}<br>
+            Broadcast: {{ broadcastAllowed }}<br>
         </div>
         <div style="border: thin solid darkgray; padding: 5px; margin-top: 5px">
             Initial start:
@@ -44,7 +45,8 @@
                 commission: '',
                 tradingAllowed: '',
                 priceChannelPeriod: null,
-                items: ''
+                items: '',
+                broadcastAllowed: ''
             }
         },
         methods: {
@@ -69,7 +71,8 @@
                     .catch(error => {
                         console.log('ChartControl.vue startbroadcast controller error: ');
                         console.log(error.response);
-                    })
+                    });
+                this.broadcastAllowed = 'on';
             },
             // Stop broadcast button handler
             stopbroadcast: function (event) {
@@ -80,7 +83,8 @@
                     .catch(error => {
                         console.log('ChartControl.vue. stopbroadcast controller error: ');
                         console.log(error.response);
-                    })
+                    });
+                this.broadcastAllowed = 'off';
             },
             // Price channel update button click
             // First price channel recalculation started then when the response is received
@@ -108,6 +112,27 @@
 
 
             },
+            chartInfo: function() {
+                // Chart info values from DB load
+                axios.get('/chartinfo')
+                    .then(response => {
+                        //console.log('ChartControl.vue. ChartInfo controller response: ');
+                        this.symbol = response.data['symbol'];
+                        this.netProfit = 'not ready yet';
+                        this.requestedBars = response.data['request_bars'];
+                        this.commission = response.data['commission_value'];
+                        this.tradingAllowed = response.data['allow_trading'];
+                        this.priceChannelPeriod = response.data['price_channel_period'];
+                        this.broadcastAllowed = ((response.data['broadcast_stop'] == 1) ? 'off' : 'on');
+
+                        //var isTrueSet = (myValue == 'true');
+
+                    }) // Output returned data by controller
+                    .catch(error => {
+                        console.log('ChartControl.vue. chartinfo controller error: ');
+                        console.log(error.response);
+                    });
+            }
         },
         mounted() {
             console.log('Component ChartControl.vue mounted.');
@@ -126,30 +151,16 @@
                 }
             });
 
-
-
             // Event bus listener
             this.$bus.$on('my-event', ($event) => {
                 //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
             });
 
-            // Chart info values from DB load
-            axios.get('/chartinfo')
-                .then(response => {
-                    //console.log('ChartControl.vue. ChartInfo controller response: ');
-                    this.symbol = response.data['symbol'];
-                    this.netProfit = 'not ready yet';
-                    this.requestedBars = response.data['request_bars'];
-                    this.commission = response.data['commission_value'];
-                    this.tradingAllowed = response.data['allow_trading'];
-                    this.priceChannelPeriod = response.data['price_channel_period'];
-
-                }) // Output returned data by controller
-                .catch(error => {
-                    console.log('ChartControl.vue. chartinfo controller error: ');
-                    console.log(error.response);
-                });
+            // Load chart info values from DB
+            this.chartInfo();
 
         },
+
+
     }
 </script>

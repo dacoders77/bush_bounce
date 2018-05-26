@@ -117,14 +117,17 @@ Route::get('event', function () {
 
 // Startbroadcast
 Route::get('/startbroadcast', function () {
-    $exitCode = Artisan::call('ratchet:start');
-    return("web.php: startbroadcast exit code: " . $exitCode);
+    DB::table("settings_realtime")
+        ->where('id', 1)
+        ->update([
+            'broadcast_stop' => 0
+        ]);
 });
 
 // Stop broadcast (console command)
 Route::get('/stopbroadcast', function () {
     DB::table("settings_realtime")
-        ->where('id', 1) // id of the last record. desc - descent order
+        ->where('id', 1)
         ->update([
             'broadcast_stop' => 1
         ]);
