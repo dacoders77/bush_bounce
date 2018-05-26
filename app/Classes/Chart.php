@@ -89,7 +89,8 @@ class Chart
             PriceChannel::calculate(); // Calculate price channel
         }
 
-        $jsonMessage = json_decode($message->getPayload(), true); // Methods http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html
+        /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
+        $jsonMessage = json_decode($message->getPayload(), true);
         //print_r($jsonMessage);
         //print_r(array_keys($z));
         //echo $message->__toString() . "\n"; // Decode each message
@@ -111,12 +112,16 @@ class Chart
                 // current trade(tick): $nojsonMessage[2][3]
                 // volume: $nojsonMessage[2][2]
 
+                $timeFrame =
+                    (DB::table('settings_realtime')
+                        ->where('id', 1)
+                        ->value('time_frame'));
 
                 // Take seconds off and add 1 min. Do it only once per interval (for example 1min)
                 if ($this->dateCompeareFlag) {
                     $x = date("Y-m-d H:i", $nojsonMessage[2][1] / 1000) . "\n"; // Take seconds off. Convert timestamp to date
                     //$this->tt = strtotime($x . $this->timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
-                    $this->tt = strtotime($x . '+1 minute'); // Time frame. Added 1 minute. Timestamp
+                    $this->tt = strtotime($x . + $timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
                     $this->dateCompeareFlag = false;
                 }
 
