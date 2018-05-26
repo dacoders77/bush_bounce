@@ -47,12 +47,12 @@ class History
 
             $timeframe =
                 DB::table('settings_realtime')
-                    ->where('id', env("SETTING_ID"))
+                    ->where('id', 1)
                     ->value('time_frame') . "m";
 
             $asset =
                 DB::table('settings_realtime')
-                    ->where('id', env("SETTING_ID"))
+                    ->where('id', 1)
                     ->value('symbol');
 
             /*
@@ -73,7 +73,7 @@ class History
             ]);
 
             //$restEndpoint = "candles/trade:" . $timeframe . ":t" . $asset . "/hist?limit=20&start=" . $start . "&end=" . $end . "&sort=1";
-            $restEndpoint = "candles/trade:" . $timeframe . ":t" . $asset . "/hist?limit=" . DB::table('settings_realtime')->where('id', env("SETTING_ID"))->value('request_bars'); // Gets bars from the present moment. No dates needed. Values must be reversed befor adding to DB. Otherwise - the chart is not properly rendered, all bars look fat
+            $restEndpoint = "candles/trade:" . $timeframe . ":t" . $asset . "/hist?limit=" . DB::table('settings_realtime')->where('id', 1)->value('request_bars'); // Gets bars from the present moment. No dates needed. Values must be reversed befor adding to DB. Otherwise - the chart is not properly rendered, all bars look fat
 
             // http://docs.guzzlephp.org/en/stable/request-options.html#http-errors
             $response = $api_connection->request('GET', $restEndpoint, ['http_errors' => true ]);

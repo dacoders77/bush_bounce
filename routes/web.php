@@ -1,5 +1,5 @@
 <?php
-
+use Illuminate\Support\Facades\DB;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -134,7 +134,31 @@ Route::get('/stopbroadcast', function () {
 });
 
 // Calculate price channel
-route::get('/pricechannelcalc', 'realtime\PriceChannel@calculate');
+route::get('/pricechannelcalc', function(){
+    App\Classes\PriceChannel::calculate(); // Calculate price channel
+});
 
 // Chart control form fields update
 Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
+
+// Initial start button click in ChartControl.vue
+Route::get('/initialstart', function () {
+
+    // Stop broadcast
+    DB::table("settings_realtime")
+        ->where('id', 1)
+        ->update([
+            'broadcast_stop' => 1
+        ]);
+
+    DB::table('asset_1')->truncate(); // Clear the table
+    App\Classes\History::load(); // Load history from www.bitfinex.com
+    App\Classes\PriceChannel::calculate();
+
+    // Start broadcast
+    DB::table("settings_realtime")
+        ->where('id', 1)
+        ->update([
+            'broadcast_stop' => 0
+        ]);
+});

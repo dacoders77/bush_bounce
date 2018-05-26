@@ -1,20 +1,22 @@
 <template>
     <div>
         <div style="border: thin solid green; padding: 5px">
-            Symbol: {{ symbol }}<br>
+            Symbol: <input type="text" min="1" max="7" class="form-control" v-model="symbol"/><br>
             Net profit: {{ netProfit }}<br>
-            Requested bars: {{ requestedBars }}<br>
+            Requested bars: <input type="number" min="1" max="100" class="form-control" v-model="requestBars"/><br>
+            Time frame: <input type="number" min="1" max="100" class="form-control" v-model="timeFrame"/><br>
             Commission: {{ commission }}<br>
             Trading allowed: {{ tradingAllowed }}<br>
             Broadcast: {{ broadcastAllowed }}<br>
         </div>
         <div style="border: thin solid darkgray; padding: 5px; margin-top: 5px">
+            History:
+            <button v-on:click="historyTest" id="history-test">Test</button><br>
             Initial start:
-            <button v-on:click="initialstart" id="initial-start">Run</button>
-            <br>
+            <button v-on:click="initialStart" id="initial-start">Run</button><br>
             Broadcast:
-            <button v-on:click="startbroadcast" id="start-broadcast">Start</button>
-            <button v-on:click="stopbroadcast" id="stop-broadcast">Stop</button>
+            <button v-on:click="startBroadcast" id="start-broadcast">Start</button>
+            <button v-on:click="stopBroadcast" id="stop-broadcast">Stop</button>
             <br>
             <form v-on:submit.prevent="priceChannelUpdate">
                 Price channel / Stop channel period:<br>
@@ -42,6 +44,8 @@
                 symbol: '',
                 netProfit: 0,
                 requestedBars: '',
+                timeFrame: '',
+                requestBars: '',
                 commission: '',
                 tradingAllowed: '',
                 priceChannelPeriod: null,
@@ -50,38 +54,26 @@
             }
         },
         methods: {
-            // Initial start button handler
-            initialstart: function (event) {
-                alert('Truncate table and load new historical data');
-                axios.get('/tabletruncate')
+            // Start broadcast button handler
+            startBroadcast: function (event) {
+                axios.get('/startBroadcast')
                     .then(response => {
-                        console.log('ChartControl.vue. Tabletruncate controller response: ');
+                        console.log('ChartControl.vue. startBroadcast controller response: ');
                     })
                     .catch(error => {
-                        console.log('ChartControl.vue Tabletruncate controller error: ');
-                        console.log(error.response);
-                    })
-            },
-            // Start laravel Ratchet:start command. Button handler
-            startbroadcast: function (event) {
-                axios.get('/startbroadcast')
-                    .then(response => {
-                        console.log('ChartControl.vue. startbroadcast controller response: ');
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue startbroadcast controller error: ');
+                        console.log('ChartControl.vue startBroadcast controller error: ');
                         console.log(error.response);
                     });
                 this.broadcastAllowed = 'on';
             },
             // Stop broadcast button handler
-            stopbroadcast: function (event) {
-                axios.get('/stopbroadcast')
+            stopBroadcast: function (event) {
+                axios.get('/stopBroadcast')
                     .then(response => {
-                        //console.log('ChartControl.vue. stopbroadcast controller response: ');
+                        //console.log('ChartControl.vue. stopBroadcast controller response: ');
                     })
                     .catch(error => {
-                        console.log('ChartControl.vue. stopbroadcast controller error: ');
+                        console.log('ChartControl.vue. stopBroadcast controller error: ');
                         console.log(error.response);
                     });
                 this.broadcastAllowed = 'off';
@@ -110,8 +102,27 @@
                         console.log(error.response);
                     })
 
-
             },
+            // Initial start button handler
+            initialStart(){
+                console.log('Initial start button clicked');
+                this.broadcastAllowed = "off";
+                axios.get('/initialstart' )
+                    .then(response => {
+                        console.log('ChartControl.vue. initialstart response');
+                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event
+                        this.broadcastAllowed = "on";
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. initialstart controller error:');
+                        console.log(error.response);
+                    })
+                //
+            },
+            historyTest(){
+                // History test button click
+            },
+            // MMethod
             chartInfo: function() {
                 // Chart info values from DB load
                 axios.get('/chartinfo')
@@ -120,6 +131,8 @@
                         this.symbol = response.data['symbol'];
                         this.netProfit = 'not ready yet';
                         this.requestedBars = response.data['request_bars'];
+                        this.timeFrame = response.data['time_frame'];
+                        this.requestBars = response.data['request_bars'];
                         this.commission = response.data['commission_value'];
                         this.tradingAllowed = response.data['allow_trading'];
                         this.priceChannelPeriod = response.data['price_channel_period'];

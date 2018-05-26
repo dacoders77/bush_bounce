@@ -63,7 +63,11 @@ class RatchetPawlSocket extends Command
             ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $loop) {
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $loop) {
 
-                    /** Stop the broadcast */
+                    /**
+                     * If the broadcast is on - proceed events, pass it to Chart class
+                     * @todo 05.26.18 This check must be performed once a second otherwise each tick will execute a requse to DB wich will overload the data base
+                     *
+                     */
                     if (DB::table('settings_realtime')
                             ->where('id', 1)
                             ->value('broadcast_stop') == 0)

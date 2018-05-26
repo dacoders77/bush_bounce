@@ -59,8 +59,8 @@ class HistoryBars extends \App\Http\Controllers\Controller
             "candles" => $candles,
             "priceChannelHighValues" => $priceChannelHighValues,
             "priceChannelLowValues" => $priceChannelLowValues,
-            //"longTradeMarkers" => $longTradeMarkers,
-            //"shortTradeMarkers" => $shortTradeMarkers
+            "longTradeMarkers" => $longTradeMarkers,
+            "shortTradeMarkers" => $shortTradeMarkers
         );
         //              0                   1                       2                   3                   4
         //$seriesData = [$candles, $priceChannelHighValue, $priceChannelLowValue, $longTradeMarkers, $shortTradeMarkers];

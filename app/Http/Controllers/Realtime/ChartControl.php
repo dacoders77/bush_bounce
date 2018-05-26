@@ -20,7 +20,11 @@ class ChartControl extends \App\Http\Controllers\Controller
         DB::table('settings_realtime')
             ->where('id', 1)
             ->update([
-                'price_channel_period' => $request->get('priceChannelPeriod')
+                'price_channel_period' => $request->get('priceChannelPeriod'),
+                'time_frame' => $request->get('timeFrame'),
+                'request_bars' => $request->get('requestBars'),
+                'symbol' => $request->get('symbol'),
+
                 //'execution_time' => date("Y-m-d G:i:s", strtotime($request->get('basketExecTime')))
             ]);
 

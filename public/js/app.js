@@ -48311,6 +48311,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48319,6 +48321,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             symbol: '',
             netProfit: 0,
             requestedBars: '',
+            timeFrame: '',
+            requestBars: '',
             commission: '',
             tradingAllowed: '',
             priceChannelPeriod: null,
@@ -48328,32 +48332,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
 
     methods: {
-        // Initial start button handler
-        initialstart: function initialstart(event) {
-            alert('Truncate table and load new historical data');
-            axios.get('/tabletruncate').then(function (response) {
-                console.log('ChartControl.vue. Tabletruncate controller response: ');
+        // Start broadcast button handler
+        startBroadcast: function startBroadcast(event) {
+            axios.get('/startBroadcast').then(function (response) {
+                console.log('ChartControl.vue. startBroadcast controller response: ');
             }).catch(function (error) {
-                console.log('ChartControl.vue Tabletruncate controller error: ');
-                console.log(error.response);
-            });
-        },
-        // Start laravel Ratchet:start command. Button handler
-        startbroadcast: function startbroadcast(event) {
-            axios.get('/startbroadcast').then(function (response) {
-                console.log('ChartControl.vue. startbroadcast controller response: ');
-            }).catch(function (error) {
-                console.log('ChartControl.vue startbroadcast controller error: ');
+                console.log('ChartControl.vue startBroadcast controller error: ');
                 console.log(error.response);
             });
             this.broadcastAllowed = 'on';
         },
         // Stop broadcast button handler
-        stopbroadcast: function stopbroadcast(event) {
-            axios.get('/stopbroadcast').then(function (response) {
-                //console.log('ChartControl.vue. stopbroadcast controller response: ');
+        stopBroadcast: function stopBroadcast(event) {
+            axios.get('/stopBroadcast').then(function (response) {
+                //console.log('ChartControl.vue. stopBroadcast controller response: ');
             }).catch(function (error) {
-                console.log('ChartControl.vue. stopbroadcast controller error: ');
+                console.log('ChartControl.vue. stopBroadcast controller error: ');
                 console.log(error.response);
             });
             this.broadcastAllowed = 'off';
@@ -48381,19 +48375,42 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
         },
 
-        chartInfo: function chartInfo() {
+        // Initial start button handler
+        initialStart: function initialStart() {
             var _this2 = this;
+
+            console.log('Initial start button clicked');
+            this.broadcastAllowed = "off";
+            axios.get('/initialstart').then(function (response) {
+                console.log('ChartControl.vue. initialstart response');
+                _this2.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event
+                _this2.broadcastAllowed = "on";
+            }).catch(function (error) {
+                console.log('ChartControl.vue. initialstart controller error:');
+                console.log(error.response);
+            });
+            //
+        },
+        historyTest: function historyTest() {
+            // History test button click
+        },
+
+        // MMethod
+        chartInfo: function chartInfo() {
+            var _this3 = this;
 
             // Chart info values from DB load
             axios.get('/chartinfo').then(function (response) {
                 //console.log('ChartControl.vue. ChartInfo controller response: ');
-                _this2.symbol = response.data['symbol'];
-                _this2.netProfit = 'not ready yet';
-                _this2.requestedBars = response.data['request_bars'];
-                _this2.commission = response.data['commission_value'];
-                _this2.tradingAllowed = response.data['allow_trading'];
-                _this2.priceChannelPeriod = response.data['price_channel_period'];
-                _this2.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
+                _this3.symbol = response.data['symbol'];
+                _this3.netProfit = 'not ready yet';
+                _this3.requestedBars = response.data['request_bars'];
+                _this3.timeFrame = response.data['time_frame'];
+                _this3.requestBars = response.data['request_bars'];
+                _this3.commission = response.data['commission_value'];
+                _this3.tradingAllowed = response.data['allow_trading'];
+                _this3.priceChannelPeriod = response.data['price_channel_period'];
+                _this3.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
 
                 //var isTrueSet = (myValue == 'true');
             }) // Output returned data by controller
@@ -48404,7 +48421,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         }
     },
     mounted: function mounted() {
-        var _this3 = this;
+        var _this4 = this;
 
         console.log('Component ChartControl.vue mounted.');
 
@@ -48413,11 +48430,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         var arr = new Array();
         this.items = arr;
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this3.items.length < 20) {
-                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            if (_this4.items.length < 20) {
+                _this4.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this3.items.shift();
-                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this4.items.shift();
+                _this4.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
 
@@ -48441,11 +48458,76 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c("div", [
     _c("div", { staticStyle: { border: "thin solid green", padding: "5px" } }, [
-      _vm._v("\n        Symbol: " + _vm._s(_vm.symbol)),
+      _vm._v("\n        Symbol: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.symbol,
+            expression: "symbol"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "text", min: "1", max: "7" },
+        domProps: { value: _vm.symbol },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.symbol = $event.target.value
+          }
+        }
+      }),
       _c("br"),
       _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
       _c("br"),
-      _vm._v("\n        Requested bars: " + _vm._s(_vm.requestedBars)),
+      _vm._v("\n        Requested bars: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.requestBars,
+            expression: "requestBars"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "number", min: "1", max: "100" },
+        domProps: { value: _vm.requestBars },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.requestBars = $event.target.value
+          }
+        }
+      }),
+      _c("br"),
+      _vm._v("\n        Time frame: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.timeFrame,
+            expression: "timeFrame"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "number", min: "1", max: "100" },
+        domProps: { value: _vm.timeFrame },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.timeFrame = $event.target.value
+          }
+        }
+      }),
       _c("br"),
       _vm._v("\n        Commission: " + _vm._s(_vm.commission)),
       _c("br"),
@@ -48465,27 +48547,33 @@ var render = function() {
         }
       },
       [
+        _vm._v("\n        History:\n        "),
+        _c(
+          "button",
+          { attrs: { id: "history-test" }, on: { click: _vm.historyTest } },
+          [_vm._v("Test")]
+        ),
+        _c("br"),
         _vm._v("\n        Initial start:\n        "),
         _c(
           "button",
-          { attrs: { id: "initial-start" }, on: { click: _vm.initialstart } },
+          { attrs: { id: "initial-start" }, on: { click: _vm.initialStart } },
           [_vm._v("Run")]
         ),
-        _vm._v(" "),
         _c("br"),
         _vm._v("\n        Broadcast:\n        "),
         _c(
           "button",
           {
             attrs: { id: "start-broadcast" },
-            on: { click: _vm.startbroadcast }
+            on: { click: _vm.startBroadcast }
           },
           [_vm._v("Start")]
         ),
         _vm._v(" "),
         _c(
           "button",
-          { attrs: { id: "stop-broadcast" }, on: { click: _vm.stopbroadcast } },
+          { attrs: { id: "stop-broadcast" }, on: { click: _vm.stopBroadcast } },
           [_vm._v("Stop")]
         ),
         _vm._v(" "),
@@ -48831,7 +48919,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         // This event is received from ChartControl.vue component when price channel update button is clicked
         this.$bus.$on('my-event', function ($event) {
             console.log('Chart.vue. My event has been triggered', $event);
-            HistoryBarsLoad(); // Load history data from BR
+            HistoryBarsLoad(); // Load history data from DB
         });
 
         // Load history bars and price channel from DB. This functions is called in each new bar or on update price channel
@@ -48841,10 +48929,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             axios.get('/historybarsload') // Load history data from BR
             .then(function (response) {
                 console.log('Chart.vue. historybarsload controller response (from function): ');
-
-                //chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
+                chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
                 chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
                 chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
+                chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
             }).catch(function (error) {
                 console.log('Chart.vue. /historybarsload controller error (from function): ');
                 console.log(error.response);

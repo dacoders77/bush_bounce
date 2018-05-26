@@ -82,9 +82,11 @@ class Chart
         {
             echo "Chart.php Application first ever run. Load history data. History::index()\n";
             //event(new \App\Events\BushBounce('Bot first ever run'));
-            History::load(); /** After the history is loaded - get price channel calculated (indicator) */
+            History::load(); /** After the history is loaded - get price channel calculated */
             // Calculate price channel
-            \App\Http\Controllers\Realtime\PriceChannel::calculate();
+            // \App\Http\Controllers\Realtime\PriceChannel::calculate();
+            // App\Classes\PriceChannel::calculate();
+            PriceChannel::calculate(); // Calculate price channel
         }
 
         $jsonMessage = json_decode($message->getPayload(), true); // Methods http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html

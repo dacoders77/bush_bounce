@@ -15,9 +15,15 @@ use Illuminate\Http\Request;
  * Calculated price channel based on historical data loaded from www.bitfinex.com
  * @package App\Http\Controllers\Realtime
  */
+
+
+// THIS CLASS IS NOT USED ANYMORE
+// \App\Http\Controllers\Realtime\PriceChannel::calculate(); // Calculate price channel
+// SHOULD BE USED INSTED
+
 class PriceChannel extends \App\Http\Controllers\Controller
 {
-    public static function calculate() { // $priceChannelPeriod
+    public static function calculateZZZZ() { // $priceChannelPeriod
 
         /** Clear prive chanel columns in DB */
         //DB::table("asset_1")->update([
@@ -104,3 +110,4 @@ class PriceChannel extends \App\Http\Controllers\Controller
         }
     }
 }
+

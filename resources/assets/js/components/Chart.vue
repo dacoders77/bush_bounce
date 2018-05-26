@@ -148,19 +148,17 @@
 
 
 
-                            axios.get('/pricechannelcalc') // Recalculate price channel
-                                .then(response => {
-                                    //console.log('ChartControl.vue. pricechannelcalc controller response: ');
-                                    //console.log(response);
-                                })
-                                .catch(error => {
-                                    console.log('ChartControl.vue. pricechannelcalc controller error: ');
-                                    console.log(error.response);
-                                })
+                        axios.get('/pricechannelcalc') // Recalculate price channel
+                            .then(response => {
+                                //console.log('ChartControl.vue. pricechannelcalc controller response: ');
+                                //console.log(response);
+                            })
+                            .catch(error => {
+                                console.log('ChartControl.vue. pricechannelcalc controller error: ');
+                                console.log(error.response);
+                            })
 
-                            HistoryBarsLoad(); // Load history data from BR
-
-
+                        HistoryBarsLoad(); // Load history data from BR
 
 
                             /*
@@ -203,7 +201,7 @@
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
                 console.log('Chart.vue. My event has been triggered', $event)
-                HistoryBarsLoad(); // Load history data from BR
+                HistoryBarsLoad(); // Load history data from DB
 
             });
 
@@ -216,10 +214,11 @@
                 axios.get('/historybarsload') // Load history data from BR
                     .then(response => {
                         console.log('Chart.vue. historybarsload controller response (from function): ');
-
-                        //chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
+                        chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
                         chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
                         chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                        chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                        chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
                     })
                     .catch(error => {
                         console.log('Chart.vue. /historybarsload controller error (from function): ');
