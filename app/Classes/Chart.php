@@ -73,7 +73,8 @@ class Chart
      * are transmitted over websocket pusher broadcast service.
      * @see https://pusher.com/
      */
-    public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message, Command $command)
+    //public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message, Command $command)
+    public function index($nojsonMessage, Command $command)
     {
         /** First time ever application run check. If so - load historical data first */
         if ((DB::table('settings_realtime')
@@ -89,21 +90,9 @@ class Chart
             PriceChannel::calculate(); // Calculate price channel
         }
 
-        /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
-        $jsonMessage = json_decode($message->getPayload(), true);
-        //print_r($jsonMessage);
-        //print_r(array_keys($z));
-        //echo $message->__toString() . "\n"; // Decode each message
 
-        if (array_key_exists('chanId',$jsonMessage)){
-            $chanId = $jsonMessage['chanId']; // Parsed channel ID then we are gonna listen exactly to this channel number. It changes each time you make a new connection
-        }
+        // here
 
-        $nojsonMessage = json_decode($message->getPayload());
-
-        if (!array_key_exists('event',$jsonMessage)){ // All messages except first two associated arrays
-            if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
-            {
                 //echo "id: " . $nojsonMessage[2][0];
                 //echo " date: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
                 //echo " volume: " . $nojsonMessage[2][2];
@@ -112,6 +101,8 @@ class Chart
                 // current trade(tick): $nojsonMessage[2][3]
                 // volume: $nojsonMessage[2][2]
 
+                // REMOVE IT FROM HERE
+                // THERE IS THE SAME CODE IN CONSTRUCTOR
                 $timeFrame =
                     (DB::table('settings_realtime')
                         ->where('id', 1)
@@ -499,7 +490,7 @@ class Chart
                     $this->barHigh = 0;
                     $this->barLow = 9999999;
                 }
-            }
-        }
+            //}// delete
+        //}// delete
     }
 }

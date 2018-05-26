@@ -72,18 +72,24 @@ class RatchetPawlSocket extends Command
                             ->where('id', 1)
                             ->value('broadcast_stop') == 0)
                     {
+                        /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
+                        $jsonMessage = json_decode($socketMessage->getPayload(), true);
+                        //print_r($jsonMessage);
+                        //print_r(array_keys($z));
+                        //echo $message->__toString() . "\n"; // Decode each message
 
-                        $chart->index($socketMessage, $this); // Call the method when the event is received
+                        if (array_key_exists('chanId',$jsonMessage)){
+                            $chanId = $jsonMessage['chanId']; // Parsed channel ID then we are gonna listen exactly to this channel number. It changes each time you make a new connection
+                        }
 
-                        /*
-                        DB::table("settings_realtime")
-                            ->where('id', 1) // Id of the last record. Desc - descent order
-                            ->update([
-                                'broadcast_stop' => 0
-                            ]);
-                        $this->alert('The broadcast is being stopped!');
-                        $loop->stop();
-                        */
+                        $nojsonMessage = json_decode($socketMessage->getPayload());
+
+                        if (!array_key_exists('event',$jsonMessage)) { // All messages except first two associated arrays
+                            if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
+                            {
+                                $chart->index($nojsonMessage, $this); // Call the method when the event is received
+                            }
+                        }
 
                         /**
                          * 1. connection starts with assets list request from DB. ALWAYS
