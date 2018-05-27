@@ -10,23 +10,29 @@
             Broadcast: {{ broadcastAllowed }}<br>
         </div>
         <div style="border: thin solid darkgray; padding: 5px; margin-top: 5px">
+            Application mode: <a href="" v-on:click.prevent="modeToggle">{{ modeToggleText }}</a><br>
+
+            <!--
             History:
             <button v-on:click="historyTest" id="history-test">Test</button><br>
+            -->
             Initial start:
             <button v-on:click="initialStart" id="initial-start">Run</button><br>
+            <!--
             Broadcast:
-            <button v-on:click="startBroadcast" id="start-broadcast">Start</button>
-            <button v-on:click="stopBroadcast" id="stop-broadcast">Stop</button>
+            <button v-on:click="startBroadcast" id="start-broadcast" :disabled="startButtonDisabled">Start</button>
+            <button v-on:click="stopBroadcast" id="stop-broadcast" :disabled="stopButtonDisabled">Stop</button>
             <br>
+            -->
             <form v-on:submit.prevent="priceChannelUpdate">
                 Price channel / Stop channel period:<br>
-                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" @input="priceChannelUpdate"/>
-                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" @input="priceChannelUpdate"/>
+                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" @input="priceChannelUpdate">
+                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" @input="priceChannelUpdate">
                 <button>Upd</button>
                 <br>
             </form>
         </div>
-        <div style="border: thin solid salmon; padding: 5px; margin-top: 5px">
+        <div style="border: thin solid blue; padding: 5px; margin-top: 5px">
             <!-- Output records to the page -->
             <span v-for="item in items">
             {{ item }}<br>
@@ -50,34 +56,21 @@
                 tradingAllowed: '',
                 priceChannelPeriod: null,
                 items: '',
-                broadcastAllowed: ''
+                broadcastAllowed: '',
+                modeToggleText: '',
+                toggleFlag: true,
+                startButtonDisabled: true,
+                stopButtonDisabled: true
             }
         },
         methods: {
-            // Start broadcast button handler
+            // Delete 'em
             startBroadcast: function (event) {
-                axios.get('/startBroadcast')
-                    .then(response => {
-                        console.log('ChartControl.vue. startBroadcast controller response: ');
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue startBroadcast controller error: ');
-                        console.log(error.response);
-                    });
-                this.broadcastAllowed = 'on';
             },
-            // Stop broadcast button handler
+            //
             stopBroadcast: function (event) {
-                axios.get('/stopBroadcast')
-                    .then(response => {
-                        //console.log('ChartControl.vue. stopBroadcast controller response: ');
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. stopBroadcast controller error: ');
-                        console.log(error.response);
-                    });
-                this.broadcastAllowed = 'off';
             },
+
             // Price channel update button click
             // First price channel recalculation started then when the response is received
             // the Event BUS event is generated
@@ -105,24 +98,47 @@
             },
             // Initial start button handler
             initialStart(){
-                console.log('Initial start button clicked');
-                this.broadcastAllowed = "off";
-                axios.get('/initialstart' )
-                    .then(response => {
-                        console.log('ChartControl.vue. initialstart response');
-                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event
-                        this.broadcastAllowed = "on";
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. initialstart controller error:');
-                        console.log(error.response);
-                    })
-                //
+                this.initialStartFunction();
             },
             historyTest(){
                 // History test button click
             },
-            // MMethod
+            modeToggle(){
+
+                if (this.toggleFlag)
+                {
+                    // History testing
+                    var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be supsended.");
+                    if (conf) {
+                        this.toggleFlag = false;
+                        this.startButtonDisabled = true;
+                        this.stopButtonDisabled = true;
+                        this.stopBroadCastFunction();
+                        this.initialStartFunction();
+
+                        console.log('history. testing controller goes here. broadcast = off');
+                        this.modeToggleText = "history testing";
+
+                    }
+                }
+                else
+                {
+                    // Real-time
+                    var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
+                    if (conf) {
+                        this.toggleFlag = true;
+                        this.startButtonDisabled = false;
+                        this.stopButtonDisabled = false;
+
+                        //this.stopBroadCastFunction();
+                        this.initialStartFunction();
+                        this.startBroadCastFunction();
+                        this.modeToggleText = "realtime";
+
+                    }
+                }
+            },
+            // Method
             chartInfo: function() {
                 // Chart info values from DB load
                 axios.get('/chartinfo')
@@ -138,6 +154,8 @@
                         this.priceChannelPeriod = response.data['price_channel_period'];
                         this.broadcastAllowed = ((response.data['broadcast_stop'] == 1) ? 'off' : 'on');
 
+                        this.modeToggleText = ((response.data['broadcast_stop'] == 1) ? 'history testing' : 'realtime')
+
                         //var isTrueSet = (myValue == 'true');
 
                     }) // Output returned data by controller
@@ -145,6 +163,44 @@
                         console.log('ChartControl.vue. chartinfo controller error: ');
                         console.log(error.response);
                     });
+            },
+            initialStartFunction: function () {
+                console.log('Initial start function executed');
+
+                axios.get('/initialstart' )
+                    .then(response => {
+                        //console.log('ChartControl.vue. initialstart response');
+                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event
+                        //this.broadcastAllowed = "on";
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. initialstart controller error:');
+                        console.log(error.response);
+                    })
+            },
+            startBroadCastFunction(){
+                axios.get('/startbroadcast')
+                    .then(response => {
+                        console.log('ChartControl.vue. startBroadcast controller response: ');
+                        this.broadcastAllowed = 'on';
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue startBroadcast controller error: ');
+                        console.log(error.response);
+                    });
+
+            },
+            stopBroadCastFunction(){
+                axios.get('/stopbroadcast')
+                    .then(response => {
+                        //console.log('ChartControl.vue. stopBroadcast controller response: ');
+                        this.broadcastAllowed = 'off';
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. stopBroadcast controller error: ');
+                        console.log(error.response);
+                    });
+
             }
         },
         mounted() {
@@ -155,7 +211,7 @@
             var arr = new Array();
             this.items = arr;
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-                if (this.items.length < 20) {
+                if (this.items.length < 15) {
                     this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
                 }
                 else {

@@ -48313,6 +48313,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48327,31 +48333,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             tradingAllowed: '',
             priceChannelPeriod: null,
             items: '',
-            broadcastAllowed: ''
+            broadcastAllowed: '',
+            modeToggleText: '',
+            toggleFlag: true,
+            startButtonDisabled: true,
+            stopButtonDisabled: true
         };
     },
 
     methods: {
-        // Start broadcast button handler
-        startBroadcast: function startBroadcast(event) {
-            axios.get('/startBroadcast').then(function (response) {
-                console.log('ChartControl.vue. startBroadcast controller response: ');
-            }).catch(function (error) {
-                console.log('ChartControl.vue startBroadcast controller error: ');
-                console.log(error.response);
-            });
-            this.broadcastAllowed = 'on';
-        },
-        // Stop broadcast button handler
-        stopBroadcast: function stopBroadcast(event) {
-            axios.get('/stopBroadcast').then(function (response) {
-                //console.log('ChartControl.vue. stopBroadcast controller response: ');
-            }).catch(function (error) {
-                console.log('ChartControl.vue. stopBroadcast controller error: ');
-                console.log(error.response);
-            });
-            this.broadcastAllowed = 'off';
-        },
+        // Delete 'em
+        startBroadcast: function startBroadcast(event) {},
+        //
+        stopBroadcast: function stopBroadcast(event) {},
+
         // Price channel update button click
         // First price channel recalculation started then when the response is received
         // the Event BUS event is generated
@@ -48377,40 +48372,60 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
         // Initial start button handler
         initialStart: function initialStart() {
-            var _this2 = this;
-
-            console.log('Initial start button clicked');
-            this.broadcastAllowed = "off";
-            axios.get('/initialstart').then(function (response) {
-                console.log('ChartControl.vue. initialstart response');
-                _this2.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event
-                _this2.broadcastAllowed = "on";
-            }).catch(function (error) {
-                console.log('ChartControl.vue. initialstart controller error:');
-                console.log(error.response);
-            });
-            //
+            this.initialStartFunction();
         },
         historyTest: function historyTest() {
             // History test button click
         },
+        modeToggle: function modeToggle() {
 
-        // MMethod
+            if (this.toggleFlag) {
+                // History testing
+                var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be supsended.");
+                if (conf) {
+                    this.toggleFlag = false;
+                    this.startButtonDisabled = true;
+                    this.stopButtonDisabled = true;
+                    this.stopBroadCastFunction();
+                    this.initialStartFunction();
+
+                    console.log('history. testing controller goes here. broadcast = off');
+                    this.modeToggleText = "history testing";
+                }
+            } else {
+                // Real-time
+                var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
+                if (conf) {
+                    this.toggleFlag = true;
+                    this.startButtonDisabled = false;
+                    this.stopButtonDisabled = false;
+
+                    //this.stopBroadCastFunction();
+                    this.initialStartFunction();
+                    this.startBroadCastFunction();
+                    this.modeToggleText = "realtime";
+                }
+            }
+        },
+
+        // Method
         chartInfo: function chartInfo() {
-            var _this3 = this;
+            var _this2 = this;
 
             // Chart info values from DB load
             axios.get('/chartinfo').then(function (response) {
                 //console.log('ChartControl.vue. ChartInfo controller response: ');
-                _this3.symbol = response.data['symbol'];
-                _this3.netProfit = 'not ready yet';
-                _this3.requestedBars = response.data['request_bars'];
-                _this3.timeFrame = response.data['time_frame'];
-                _this3.requestBars = response.data['request_bars'];
-                _this3.commission = response.data['commission_value'];
-                _this3.tradingAllowed = response.data['allow_trading'];
-                _this3.priceChannelPeriod = response.data['price_channel_period'];
-                _this3.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
+                _this2.symbol = response.data['symbol'];
+                _this2.netProfit = 'not ready yet';
+                _this2.requestedBars = response.data['request_bars'];
+                _this2.timeFrame = response.data['time_frame'];
+                _this2.requestBars = response.data['request_bars'];
+                _this2.commission = response.data['commission_value'];
+                _this2.tradingAllowed = response.data['allow_trading'];
+                _this2.priceChannelPeriod = response.data['price_channel_period'];
+                _this2.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
+
+                _this2.modeToggleText = response.data['broadcast_stop'] == 1 ? 'history testing' : 'realtime';
 
                 //var isTrueSet = (myValue == 'true');
             }) // Output returned data by controller
@@ -48418,10 +48433,46 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log('ChartControl.vue. chartinfo controller error: ');
                 console.log(error.response);
             });
+        },
+        initialStartFunction: function initialStartFunction() {
+            var _this3 = this;
+
+            console.log('Initial start function executed');
+
+            axios.get('/initialstart').then(function (response) {
+                //console.log('ChartControl.vue. initialstart response');
+                _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event
+                //this.broadcastAllowed = "on";
+            }).catch(function (error) {
+                console.log('ChartControl.vue. initialstart controller error:');
+                console.log(error.response);
+            });
+        },
+        startBroadCastFunction: function startBroadCastFunction() {
+            var _this4 = this;
+
+            axios.get('/startbroadcast').then(function (response) {
+                console.log('ChartControl.vue. startBroadcast controller response: ');
+                _this4.broadcastAllowed = 'on';
+            }).catch(function (error) {
+                console.log('ChartControl.vue startBroadcast controller error: ');
+                console.log(error.response);
+            });
+        },
+        stopBroadCastFunction: function stopBroadCastFunction() {
+            var _this5 = this;
+
+            axios.get('/stopbroadcast').then(function (response) {
+                //console.log('ChartControl.vue. stopBroadcast controller response: ');
+                _this5.broadcastAllowed = 'off';
+            }).catch(function (error) {
+                console.log('ChartControl.vue. stopBroadcast controller error: ');
+                console.log(error.response);
+            });
         }
     },
     mounted: function mounted() {
-        var _this4 = this;
+        var _this6 = this;
 
         console.log('Component ChartControl.vue mounted.');
 
@@ -48430,11 +48481,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         var arr = new Array();
         this.items = arr;
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this4.items.length < 20) {
-                _this4.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+            if (_this6.items.length < 15) {
+                _this6.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this4.items.shift();
-                _this4.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this6.items.shift();
+                _this6.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
 
@@ -48547,36 +48598,28 @@ var render = function() {
         }
       },
       [
-        _vm._v("\n        History:\n        "),
+        _vm._v("\n        Application mode: "),
         _c(
-          "button",
-          { attrs: { id: "history-test" }, on: { click: _vm.historyTest } },
-          [_vm._v("Test")]
+          "a",
+          {
+            attrs: { href: "" },
+            on: {
+              click: function($event) {
+                $event.preventDefault()
+                return _vm.modeToggle($event)
+              }
+            }
+          },
+          [_vm._v(_vm._s(_vm.modeToggleText))]
         ),
         _c("br"),
+        _vm._v(" "),
         _vm._v("\n        Initial start:\n        "),
         _c(
           "button",
           { attrs: { id: "initial-start" }, on: { click: _vm.initialStart } },
           [_vm._v("Run")]
         ),
-        _c("br"),
-        _vm._v("\n        Broadcast:\n        "),
-        _c(
-          "button",
-          {
-            attrs: { id: "start-broadcast" },
-            on: { click: _vm.startBroadcast }
-          },
-          [_vm._v("Start")]
-        ),
-        _vm._v(" "),
-        _c(
-          "button",
-          { attrs: { id: "stop-broadcast" }, on: { click: _vm.stopBroadcast } },
-          [_vm._v("Stop")]
-        ),
-        _vm._v(" "),
         _c("br"),
         _vm._v(" "),
         _c(
@@ -48655,7 +48698,7 @@ var render = function() {
       "div",
       {
         staticStyle: {
-          border: "thin solid salmon",
+          border: "thin solid blue",
           padding: "5px",
           "margin-top": "5px"
         }

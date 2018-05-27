@@ -143,22 +143,7 @@ Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
 
 // Initial start button click in ChartControl.vue
 Route::get('/initialstart', function () {
-
-    // Stop broadcast
-    DB::table("settings_realtime")
-        ->where('id', 1)
-        ->update([
-            'broadcast_stop' => 1
-        ]);
-
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::load(); // Load history from www.bitfinex.com
     App\Classes\PriceChannel::calculate();
-
-    // Start broadcast
-    DB::table("settings_realtime")
-        ->where('id', 1)
-        ->update([
-            'broadcast_stop' => 0
-        ]);
 });
