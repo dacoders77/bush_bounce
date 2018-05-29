@@ -103,6 +103,7 @@ class RatchetPawlSocket extends Command
                     else
                     {
                         echo "Broadcast is stopped \n";
+                        echo "delete this line";
                     }
 
 
