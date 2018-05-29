@@ -15,7 +15,7 @@ class HistoryBars extends \App\Http\Controllers\Controller
         $shortTradeMarkers[] = "";
 
         $allDbValues = DB::table("asset_1")->get(); // Read the whole table from BD to $allDbValues
-        foreach ($allDbValues as $rowValue) { // Go through all DB reacords
+        foreach ($allDbValues as $rowValue) { // Go through all DB records
 
             $candles[] = [
                 $rowValue->time_stamp,

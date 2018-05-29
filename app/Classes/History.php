@@ -19,7 +19,6 @@ class History
      * Loads historical data to DB from www.bitfinex.com.
      * These bars are shown at the chart when the page is open.
      * Each bar has 5 values: 1526651340000,8095.7,8095.7,8090.1,8090.1
-     *
      * @return void
      */
 
@@ -54,13 +53,6 @@ class History
                 DB::table('settings_realtime')
                     ->where('id', 1)
                     ->value('symbol');
-
-            /*
-            echo "init start: " .
-                DB::table('settings_realtime')
-                    ->where('id', env("SETTING_ID"))
-                    ->value('initial_start') . "<br>";
-            */
 
             /**
              * Create guzzle http client
@@ -102,9 +94,6 @@ class History
             {
                 echo "History. Too many request error";
             }
-
-            /** Calculate price channel */
-            //PriceChannel::calculate();
 
             /** Ste Initial start flag to false */
             DB::table('settings_realtime')

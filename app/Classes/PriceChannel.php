@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\DB;
 /**
  * Class PriceChannel calculates price channel high and low values based on data read from DB loaded from www.bitfinex.com
  * Values are recorded (updated) in DB when calculated.
+ * Price channel period is read from DB
  * This class is called in 3 cases:
- * 1. On the first (initial) start of the application when the DB is empty and contains no historical data
+ * 1. On the first (initial) start of the application when the DB is empty and contains no historical data loaded from www.bitfinex.com
  * 2. When a new bar is issued
  * 3. When Initial start button is clicked from GUI
  *
@@ -24,13 +25,10 @@ class PriceChannel
 {
     public static function calculate()
     {
-        //DB::table(env("ASSET_TABLE"))->truncate();
-
         /** @var int $priceChannelPeriod */
         $priceChannelPeriod = DB::table('settings_realtime')
             ->where('id', 1)
             ->value('price_channel_period');
-        //$priceChannelPeriod = $priceChannelPeriod;
 
         /**
          * @var int elementIndex Loop index. If the price channel period is 5 the loop will go from 0 to 4.
@@ -83,9 +81,6 @@ class PriceChannel
                     if ($records[$i]->low < $priceChannelLowValue)
                         $priceChannelLowValue = $records[$i]->low;
                 }
-
-                //echo "$elementIndex " . $records[$elementIndex]->date . " " . $priceChannelHighValue . "<br>";
-
 
                 /** Update high and low values in DB */
                 DB::table("asset_1")

@@ -64,7 +64,7 @@ class RatchetPawlSocket extends Command
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $loop) {
 
                     /**
-                     * If the broadcast is on - proceed events, pass it to Chart class
+                     * If the broadcast is on (enabled in UI, ChartControl.vue) - proceed events, pass it to thd Chart class
                      * @todo 05.26.18 This check must be performed once a second otherwise each tick will execute a requse to DB wich will overload the data base
                      *
                      */

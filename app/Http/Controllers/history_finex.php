@@ -13,10 +13,10 @@ use Illuminate\Database\Schema\Blueprint;
  * Unauthenticated channel and API v2
  * https://docs.bitfinex.com/v2/reference#rest-public-candles
  *
- * 1. Read the list of assets from assets table (DB)
- * 1.1 Truncate created_tables_for_history_data (drop all created table records in DB)
- * 2. Create tables for received assets using the same names
- * 3. Add created table to created_tables_for_history_data in DB
+ * 1. Reads the list of assets from assets table (DB)
+ * 1.1 Truncates created_tables_for_history_data (drop all created table records in DB)
+ * 2. Creates tables for received assets using the same names
+ * 3. Adds created table to created_tables_for_history_data in DB
  */
 
 class history_finex extends Controller

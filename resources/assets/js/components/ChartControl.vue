@@ -118,7 +118,6 @@
 
                         console.log('history. testing controller goes here. broadcast = off');
                         this.modeToggleText = "history testing";
-
                     }
                 }
                 else
@@ -129,12 +128,9 @@
                         this.toggleFlag = true;
                         this.startButtonDisabled = false;
                         this.stopButtonDisabled = false;
-
-                        //this.stopBroadCastFunction();
                         this.initialStartFunction();
                         this.startBroadCastFunction();
                         this.modeToggleText = "realtime";
-
                     }
                 }
             },

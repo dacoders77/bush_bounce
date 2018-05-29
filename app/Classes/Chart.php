@@ -62,6 +62,10 @@ class Chart
                 ->value('symbol');
     }
 
+    public function hist(){
+        echo "------------------------------************!"; // WORKS!
+    }
+
     /**
      * Received message in websocket channel is sent to this method as an argument.
      * A message is precessed, bars and trades are calculated.
@@ -91,7 +95,6 @@ class Chart
         }
 
 
-        // here
 
                 //echo "id: " . $nojsonMessage[2][0];
                 //echo " date: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
@@ -469,6 +472,7 @@ class Chart
 
                     /** Recalculate price channel. Controller call as a method */
                     //app('App\Http\Controllers\indicatorPriceChannel')->index();
+                    PriceChannel::calculate();
 
                 } // New bar is issued
 

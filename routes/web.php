@@ -147,3 +147,11 @@ Route::get('/initialstart', function () {
     App\Classes\History::load(); // Load history from www.bitfinex.com
     App\Classes\PriceChannel::calculate();
 });
+
+// Test history controller. Which is used to test broadcasting messages frim the local DB to Chart.php
+route::get('/historytest/{z}', 'realtime\HistoryTest@index');
+
+// Event test route
+route::get('/event', function(){
+    event(new \App\Events\TaskEvent('web.php event test route'));
+});

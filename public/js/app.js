@@ -48399,8 +48399,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     this.toggleFlag = true;
                     this.startButtonDisabled = false;
                     this.stopButtonDisabled = false;
-
-                    //this.stopBroadCastFunction();
                     this.initialStartFunction();
                     this.startBroadCastFunction();
                     this.modeToggleText = "realtime";
