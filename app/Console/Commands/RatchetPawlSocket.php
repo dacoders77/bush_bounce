@@ -36,12 +36,13 @@ class RatchetPawlSocket extends Command
         //$this->chart = new Classes\Chart(); // New instance of Chart class
     }
 
+
     /**
      * Execute the console command.
      *
      * @return mixed
      */
-    public function handle(Classes\Chart $chart)
+    public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
         echo "*****Ratchet websocket console command(app) started!*****\n";
         //event(new \App\Events\BushBounce('*** Ratchet websocket console app started ***'));
@@ -60,8 +61,8 @@ class RatchetPawlSocket extends Command
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
         $connector('wss://api.bitfinex.com/ws/2', [], ['Origin' => 'http://localhost'])
-            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $loop) {
-                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $loop) {
+            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $candleMaker, $loop) {
+                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop) {
 
                     /**
                      * If the broadcast is on - proceed events, pass it to Chart class
@@ -87,7 +88,13 @@ class RatchetPawlSocket extends Command
                         if (!array_key_exists('event',$jsonMessage)) { // All messages except first two associated arrays
                             if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
                             {
-                                $chart->index($nojsonMessage, $this); // Call the method when the event is received
+                                //$chart->index($nojsonMessage, $this); // Call the method when the event is received
+                                //public function index(double $tickPrice, date $tickDate, double $tickVolume, Command $command)
+
+                                $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $this);
+                                //Classes\CandleMaker::index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $this);
+                                //Classes\CandleMaker::index(1.0, 1, 1.0, $this);
+
                             }
                         }
 

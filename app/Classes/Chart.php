@@ -33,11 +33,10 @@ use PhpParser\Node\Expr\Variable;
  */
 class Chart
 {
-    public $dateCompeareFlag = true;
-    public $tt; // Time
 
-    public $barHigh = 0; // For high value calculation
-    public $barLow = 9999999;
+
+
+
 
     public $trade_flag = "all";
     public $add_bar_long = true; // Count closed position on the same be the signal occurred. The problem is when the position is closed the close price of this bar goes to the next position
@@ -47,20 +46,7 @@ class Chart
     public $firstPositionEver = true; // Skip the first trade record. When it occurs we ignore calculations and make accumulated_profit = 0. On the next step (next bar) there will be the link to this value
     public $firstEverTradeFlag = true; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
 
-    public function __construct()
-    {
-        $this->timeFrame =
-            DB::table('settings_realtime')
-                ->where('id', 'asset_1')
-                ->value('time_frame');
 
-        // Get traded symbol from DB. String must look like: tBTCUSD
-        // MAKE IT UPPER CASE!
-        $this->symbol = "t" .
-            DB::table('settings_realtime')
-                ->where('id', 'asset_1')
-                ->value('symbol');
-    }
 
     /**
      * Received message in websocket channel is sent to this method as an argument.
@@ -76,108 +62,8 @@ class Chart
     //public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message, Command $command)
     public function index($nojsonMessage, Command $command)
     {
-        /** First time ever application run check. If so - load historical data first */
-        if ((DB::table('settings_realtime')
-                ->where('id', 1)
-                ->value('initial_start')))
-        {
-            echo "Chart.php Application first ever run. Load history data. History::index()\n";
-            //event(new \App\Events\BushBounce('Bot first ever run'));
-            History::load(); /** After the history is loaded - get price channel calculated */
-            // Calculate price channel
-            // \App\Http\Controllers\Realtime\PriceChannel::calculate();
-            // App\Classes\PriceChannel::calculate();
-            PriceChannel::calculate(); // Calculate price channel
-        }
 
 
-        // here
-
-                //echo "id: " . $nojsonMessage[2][0];
-                //echo " date: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
-                //echo " volume: " . $nojsonMessage[2][2];
-                //echo " price: " . $nojsonMessage[2][3] . "\n";
-
-                // current trade(tick): $nojsonMessage[2][3]
-                // volume: $nojsonMessage[2][2]
-
-                // REMOVE IT FROM HERE
-                // THERE IS THE SAME CODE IN CONSTRUCTOR
-                $timeFrame =
-                    (DB::table('settings_realtime')
-                        ->where('id', 1)
-                        ->value('time_frame'));
-
-                // Take seconds off and add 1 min. Do it only once per interval (for example 1min)
-                if ($this->dateCompeareFlag) {
-                    $x = date("Y-m-d H:i", $nojsonMessage[2][1] / 1000) . "\n"; // Take seconds off. Convert timestamp to date
-                    //$this->tt = strtotime($x . $this->timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
-                    $this->tt = strtotime($x . + $timeFrame . 'minute'); // Time frame. Added 1 minute. Timestamp
-                    $this->dateCompeareFlag = false;
-                }
-
-                //echo "x: " . $x;
-                //echo " this->tt: " . ($this->tt) . "\n";
-                //echo " tt: " . gmdate("Y-m-d G:i:s", ($this->tt));
-                //die();
-
-                // Make a signal when value reaches over added 1 minute
-                echo
-                    "Ticker: " . $this->symbol .
-                    " time: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)) .
-                    " price: " . $nojsonMessage[2][3] .
-                    " vol: " . $nojsonMessage[2][2] .
-                    " pos: " . $this->position . "\n";
-
-                /*
-                event(new \App\Events\BushBounce(
-                    $this->symbol .
-                    " / " . gmdate("G:i:s", ($nojsonMessage[2][1] / 1000)) .
-                    " price: " . $nojsonMessage[2][3] .
-                    " pos: " . $this->position
-                ));
-                */
-
-                // Calculate high and low of the bar then pass it to the chart in $messageArray
-                if ($nojsonMessage[2][3] > $this->barHigh) // High
-                {
-                    $this->barHigh = $nojsonMessage[2][3];
-                }
-
-                if ($nojsonMessage[2][3] < $this->barLow) // Low
-                {
-                    $this->barLow = $nojsonMessage[2][3];
-                }
-
-                // RATCHET ERROR GOES HERE, WHILE INITIAL START FROM GIU. trying to get property of non-object
-                // Update high, low and close of the current bar in DB. Update the record on each trade.
-                // Then the new bar will be issued - we will have actual values updated in the DB
-
-                // ERROR: Trying to get property of non object
-                // Occurs when ratchet:start is run for the first time and the history table is empty - no record to update
-                // Start GIU first and then rathcet:start
-                // Updating last bar in the table. At the first run the table is not empty. Historical bars were loaded
-
-
-
-
-                    try {
-                    DB::table('asset_1')
-                        ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
-                        ->update([
-                            'close' => $nojsonMessage[2][3],
-                            'high' => $this->barHigh,
-                            'low' => $this->barLow,
-                        ]);
-                    }
-                    catch(Exception $e) {
-                        echo 'Error while DB record update: ' .$e->getMessage();
-                        //event(new \App\Events\BushBounce('Error while DB record update: ' .$e->getMessage()));
-                    }
-
-
-                //echo "current tick: " . gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000));
-                //echo " time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt / 1000));
 
                 // NEW BAR IS ISSUED
                 if (floor(($nojsonMessage[2][1] / 1000)) >= $this->tt){
@@ -223,6 +109,9 @@ class Chart
 
                     // Trades watch
                     // Quantity of all records in DB
+                    /**
+                     * @todo read the whole record from the DB then acess it by keys. No need to read each value over and over
+                     */
                     $x = (DB::table('asset_1')->orderBy('time_stamp', 'desc')->get())[0]->id;
 
                     // Get price
@@ -466,10 +355,6 @@ class Chart
                     }
 
 
-
-                    /** Recalculate price channel. Controller call as a method */
-                    //app('App\Http\Controllers\indicatorPriceChannel')->index();
-
                 } // New bar is issued
 
                 /** Add calculated values to associative array */
@@ -490,7 +375,6 @@ class Chart
                     $this->barHigh = 0;
                     $this->barLow = 9999999;
                 }
-            //}// delete
-        //}// delete
+
     }
 }
