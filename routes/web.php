@@ -145,5 +145,5 @@ Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
 Route::get('/initialstart', function () {
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::load(); // Load history from www.bitfinex.com
-    App\Classes\PriceChannel::calculate();
+    //App\Classes\PriceChannel::calculate();
 });

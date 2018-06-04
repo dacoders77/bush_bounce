@@ -19,6 +19,7 @@
         },
 
         mounted() {
+            // Mounted is not used anymore
             console.log('Component Chart.vue mounted');
         },
         created() {
@@ -140,9 +141,9 @@
                             'close': e.update["tradePrice"]
                         }, true);
 
-                        // New bar is issued. Flag sent from RatchetWebSocket.php
+                        // New bar is issued. Flag sent from CandleMaker.php
                         if (e.update["flag"]) { // e.update["flag"] = true
-                            console.log('new bar is added');
+                            console.log('Chart.vue. New bar is added');
                             // Add bar to the chart
                             chart1.series[0].addPoint([e.update["tradeDate"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"]],true, false); // Works good
 
@@ -174,6 +175,7 @@
                         }
 
                         /*
+                        // TRADE FLAGS
                         // buy flag
                         if (e.update["flag"] == "buy") {
                             console.log('buy');
@@ -200,7 +202,7 @@
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
-                console.log('Chart.vue. My event has been triggered', $event)
+                console.log('Chart.vue. My event has been triggered. Reload history data', $event)
                 HistoryBarsLoad(); // Load history data from DB
 
             });
@@ -213,7 +215,7 @@
                 console.log('Chart.vue. HistoryBarsLoad() function worked');
                 axios.get('/historybarsload') // Load history data from BR
                     .then(response => {
-                        console.log('Chart.vue. historybarsload controller response (from function): ');
+                        //console.log('Chart.vue. historybarsload controller response (from function): ');
                         chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
                         chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
                         chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
@@ -224,25 +226,26 @@
                         console.log('Chart.vue. /historybarsload controller error (from function): ');
                         console.log(error.response);
                     })
-
             }
 
-            //Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-                //console.log(e.update);
 
-                /*
-                var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
+            /*
+            DELETE THIS CODE! IT IS ALREADY USED!
+            Echo.channel('Bush-channel').listen('BushBounce', (e, chart1) => {
+                console.log(e.update);
+                //var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
+                var last = chart1.series[0].data[chart.series[0].data.length - 1];
                 last.update({
                     //'open': 1000,
                     'high': e.update["tradeBarHigh"],
                     'low': e.update["tradeBarLow"],
                     'close': e.update["tradePrice"]
                 }, true);
-                */
-                //});
+
+                });
+           */
+
         },
-
-
 
     }
 </script>

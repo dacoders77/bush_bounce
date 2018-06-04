@@ -48378,9 +48378,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             // History test button click
         },
         modeToggle: function modeToggle() {
-
             if (this.toggleFlag) {
-                // History testing
+                // History testing mode
                 var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be supsended.");
                 if (conf) {
                     this.toggleFlag = false;
@@ -48388,12 +48387,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     this.stopButtonDisabled = true;
                     this.stopBroadCastFunction();
                     this.initialStartFunction();
-
+                    // *******************************************
                     console.log('history. testing controller goes here. broadcast = off');
+
                     this.modeToggleText = "history testing";
                 }
             } else {
-                // Real-time
+                // Real-time mode
                 var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                 if (conf) {
                     this.toggleFlag = true;
@@ -48437,11 +48437,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         initialStartFunction: function initialStartFunction() {
             var _this3 = this;
 
-            console.log('Initial start function executed');
+            // There is no controller
+            // All code located in web.php
+            // 1. Truncate history data table (asset_!
+            // 2. Load history App\Classes\History::load()
+            // 3. Calculate price channel
 
+
+            console.log('Initial start function executed');
             axios.get('/initialstart').then(function (response) {
                 //console.log('ChartControl.vue. initialstart response');
-                _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event
+                _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                 //this.broadcastAllowed = "on";
             }).catch(function (error) {
                 console.log('ChartControl.vue. initialstart controller error:');
@@ -48471,17 +48477,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
         }
     },
-    mounted: function mounted() {
+    created: function created() {
         var _this6 = this;
 
-        console.log('Component ChartControl.vue mounted.');
+        console.log('ChartControl.vue created');
 
         // Console messages output to the page
         // Messages are streamed from php via websocket
         var arr = new Array();
         this.items = arr;
+
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
             if (_this6.items.length < 15) {
+                // 15 - quantity of rows in quotes window
                 _this6.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
                 _this6.items.shift();
@@ -48792,6 +48800,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         };
     },
     mounted: function mounted() {
+        // Mounted is not used anymore
         console.log('Component Chart.vue mounted');
     },
     created: function created() {
@@ -48907,10 +48916,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     'close': e.update["tradePrice"]
                 }, true);
 
-                // New bar is issued. Flag sent from RatchetWebSocket.php
+                // New bar is issued. Flag sent from CandleMaker.php
                 if (e.update["flag"]) {
                     // e.update["flag"] = true
-                    console.log('new bar is added');
+                    console.log('Chart.vue. New bar is added');
                     // Add bar to the chart
                     chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
 
@@ -48940,6 +48949,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 }
 
                 /*
+                // TRADE FLAGS
                 // buy flag
                 if (e.update["flag"] == "buy") {
                     console.log('buy');
@@ -48961,7 +48971,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         // Event bus listener
         // This event is received from ChartControl.vue component when price channel update button is clicked
         this.$bus.$on('my-event', function ($event) {
-            console.log('Chart.vue. My event has been triggered', $event);
+            console.log('Chart.vue. My event has been triggered. Reload history data', $event);
             HistoryBarsLoad(); // Load history data from DB
         });
 
@@ -48971,7 +48981,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             console.log('Chart.vue. HistoryBarsLoad() function worked');
             axios.get('/historybarsload') // Load history data from BR
             .then(function (response) {
-                console.log('Chart.vue. historybarsload controller response (from function): ');
+                //console.log('Chart.vue. historybarsload controller response (from function): ');
                 chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
                 chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
                 chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
@@ -48983,19 +48993,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
         }
 
-        //Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-        //console.log(e.update);
-
         /*
-        var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
-        last.update({
-            //'open': 1000,
-            'high': e.update["tradeBarHigh"],
-            'low': e.update["tradeBarLow"],
-            'close': e.update["tradePrice"]
-        }, true);
+        DELETE THIS CODE! IT IS ALREADY USED!
+        Echo.channel('Bush-channel').listen('BushBounce', (e, chart1) => {
+            console.log(e.update);
+            //var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
+            var last = chart1.series[0].data[chart.series[0].data.length - 1];
+            last.update({
+                //'open': 1000,
+                'high': e.update["tradeBarHigh"],
+                'low': e.update["tradeBarLow"],
+                'close': e.update["tradePrice"]
+            }, true);
+             });
         */
-        //});
     }
 });
 

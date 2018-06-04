@@ -84,10 +84,10 @@ class CandleMaker
 
         // Take seconds off and add 1 min. Do it only once per interval (for example 1min)
         if ($this->isFirstTickInBar) {
-            echo "xx:" . $this->isFirstTickInBar . "\n";
+            //echo "xx:" . $this->isFirstTickInBar . "\n";
             $x = date("Y-m-d H:i", $tickDate / 1000) . "\n"; // Take seconds off. Convert timestamp to date
             $this->tt = strtotime($x . $this->settings->time_frame . "minute");
-            $command->info("IF ###############################################");
+            //$command->info("IF ###############################################");
             $this->isFirstTickInBar = false;
         }
 
@@ -133,9 +133,9 @@ class CandleMaker
         /*
          * New bar is issued
          * When the time of the tick is > added time - add this bar to the DB
+         * @todo now volume is not accumulated. We record the last volume of the trade
          */
         if (floor($tickDate / 1000) >= $this->tt){
-
             $command->info("------------------- NEW BAR ISSUED ----------------------");
             DB::table('asset_1')->insert(array( // Record to DB
                 'date' => gmdate("Y-m-d G:i:s", ($tickDate / 1000)), // Date in regular format. Converted from unix timestamp
@@ -154,11 +154,24 @@ class CandleMaker
                  */
                 $this->settings = DB::table('settings_realtime')->first();
 
-                /*
-                 * Set flag to true in order to drop seconds of the time and add time frame
-                 * $this->isFirstTickInBar
-                 */
+                /** Set flag to true in order to drop seconds of the time and add time frame */
                 $this->isFirstTickInBar = true;
+                /** This flag informs Chart.vue that it needs to add new bar to the chart.  */
+                $messageArray['flag'] = true;
             }
+
+        $messageArray['tradeDate'] = $tickDate;
+        $messageArray['tradeVolume'] = $tickVolume;
+        $messageArray['tradePrice'] = $tickPrice; // Tick price = current price and close (when a bar is closed)
+        $messageArray['tradeBarHigh'] = $this->barHigh; // High value of the bar
+        $messageArray['tradeBarLow'] = $this->barLow; // Low value of the bar
+        event(new \App\Events\BushBounce($messageArray));
+
+        /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
+        if ($this->isFirstTickInBar == true){
+            $this->barHigh = 0;
+            $this->barLow = 9999999;
+        }
+
     }
 }

@@ -110,7 +110,7 @@ class Chart
                     // Trades watch
                     // Quantity of all records in DB
                     /**
-                     * @todo read the whole record from the DB then acess it by keys. No need to read each value over and over
+                     * @todo read the whole record from the DB then access it by keys. No need to read each value over and over
                      */
                     $x = (DB::table('asset_1')->orderBy('time_stamp', 'desc')->get())[0]->id;
 

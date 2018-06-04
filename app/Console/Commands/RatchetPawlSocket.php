@@ -109,8 +109,7 @@ class RatchetPawlSocket extends Command
                     }
                     else
                     {
-                        echo "Broadcast is stopped \n";
-                        echo "delete this line";
+                        echo "Broadcast is stopped. The flag in DB is set to false \n";
                     }
 
 

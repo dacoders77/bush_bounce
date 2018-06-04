@@ -104,10 +104,9 @@
                 // History test button click
             },
             modeToggle(){
-
                 if (this.toggleFlag)
                 {
-                    // History testing
+                    // History testing mode
                     var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be supsended.");
                     if (conf) {
                         this.toggleFlag = false;
@@ -115,15 +114,15 @@
                         this.stopButtonDisabled = true;
                         this.stopBroadCastFunction();
                         this.initialStartFunction();
-
+                        // *******************************************
                         console.log('history. testing controller goes here. broadcast = off');
-                        this.modeToggleText = "history testing";
 
+                        this.modeToggleText = "history testing";
                     }
                 }
                 else
                 {
-                    // Real-time
+                    // Real-time mode
                     var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (conf) {
                         this.toggleFlag = true;
@@ -165,18 +164,25 @@
                     });
             },
             initialStartFunction: function () {
-                console.log('Initial start function executed');
+                // There is no controller
+                // All code located in web.php
+                // 1. Truncate history data table (asset_!
+                // 2. Load history App\Classes\History::load()
+                // 3. Calculate price channel
 
+
+                console.log('Initial start function executed');
                 axios.get('/initialstart' )
                     .then(response => {
                         //console.log('ChartControl.vue. initialstart response');
-                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event
+                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                         //this.broadcastAllowed = "on";
                     })
                     .catch(error => {
                         console.log('ChartControl.vue. initialstart controller error:');
                         console.log(error.response);
                     })
+
             },
             startBroadCastFunction(){
                 axios.get('/startbroadcast')
@@ -203,15 +209,16 @@
 
             }
         },
-        mounted() {
-            console.log('Component ChartControl.vue mounted.');
+        created() {
+            console.log('ChartControl.vue created');
 
             // Console messages output to the page
             // Messages are streamed from php via websocket
             var arr = new Array();
             this.items = arr;
+
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-                if (this.items.length < 15) {
+                if (this.items.length < 15) { // 15 - quantity of rows in quotes window
                     this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
                 }
                 else {
