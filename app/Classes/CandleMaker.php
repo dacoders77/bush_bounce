@@ -8,6 +8,7 @@
 
 namespace App\Classes;
 use Illuminate\Support\Facades\DB;
+use Mockery\Exception;
 
 /**
  * Class CandleMakers
@@ -108,9 +109,16 @@ class CandleMaker
             $this->barLow = $tickPrice;
         }
 
+        try{
+            $lastRecordId = DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id;
+        }
+        catch(Exception $exception) {
+            echo "CandleMaker.php. Get last id of the record error: " . $exception;
+        }
+
         try {
             DB::table('asset_1')
-                ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
+                ->where('id', $lastRecordId) // id of the last record. desc - descent order
                 ->update([
                     'close' => $tickPrice,
                     'high' => $this->barHigh,

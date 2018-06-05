@@ -120,22 +120,14 @@ class History
     /** Gets history data for specified period of time. This method is called when history back testing mode is activated */
     static public function LoadPeriod(){
 
-
         // Read start and end dates, timeframe from the DB
-        $start = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_start')) * 1000); // Timestamp
-        $end = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_end')) * 1000);
-        $timeframe = DB::table('assets')->where('id', 1)->value('timeframe');
-
+        $start = (strtotime(DB::table('settings_realtime')->where('id', 1)->value('history_from')) * 1000); // Timestamp
+        $end = (strtotime(DB::table('settings_realtime')->where('id', 1)->value('history_to')) * 1000);
+        $timeframe = DB::table('settings_realtime')->where('id', 1)->value('time_frame') . "m"; // "m" - minutes
+        $symbol = DB::table('settings_realtime')->where('id', 1)->value('symbol');
 
         echo "start: " . gmdate ("d-m-Y G:i:s", ($start / 1000)) . " end: " . gmdate ("d-m-Y G:i:s", ($end / 1000)) . "<br>";
         echo "timeframe: " . $timeframe . "<br>";
-
-
-        // Loop through all elements is assets
-        foreach ($allTableValues1 as $tableValue) {
-
-            echo "<br>";
-            echo "                                             current asset: " . $tableValue->asset_name;
 
             // Create guzzle http client
             $api_connection = new Client([
@@ -145,19 +137,13 @@ class History
 
             // Working end point! do not touch it!
             //$restEndpoint = "candles/trade:" . $timeframe . ":tBTCUSD/hist?limit=1000&start=" . $start . "&end=" . $end . "&sort=1";
-
-            DB::table('history_' . $tableValue->asset_name)->truncate(); // Drop all records in the table
-
-
-
+           // https://api.bitfinex.com/v2/candles/trade:1m:tBTCUSD/hist?limit=1000&start=1518480000000&end=1518566400000&sort=1
 
             // Break requested time period into pieces and request one by one
-
             $q = 1;
-            // READING THIS VARS AGAIN! FIX IT! there is another reading at the beggining of the code
             // Read star and end date, timeframe from the DB
-            $start = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_start')) * 1000); // Timestamp
-            $end = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_end')) * 1000);
+            //$start = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_start')) * 1000); // Timestamp
+            //$end = (strtotime(DB::table('assets')->where('id', 1)->value('load_history_end')) * 1000);
 
             $tempEnd = $end;
             $dayStep = 1; // Previous value 9. 1 for one day history loading
@@ -178,7 +164,7 @@ class History
 
                 // Time fromat: YYYY-MM-DD
                 //$restEndpoint = "candles/trade:" . $timeframe . ":t" . strtoupper($tableValue->asset_name) . "/hist?limit=1000&start=" . (strtotime("2017-01-01 +0 day") * 1000) . "&end=" . (strtotime("2017-01-05 +0 day") * 1000) . "&sort=1"; //
-                $restEndpoint = "candles/trade:" . $timeframe . ":t" . strtoupper($tableValue->asset_name) . "/hist?limit=1000&start=" . $start . "&end=" . $tempEnd . "&sort=1"; //
+                $restEndpoint = "candles/trade:" . $timeframe . ":t" . strtoupper($symbol) . "/hist?limit=1000&start=" . $start . "&end=" . $tempEnd . "&sort=1"; //
 
                 // Create request and assign its result to $response variable
                 // $response = $api_connection->request('GET', $restEndpoint, ['headers' => [] ]); // http://docs.guzzlephp.org/en/stable/request-options.html#http-errors
@@ -191,19 +177,22 @@ class History
 
                 $json = json_decode($body, true);
 
+                echo($restEndpoint);
+                //dd($json);
+
                 if ($response->getStatusCode() == 200) // Request successful
                 {
-
                     $i = 1;
                     foreach ($json as $z) {
 
-                        //echo '<pre>';
-                        //echo $z[0] . " ";
-                        //echo $i . " " . gmdate("d-m-Y G:i:s", ($z[0] / 1000));
-                        //echo '</pre>';
-                        //$i++;
+                        echo "loaded bar:\n";
+                        echo '<pre>';
+                        echo $z[0] . " ";
+                        echo $i . " " . gmdate("d-m-Y G:i:s", ($z[0] / 1000));
+                        echo '</pre>';
+                        $i++;
 
-                        DB::table('history_' . $tableValue->asset_name)->insert(array(
+                        DB::table('asset_1')->insert(array(
                             'date' => gmdate("Y-m-d G:i:s", ($z[0] / 1000)), // Date in regular format. Converted from unix timestamp
                             'time_stamp' => $z[0],
                             'open' => $z[1],
@@ -211,23 +200,22 @@ class History
                             'high' => $z[3],
                             'low' => $z[4],
                             'volume' => $z[5],
-
                         ));
+                    }
 
-                    } // foreach
+                    //session()->flash('notif', 'The historical data loaded successfully! ' . $i . ' candles in total. Last loaded date: ');
 
-                    // https://www.youtube.com/watch?v=6-5XrSvjsic
-                    //session()->flash('notif', 'The historical data loaded successfully! ' . $i . ' candles in total. Last loaded date: ' . gmdate("Y-m-d G:i:s", ($z[0] / 1000))); // Add flash message to the session. Later it will be read and displayed from the session
-                    session()->flash('notif', 'The historical data loaded successfully! ' . $i . ' candles in total. Last loaded date: ');
+                    echo "The historical data loaded successfully! ' . $i . ' candles in total";
 
                 } // if 200
 
                 else // Request is not successful. Error code is not 200
 
                 {
-                    echo "<script>alert('Request error: too many requests!' )</script>"; // $response->getReasonPhrase()
+                    echo "Request error: too many requests!"; // $response->getReasonPhrase()
                 }
 
+                /** Make a staep */
                 $start = $start + 86400000 * $dayStep; // 10 days step. 86400000 millesecs - 1 day
                 $tempEnd = $tempEnd + 86400000 * $dayStep;
                 $q++;

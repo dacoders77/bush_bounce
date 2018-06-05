@@ -48320,8 +48320,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
-//
-//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48385,7 +48383,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         modeToggle: function modeToggle() {
             if (this.toggleFlag) {
                 // History testing mode
-                var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be supsended.");
+                var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                 if (conf) {
                     this.toggleFlag = false;
                     this.startButtonDisabled = true;
@@ -48393,8 +48391,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     this.stopBroadCastFunction();
                     this.initialStartFunction();
                     // *******************************************
-                    console.log('history. testing controller goes here. broadcast = off');
+                    // call history period controller http://bounce.kk/public/historyperiod
+                    axios.get('/historyperiod').then(function (response) {
+                        console.log('ChartControl.vue. historyperiodt controller response: ');
+                    }).catch(function (error) {
+                        console.log('ChartControl.vue historyperiod controller error: ');
+                        console.log(error.response);
+                    });
 
+                    // fire event (load bars)
+                    this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
+
+                    console.log('history. testing controller goes here. broadcast = off');
                     this.modeToggleText = "history testing";
                 }
             } else {
@@ -48413,13 +48421,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             }
         },
 
-        // Method
+        // Methods
         chartInfo: function chartInfo() {
             var _this2 = this;
 
             // Chart info values from DB load
             axios.get('/chartinfo').then(function (response) {
-                //console.log('ChartControl.vue. ChartInfo controller response: ');
+                console.log('ChartControl.vue. ChartInfo controller response: ');
                 _this2.symbol = response.data['symbol'];
                 _this2.netProfit = 'not ready yet';
                 _this2.requestedBars = response.data['request_bars'];
@@ -48429,8 +48437,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 _this2.tradingAllowed = response.data['allow_trading'];
                 _this2.priceChannelPeriod = response.data['price_channel_period'];
                 _this2.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
-
                 _this2.modeToggleText = response.data['broadcast_stop'] == 1 ? 'history testing' : 'realtime';
+                _this2.historyFrom = response.data['history_from'];
+                _this2.historyTo = response.data['history_to'];
 
                 //var isTrueSet = (myValue == 'true');
             }) // Output returned data by controller
@@ -48448,16 +48457,25 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             // 2. Load history App\Classes\History::load()
             // 3. Calculate price channel
 
-
             console.log('Initial start function executed');
-            axios.get('/initialstart').then(function (response) {
-                //console.log('ChartControl.vue. initialstart response');
-                _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                //this.broadcastAllowed = "on";
-            }).catch(function (error) {
-                console.log('ChartControl.vue. initialstart controller error:');
-                console.log(error.response);
-            });
+            if (this.modeToggleText == "realtime") {
+                axios.get('/initialstart').then(function (response) {
+                    //console.log('ChartControl.vue. initialstart response');
+                    _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                    //this.broadcastAllowed = "on";
+                }).catch(function (error) {
+                    console.log('ChartControl.vue. initialstart controller error:');
+                    console.log(error.response);
+                });
+            } else {
+                axios.get('/historyperiod').then(function (response) {
+                    //console.log('ChartControl.vue. historyperiod response');
+                    _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                }).catch(function (error) {
+                    console.log('ChartControl.vue. historyperiod controller error:');
+                    console.log(error.response);
+                });
+            }
         },
         startBroadCastFunction: function startBroadCastFunction() {
             var _this4 = this;
@@ -48581,7 +48599,7 @@ var render = function() {
         }
       }),
       _c("br"),
-      _vm._v("\n\n        Testing Period: "),
+      _vm._v("\n        Tst: "),
       _c("input", {
         directives: [
           {
@@ -48592,7 +48610,7 @@ var render = function() {
           }
         ],
         staticClass: "form-control",
-        staticStyle: { width: "80px" },
+        staticStyle: { width: "130px" },
         attrs: { type: "date" },
         domProps: { value: _vm.historyFrom },
         on: {
@@ -48615,7 +48633,7 @@ var render = function() {
           }
         ],
         staticClass: "form-control",
-        staticStyle: { width: "80px" },
+        staticStyle: { width: "130px" },
         attrs: { type: "date" },
         domProps: { value: _vm.historyTo },
         on: {
@@ -48628,7 +48646,7 @@ var render = function() {
         }
       }),
       _c("br"),
-      _vm._v("\n\n        Time frame: "),
+      _vm._v("\n        Time frame: "),
       _c("input", {
         directives: [
           {

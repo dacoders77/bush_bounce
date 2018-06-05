@@ -4,9 +4,7 @@
             Symbol: <input type="text" min="1" max="7" class="form-control" v-model="symbol"/><br>
             Net profit: {{ netProfit }}<br>
             Requested bars (realtime): <input type="number" min="1" max="100" class="form-control" v-model="requestBars"/><br>
-
-            Testing Period: <input type="date" class="form-control" v-model="historyFrom" style="width: 80px"> - <input type="date" class="form-control" v-model="historyTo" style="width: 80px"><br>
-
+            Tst: <input type="date" class="form-control" v-model="historyFrom" style="width: 130px"> - <input type="date" class="form-control" v-model="historyTo" style="width: 130px"><br>
             Time frame: <input type="number" min="1" max="100" class="form-control" v-model="timeFrame"/><br>
             Commission: {{ commission }}<br>
             Trading allowed: {{ tradingAllowed }}<br>
@@ -112,7 +110,7 @@
                 if (this.toggleFlag)
                 {
                     // History testing mode
-                    var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be supsended.");
+                    var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                     if (conf) {
                         this.toggleFlag = false;
                         this.startButtonDisabled = true;
@@ -120,8 +118,20 @@
                         this.stopBroadCastFunction();
                         this.initialStartFunction();
                         // *******************************************
-                        console.log('history. testing controller goes here. broadcast = off');
+                        // call history period controller http://bounce.kk/public/historyperiod
+                        axios.get('/historyperiod')
+                            .then(response => {
+                                console.log('ChartControl.vue. historyperiodt controller response: ');
+                            })
+                            .catch(error => {
+                                console.log('ChartControl.vue historyperiod controller error: ');
+                                console.log(error.response);
+                            });
 
+                        // fire event (load bars)
+                        this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
+
+                        console.log('history. testing controller goes here. broadcast = off');
                         this.modeToggleText = "history testing";
                     }
                 }
@@ -142,12 +152,12 @@
                     }
                 }
             },
-            // Method
+            // Methods
             chartInfo: function() {
                 // Chart info values from DB load
                 axios.get('/chartinfo')
                     .then(response => {
-                        //console.log('ChartControl.vue. ChartInfo controller response: ');
+                        console.log('ChartControl.vue. ChartInfo controller response: ');
                         this.symbol = response.data['symbol'];
                         this.netProfit = 'not ready yet';
                         this.requestedBars = response.data['request_bars'];
@@ -157,8 +167,9 @@
                         this.tradingAllowed = response.data['allow_trading'];
                         this.priceChannelPeriod = response.data['price_channel_period'];
                         this.broadcastAllowed = ((response.data['broadcast_stop'] == 1) ? 'off' : 'on');
-
-                        this.modeToggleText = ((response.data['broadcast_stop'] == 1) ? 'history testing' : 'realtime')
+                        this.modeToggleText = ((response.data['broadcast_stop'] == 1) ? 'history testing' : 'realtime');
+                        this.historyFrom = response.data['history_from'];
+                        this.historyTo = response.data['history_to'];
 
                         //var isTrueSet = (myValue == 'true');
 
@@ -175,18 +186,34 @@
                 // 2. Load history App\Classes\History::load()
                 // 3. Calculate price channel
 
-
                 console.log('Initial start function executed');
-                axios.get('/initialstart' )
-                    .then(response => {
-                        //console.log('ChartControl.vue. initialstart response');
-                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                        //this.broadcastAllowed = "on";
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. initialstart controller error:');
-                        console.log(error.response);
-                    })
+                if (this.modeToggleText == "realtime")
+                {
+                    axios.get('/initialstart' )
+                        .then(response => {
+                            //console.log('ChartControl.vue. initialstart response');
+                            this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                            //this.broadcastAllowed = "on";
+                        })
+                        .catch(error => {
+                            console.log('ChartControl.vue. initialstart controller error:');
+                            console.log(error.response);
+                        })
+                }
+                else
+                {
+                    axios.get('/historyperiod' )
+                        .then(response => {
+                            //console.log('ChartControl.vue. historyperiod response');
+                            this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                        })
+                        .catch(error => {
+                            console.log('ChartControl.vue. historyperiod controller error:');
+                            console.log(error.response);
+                        })
+                }
+
+
 
             },
             startBroadCastFunction(){

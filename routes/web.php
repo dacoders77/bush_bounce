@@ -147,3 +147,9 @@ Route::get('/initialstart', function () {
     App\Classes\History::load(); // Load history from www.bitfinex.com
     //App\Classes\PriceChannel::calculate();
 });
+
+// Load history data for determined period of time (delete it?)
+Route::get('/historyperiod', function(){
+    DB::table('asset_1')->truncate(); // Clear the table
+    App\Classes\History::LoadPeriod();
+});
