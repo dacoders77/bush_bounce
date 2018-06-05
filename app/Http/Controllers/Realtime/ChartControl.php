@@ -25,6 +25,9 @@ class ChartControl extends \App\Http\Controllers\Controller
                 'request_bars' => $request->get('requestBars'),
                 'symbol' => $request->get('symbol'),
 
+                'symbol' => $request->get('symbol'),
+                'symbol' => $request->get('symbol'),
+
                 //'execution_time' => date("Y-m-d G:i:s", strtotime($request->get('basketExecTime')))
             ]);
 

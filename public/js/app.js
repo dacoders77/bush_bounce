@@ -48319,6 +48319,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
@@ -48337,7 +48340,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             modeToggleText: '',
             toggleFlag: true,
             startButtonDisabled: true,
-            stopButtonDisabled: true
+            stopButtonDisabled: true,
+            historyFrom: '',
+            historyTo: ''
         };
     },
 
@@ -48497,6 +48502,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             }
         });
 
+        // When a connection error (broadcast stopped and other info messages) occurred in RatchetPawlSocket.php
+        Echo.channel('Bush-channel').listen('ConnectionError', function (e) {
+            if (_this6.items.length < 15) {
+                // 15 - quantity of rows in quotes window
+                _this6.items.push(e.update);
+            } else {
+                _this6.items.shift();
+                _this6.items.push(e.update);
+            }
+        });
+
         // Event bus listener
         this.$bus.$on('my-event', function ($event) {
             //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
@@ -48542,7 +48558,7 @@ var render = function() {
       _c("br"),
       _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
       _c("br"),
-      _vm._v("\n        Requested bars: "),
+      _vm._v("\n        Requested bars (realtime): "),
       _c("input", {
         directives: [
           {
@@ -48565,7 +48581,54 @@ var render = function() {
         }
       }),
       _c("br"),
-      _vm._v("\n        Time frame: "),
+      _vm._v("\n\n        Testing Period: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.historyFrom,
+            expression: "historyFrom"
+          }
+        ],
+        staticClass: "form-control",
+        staticStyle: { width: "80px" },
+        attrs: { type: "date" },
+        domProps: { value: _vm.historyFrom },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.historyFrom = $event.target.value
+          }
+        }
+      }),
+      _vm._v(" - "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.historyTo,
+            expression: "historyTo"
+          }
+        ],
+        staticClass: "form-control",
+        staticStyle: { width: "80px" },
+        attrs: { type: "date" },
+        domProps: { value: _vm.historyTo },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.historyTo = $event.target.value
+          }
+        }
+      }),
+      _c("br"),
+      _vm._v("\n\n        Time frame: "),
       _c("input", {
         directives: [
           {

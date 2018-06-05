@@ -79,15 +79,13 @@ class CandleMaker
             ));
         }
 
-        //$this->isFirstTickInBar = false;
         echo "isFirstTickInBar: " . $this->isFirstTickInBar . "\n";
 
-        // Take seconds off and add 1 min. Do it only once per interval (for example 1min)
+        /** Take seconds off and add 1 min. Do it only once per interval (for example 1min) */
         if ($this->isFirstTickInBar) {
             //echo "xx:" . $this->isFirstTickInBar . "\n";
             $x = date("Y-m-d H:i", $tickDate / 1000) . "\n"; // Take seconds off. Convert timestamp to date
             $this->tt = strtotime($x . $this->settings->time_frame . "minute");
-            //$command->info("IF ###############################################");
             $this->isFirstTickInBar = false;
         }
 
@@ -99,7 +97,7 @@ class CandleMaker
         //    " price: " . $tickPrice .
         //    " vol: " . $tickVolume . "\n";
 
-        // Calculate high and low of the bar then pass it to the chart in $messageArray
+        /** Calculate high and low of the bar then pass it to the chart in $messageArray */
         if ($tickPrice > $this->barHigh) // High
         {
             $this->barHigh = $tickPrice;
@@ -121,14 +119,14 @@ class CandleMaker
         }
         catch(Exception $e) {
             echo 'DB record update error: ' . $e->getMessage();
-            //event(new \App\Events\BushBounce('Error while DB record update: ' .$e->getMessage()));
         }
 
         $command->error("current tick: " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)));
         echo " time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
+        echo "time frame: " . $this->settings->time_frame . "\n";
 
-        echo "************* tick: " . floor($tickDate / 1000) . "\n";
-        echo "************* tt: " . $this->tt . "\n";
+        //echo "************* tick: " . floor($tickDate / 1000) . "\n";
+        //echo "************* tt: " . $this->tt . "\n";
 
         /*
          * New bar is issued
@@ -166,6 +164,7 @@ class CandleMaker
         $messageArray['tradeBarHigh'] = $this->barHigh; // High value of the bar
         $messageArray['tradeBarLow'] = $this->barLow; // Low value of the bar
         event(new \App\Events\BushBounce($messageArray));
+
 
         /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
         if ($this->isFirstTickInBar == true){

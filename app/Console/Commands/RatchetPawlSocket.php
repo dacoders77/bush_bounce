@@ -45,8 +45,8 @@ class RatchetPawlSocket extends Command
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
         echo "*****Ratchet websocket console command(app) started!*****\n";
+        event(new \App\Events\ConnectionError("Connection started"));
         //event(new \App\Events\BushBounce('*** Ratchet websocket console app started ***'));
-
 
         /**
          * Ratchet/pawl websocket lib
@@ -110,15 +110,17 @@ class RatchetPawlSocket extends Command
                     else
                     {
                         echo "Broadcast is stopped. The flag in DB is set to false \n";
+                        event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
                     }
 
 
                 });
-                $conn->on('close', function($code = null, $reason = null) use ($chart) {
+                $conn->on('close', function($code = null, $reason = null) use ($chart, $candleMaker) {
                     echo "Connection closed ({$code} - {$reason})\n";
                     $this->info("line 82. connection closed");
                     $this->error("Reconnecting back!");
-                    $this->handle($chart);
+                    sleep(5); // Wait 5 seconds before next connection try will attpemt
+                    $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
                 //$conn->send(['event' => 'ping']);
@@ -142,10 +144,15 @@ class RatchetPawlSocket extends Command
                 //$conn->send($x);
 
                 /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed again */
-            }, function(\Exception $e) use ($loop) {
-                echo "RatchetPawlSocket.php: Could not connect: \n {$e->getMessage()}\n";
-                $loop->stop();
+            }, function(\Exception $e) use ($loop, $chart, $candleMaker) {
+                $errorString = "RatchetPawlSocket.php: Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
+                echo $errorString;
+                event(new \App\Events\ConnectionError($errorString));
+                sleep(5); // Wait 5 seconds before next connection try will attpemt
+                $this->handle($chart, $candleMaker); // Call the main method of this class
+                //$loop->stop();
             });
+
         $loop->run();
 
     }

@@ -3,7 +3,10 @@
         <div style="border: thin solid green; padding: 5px">
             Symbol: <input type="text" min="1" max="7" class="form-control" v-model="symbol"/><br>
             Net profit: {{ netProfit }}<br>
-            Requested bars: <input type="number" min="1" max="100" class="form-control" v-model="requestBars"/><br>
+            Requested bars (realtime): <input type="number" min="1" max="100" class="form-control" v-model="requestBars"/><br>
+
+            Testing Period: <input type="date" class="form-control" v-model="historyFrom" style="width: 80px"> - <input type="date" class="form-control" v-model="historyTo" style="width: 80px"><br>
+
             Time frame: <input type="number" min="1" max="100" class="form-control" v-model="timeFrame"/><br>
             Commission: {{ commission }}<br>
             Trading allowed: {{ tradingAllowed }}<br>
@@ -60,7 +63,9 @@
                 modeToggleText: '',
                 toggleFlag: true,
                 startButtonDisabled: true,
-                stopButtonDisabled: true
+                stopButtonDisabled: true,
+                historyFrom: '',
+                historyTo: ''
             }
         },
         methods: {
@@ -224,6 +229,17 @@
                 else {
                     this.items.shift();
                     this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                }
+            });
+
+            // When a connection error (broadcast stopped and other info messages) occurred in RatchetPawlSocket.php
+            Echo.channel('Bush-channel').listen('ConnectionError', (e) => {
+                if (this.items.length < 15) { // 15 - quantity of rows in quotes window
+                    this.items.push(e.update);
+                }
+                else {
+                    this.items.shift();
+                    this.items.push(e.update);
                 }
             });
 
