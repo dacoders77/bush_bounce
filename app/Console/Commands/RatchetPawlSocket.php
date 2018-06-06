@@ -7,6 +7,12 @@ use App\Classes;
 
 class RatchetPawlSocket extends Command
 {
+    /** @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
+    private $isFirstTimeBroadcastCheck = false;
+    /** @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
+    private $addedTime = null;
+    /** @var  bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
+    private $isBroadCastAllowed;
 
     /**
      * The name and signature of the console command.
@@ -69,9 +75,11 @@ class RatchetPawlSocket extends Command
                      * @todo 05.26.18 This check must be performed once a second otherwise each tick will execute a requse to DB wich will overload the data base
                      *
                      */
-                    if (DB::table('settings_realtime')
-                            ->where('id', 1)
-                            ->value('broadcast_stop') == 0)
+
+
+
+
+                    if (true) // DELETE THIS IF
                     {
                         /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
                         $jsonMessage = json_decode($socketMessage->getPayload(), true);
@@ -88,13 +96,36 @@ class RatchetPawlSocket extends Command
                         if (!array_key_exists('event',$jsonMessage)) { // All messages except first two associated arrays
                             if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
                             {
-                                //$chart->index($nojsonMessage, $this); // Call the method when the event is received
-                                //public function index(double $tickPrice, date $tickDate, double $tickVolume, Command $command)
+                                /** Chech whether broadcast is allowed only onece a second */
+                                if ($this->isFirstTimeBroadcastCheck || $nojsonMessage[2][1] >= $this->addedTime)
+                                {
+                                    $this->addedTime = $nojsonMessage[2][1] + 1000;
+                                    $this->isFirstTimeBroadcastCheck = false;
 
-                                $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $this);
-                                //Classes\CandleMaker::index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $this);
-                                //Classes\CandleMaker::index(1.0, 1, 1.0, $this);
+                                    if (DB::table('settings_realtime')
+                                            ->where('id', 1)
+                                            ->value('broadcast_stop') == 0)
+                                    {
+                                        $this->isBroadCastAllowed = true;
+                                    }
+                                    else
+                                    {
+                                        $this->isBroadCastAllowed = false;
+                                        echo "Broadcast is stopped. The flag in DB is set to false \n";
+                                        event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
+                                    }
+                                }
 
+                                if ($this->isBroadCastAllowed)
+                                {
+                                    /**
+                                     * @param double        $nojsonMessage[2][3] ($tickPrice) Price of the trade
+                                     * @param integer       $nojsonMessage[2][1] ($tickDate) Timestamp
+                                     * @param double        $nojsonMessage[2][2] ($tickVolume) Volume of the trade
+                                     * @param command       $command variable for graphical strings output to the console
+                                     */
+                                    $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $this);
+                                }
                             }
                         }
 
@@ -107,11 +138,7 @@ class RatchetPawlSocket extends Command
                          * 1.  connection restart
                          */
                     }
-                    else
-                    {
-                        echo "Broadcast is stopped. The flag in DB is set to false \n";
-                        event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
-                    }
+
 
 
                 });

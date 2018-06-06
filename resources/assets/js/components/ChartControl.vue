@@ -109,42 +109,42 @@
             modeToggle(){
                 if (this.toggleFlag)
                 {
-                    // History testing mode
+                    // Enter history testing mode
                     var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                     if (conf) {
                         this.toggleFlag = false;
                         this.startButtonDisabled = true;
                         this.stopButtonDisabled = true;
+
                         this.stopBroadCastFunction();
-                        this.initialStartFunction();
-                        // *******************************************
+                        //this.initialStartFunction();
+
                         // call history period controller http://bounce.kk/public/historyperiod
                         axios.get('/historyperiod')
                             .then(response => {
-                                console.log('ChartControl.vue. historyperiodt controller response: ');
+                                console.log('ChartControl.vue. historyperiodt controller response ');
+                                // Lets try to call the controller when history finished loading
+                                // fire event (load bars)
+                                this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
                             })
                             .catch(error => {
                                 console.log('ChartControl.vue historyperiod controller error: ');
                                 console.log(error.response);
                             });
 
-                        // fire event (load bars)
-                        this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
-
-                        console.log('history. testing controller goes here. broadcast = off');
                         this.modeToggleText = "history testing";
                     }
                 }
                 else
                 {
-                    // Real-time mode
+                    // Enter real-time mode
                     var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (conf) {
                         this.toggleFlag = true;
                         this.startButtonDisabled = false;
                         this.stopButtonDisabled = false;
 
-                        //this.stopBroadCastFunction();
+                        //this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
                         this.initialStartFunction();
                         this.startBroadCastFunction();
                         this.modeToggleText = "realtime";
@@ -179,30 +179,55 @@
                         console.log(error.response);
                     });
             },
+            getUser: async function() {
+                try {
+                    const response = await axios.get('/initialstart');
+                    console.log('async request');
+                    //console.log(response);
+                    this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                } catch (error) {
+                    console.log('ChartControl.vue. initialstart controller error:');
+                    console.log(error.response);
+                }
+            },
+
             initialStartFunction: function () {
+
+                alert('initial start func');
                 // There is no controller
                 // All code located in web.php
                 // 1. Truncate history data table (asset_!
                 // 2. Load history App\Classes\History::load()
                 // 3. Calculate price channel
 
-                console.log('Initial start function executed');
+                console.log('ChartControl.vue. Initial start function');
+
+                // Determine from which start (history or realtime) initial start button is clicked
                 if (this.modeToggleText == "realtime")
                 {
-                    axios.get('/initialstart' )
+                    console.log('ChartControl.vue. Entered realtime mode');
+                    /*
+                    axios.get('/initialstart')
                         .then(response => {
                             //console.log('ChartControl.vue. initialstart response');
                             this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                            //this.broadcastAllowed = "on";
                         })
                         .catch(error => {
                             console.log('ChartControl.vue. initialstart controller error:');
                             console.log(error.response);
                         })
+                        */
+                    this.getUser();
+
+
                 }
                 else
                 {
-                    axios.get('/historyperiod' )
+                    console.log('ChartControl.vue. Entered history mode');
+
+                    // Need to stop broadcasting first
+
+                    axios.get('/historyperiod') // The table will be truncated, history loaded
                         .then(response => {
                             //console.log('ChartControl.vue. historyperiod response');
                             this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
@@ -212,6 +237,8 @@
                             console.log(error.response);
                         })
                 }
+
+
 
 
 
@@ -242,7 +269,6 @@
             }
         },
         created() {
-            console.log('ChartControl.vue created');
 
             // Console messages output to the page
             // Messages are streamed from php via websocket

@@ -18,10 +18,6 @@
             }
         },
 
-        mounted() {
-            // Mounted is not used anymore
-            console.log('Component Chart.vue mounted');
-        },
         created() {
             var chart1; // globally available
             axios.get('/historybarsload')
@@ -202,7 +198,7 @@
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
-                console.log('Chart.vue. My event has been triggered. Reload history data', $event)
+                //console.log('Chart.vue. My event has been triggered. Reload history data', $event) // Output $event parameter
                 HistoryBarsLoad(); // Load history data from DB
 
             });

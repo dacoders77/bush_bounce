@@ -23,8 +23,8 @@ class SettingsRealtime extends Migration
             $table->integer('price_channel_period');
             $table->boolean('allow_trading');
             $table->float('commission_value')->nullable();
-            $table->dateTime('history_from')->nullable();
-            $table->dateTime('history_to')->nullable();
+            $table->date('history_from')->nullable();
+            $table->date('history_to')->nullable();
         });
 
         DB::table('settings_realtime')->insert(array(
@@ -36,8 +36,8 @@ class SettingsRealtime extends Migration
             'price_channel_period' => 10,
             'allow_trading' => 0,
             'commission_value' => 0.2,
-            'history_from' => '2018-06-01 00:00:00',
-            'history_to' => '2018-06-05 00:00:00'
+            'history_from' => '2018-06-01',
+            'history_to' => '2018-06-05'
         ));
     }
 
