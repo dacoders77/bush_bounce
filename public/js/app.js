@@ -48422,7 +48422,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                     this.stopButtonDisabled = false;
 
                     //this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
-                    this.initialStartFunction();
+
+                    // Async request
+                    this.getUser();
+
                     this.startBroadCastFunction();
                     this.modeToggleText = "realtime";
                 }
@@ -48501,7 +48504,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         initialStartFunction: function initialStartFunction() {
             var _this4 = this;
 
-            alert('initial start func');
+            alert('initial start func. this.modeToggleText: ' + this.modeToggleText);
             // There is no controller
             // All code located in web.php
             // 1. Truncate history data table (asset_!
@@ -48512,19 +48515,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
             // Determine from which start (history or realtime) initial start button is clicked
             if (this.modeToggleText == "realtime") {
-                console.log('ChartControl.vue. Entered realtime mode');
-                /*
-                axios.get('/initialstart')
-                    .then(response => {
-                        //console.log('ChartControl.vue. initialstart response');
-                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. initialstart controller error:');
-                        console.log(error.response);
-                    })
-                    */
-                this.getUser();
+                // Code is moved to modeToggle() function
             } else {
                 console.log('ChartControl.vue. Entered history mode');
 
