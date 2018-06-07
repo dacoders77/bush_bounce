@@ -155,7 +155,7 @@
                                 console.log(error.response);
                             })
 
-                        HistoryBarsLoad(); // Load history data from BR
+                        //HistoryBarsLoad(); // Load history data from BR
 
 
                             /*
@@ -205,7 +205,7 @@
 
 
 
-            // Load history bars and price channel from DB. This functions is called in each new bar or on update price channel
+            // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
             // Button from ChartControl.vue component
             function HistoryBarsLoad() {
                 console.log('Chart.vue. HistoryBarsLoad() function worked');

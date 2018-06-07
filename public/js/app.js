@@ -48390,7 +48390,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             var _this2 = this;
 
             if (this.toggleFlag) {
-                // Enter history testing mode
+                // Entering history mode from realtime
                 var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                 if (conf) {
                     this.toggleFlag = false;
@@ -48414,7 +48414,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                     this.modeToggleText = "history testing";
                 }
             } else {
-                // Enter real-time mode
+                // Entering real-time mode from history
                 var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                 if (conf) {
                     this.toggleFlag = true;
@@ -48504,7 +48504,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         initialStartFunction: function initialStartFunction() {
             var _this4 = this;
 
-            alert('initial start func. this.modeToggleText: ' + this.modeToggleText);
+            //alert('initial start func. this.modeToggleText: ' + this.modeToggleText);
+
             // There is no controller
             // All code located in web.php
             // 1. Truncate history data table (asset_!
@@ -48515,7 +48516,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
             // Determine from which start (history or realtime) initial start button is clicked
             if (this.modeToggleText == "realtime") {
-                // Code is moved to modeToggle() function
+                // The same code is presented in modeToggle() function. MOVE IT TO A SEPARATE FUNCTION!
+                // call history period controller http://bounce.kk/public/historyperiod
+
+                this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
+                // Async request
+                this.getUser();
+                this.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                this.startBroadCastFunction();
             } else {
                 console.log('ChartControl.vue. Entered history mode');
 
@@ -49062,7 +49070,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         console.log(error.response);
                     });
 
-                    HistoryBarsLoad(); // Load history data from BR
+                    //HistoryBarsLoad(); // Load history data from BR
 
 
                     /*
@@ -49104,7 +49112,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             HistoryBarsLoad(); // Load history data from DB
         });
 
-        // Load history bars and price channel from DB. This functions is called in each new bar or on update price channel
+        // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
         // Button from ChartControl.vue component
         function HistoryBarsLoad() {
             console.log('Chart.vue. HistoryBarsLoad() function worked');

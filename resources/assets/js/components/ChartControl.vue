@@ -109,7 +109,7 @@
             modeToggle(){
                 if (this.toggleFlag)
                 {
-                    // Enter history testing mode
+                    // Entering history mode from realtime
                     var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                     if (conf) {
                         this.toggleFlag = false;
@@ -137,7 +137,7 @@
                 }
                 else
                 {
-                    // Enter real-time mode
+                    // Entering real-time mode from history
                     var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (conf) {
                         this.toggleFlag = true;
@@ -196,7 +196,8 @@
 
             initialStartFunction: function () {
 
-                alert('initial start func. this.modeToggleText: ' + this.modeToggleText);
+                //alert('initial start func. this.modeToggleText: ' + this.modeToggleText);
+
                 // There is no controller
                 // All code located in web.php
                 // 1. Truncate history data table (asset_!
@@ -208,7 +209,14 @@
                 // Determine from which start (history or realtime) initial start button is clicked
                 if (this.modeToggleText == "realtime")
                 {
-                    // Code is moved to modeToggle() function
+                    // The same code is presented in modeToggle() function. MOVE IT TO A SEPARATE FUNCTION!
+                    // call history period controller http://bounce.kk/public/historyperiod
+
+                    this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
+                    // Async request
+                    this.getUser();
+                    this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                    this.startBroadCastFunction();
                 }
                 else
                 {
