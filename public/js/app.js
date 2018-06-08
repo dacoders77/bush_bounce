@@ -48980,65 +48980,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     dataGrouping: {
                         enabled: false
                     }
-                }, {
-                    name: 'Price channel high',
-                    visible: true,
-                    enableMouseTracking: true,
-                    color: 'red',
-                    lineWidth: 1,
-                    data: response.data['priceChannelHighValues'],
-                    dataGrouping: {
-                        enabled: false
-                    }
-
-                }, {
-                    name: 'Price channel low',
-                    visible: true,
-                    enableMouseTracking: true,
-                    color: 'red',
-                    lineWidth: 1,
-                    data: response.data['priceChannelLowValues'],
-                    dataGrouping: {
-                        enabled: false
-                    }
-
-                }, {
-                    name: 'Long markers',
-                    visible: true,
-                    enableMouseTracking: true,
-                    type: 'scatter',
-                    color: 'purple',
-                    //lineWidth: 3,
-                    data: response.data['longTradeMarkers'],
-                    dataGrouping: {
-                        enabled: false
-                    },
-                    marker: {
-                        fillColor: 'lime',
-                        lineColor: 'green',
-                        lineWidth: 1,
-                        radius: 6,
-                        symbol: 'triangle'
-                    }
-                }, {
-                    name: 'Short markers',
-                    visible: true,
-                    enableMouseTracking: true,
-                    type: 'scatter',
-                    //yAxis: 1, // To which of two y axis this series should be linked
-                    color: 'purple',
-                    //lineWidth: 3,
-                    data: response.data['shortTradeMarkers'],
-                    dataGrouping: {
-                        enabled: false
-                    },
-                    marker: {
-                        fillColor: 'red',
-                        lineColor: 'red',
-                        lineWidth: 1,
-                        radius: 6,
-                        symbol: 'triangle-down'
-                    }
                 }]
             });
 

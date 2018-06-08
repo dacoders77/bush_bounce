@@ -61,6 +61,7 @@
                                 enabled: false
                             }
                         },
+                            /*
                             {
                                 name: 'Price channel high',
                                 visible: true,
@@ -123,7 +124,9 @@
                                     radius: 6,
                                     symbol: 'triangle-down'
                                 },
-                            }]
+                            }
+                            */
+                            ]
                     });
 
                     // Websocket event listener
