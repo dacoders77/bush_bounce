@@ -48360,8 +48360,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         // First price channel recalculation started then when the response is received
         // the Event BUS event is generated
         priceChannelUpdate: function priceChannelUpdate() {
-            var _this = this;
-
             // Update price channel in DB
             // In this controller price channel recalculation is called automatically
             axios.post('/chartcontrolupdate', this.$data).then(function (response) {}).catch(function (error) {
@@ -48369,26 +48367,31 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                 console.log(error.response);
             });
 
-            axios.get('/pricechannelcalc') // + /this.priceChannelPeriod
-            .then(function (response) {
-                console.log('ChartControl.vue. pricechannelcalc response');
-                _this.$bus.$emit('my-event', {}); // When price channel is recalculated, raise the event
-            }).catch(function (error) {
-                console.log('ChartControl.vue. pricechannelcalc controller error:');
-                console.log(error.response);
-            });
+            /*
+            axios.get('/pricechannelcalc' ) // + /this.priceChannelPeriod
+                .then(response => {
+                    console.log('ChartControl.vue. pricechannelcalc response');
+                    this.$bus.$emit('my-event', {}) // When price channel is recalculated, raise the event
+                })
+                .catch(error => {
+                    console.log('ChartControl.vue. pricechannelcalc controller error:');
+                    console.log(error.response);
+                })
+                */
         },
 
         // Initial start button handler
-        initialStart: function initialStart() {
+        initialStartButton: function initialStartButton() {
+            alert('Initial start button clicked');
             this.initialStartFunction();
         },
         historyTest: function historyTest() {
             // History test button click
         },
         modeToggle: function modeToggle() {
-            var _this2 = this;
+            var _this = this;
 
+            console.log('entered modeToggle() line 113');
             if (this.toggleFlag) {
                 // Entering history mode from realtime
                 var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
@@ -48402,12 +48405,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                     // call history period controller http://bounce.kk/public/historyperiod
                     axios.get('/historyperiod').then(function (response) {
-                        console.log('ChartControl.vue. historyperiodt controller response ');
+                        console.log('ChartControl.vue. line 128. historyperiodt controller response ');
                         // Lets try to call the controller when history finished loading
                         // fire event (load bars)
-                        _this2.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
+                        _this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
                     }).catch(function (error) {
-                        console.log('ChartControl.vue historyperiod controller error: ');
+                        console.log('ChartControl.vue. line 128. historyperiod controller error: ');
                         console.log(error.response);
                     });
 
@@ -48424,7 +48427,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                     //this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
 
                     // Async request
-                    this.getUser();
+                    this.initialStart();
 
                     this.startBroadCastFunction();
                     this.modeToggleText = "realtime";
@@ -48432,34 +48435,35 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             }
         },
 
-        // Methods
+        // Methods (functions)
         chartInfo: function chartInfo() {
-            var _this3 = this;
+            var _this2 = this;
 
             // Chart info values from DB load
             axios.get('/chartinfo').then(function (response) {
-                console.log('ChartControl.vue. ChartInfo controller response: ');
-                _this3.symbol = response.data['symbol'];
-                _this3.netProfit = 'not ready yet';
-                _this3.requestedBars = response.data['request_bars'];
-                _this3.timeFrame = response.data['time_frame'];
-                _this3.requestBars = response.data['request_bars'];
-                _this3.commission = response.data['commission_value'];
-                _this3.tradingAllowed = response.data['allow_trading'];
-                _this3.priceChannelPeriod = response.data['price_channel_period'];
-                _this3.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
-                _this3.modeToggleText = response.data['broadcast_stop'] == 1 ? 'history testing' : 'realtime';
-                _this3.historyFrom = response.data['history_from'];
-                _this3.historyTo = response.data['history_to'];
+                //console.log('ChartControl.vue. ChartInfo controller response: ');
+                _this2.symbol = response.data['symbol'];
+                _this2.netProfit = 'not ready yet';
+                _this2.requestedBars = response.data['request_bars'];
+                _this2.timeFrame = response.data['time_frame'];
+                _this2.requestBars = response.data['request_bars'];
+                _this2.commission = response.data['commission_value'];
+                _this2.tradingAllowed = response.data['allow_trading'];
+                _this2.priceChannelPeriod = response.data['price_channel_period'];
+                _this2.broadcastAllowed = response.data['broadcast_stop'] == 1 ? 'off' : 'on';
+                _this2.modeToggleText = response.data['broadcast_stop'] == 1 ? 'history testing' : 'realtime';
+                _this2.historyFrom = response.data['history_from'];
+                _this2.historyTo = response.data['history_to'];
 
                 //var isTrueSet = (myValue == 'true');
             }) // Output returned data by controller
             .catch(function (error) {
-                console.log('ChartControl.vue. chartinfo controller error: ');
+                console.log('ChartControl.vue. chartinfo controller error ');
                 console.log(error.response);
             });
         },
-        getUser: function () {
+        // Async axiso request function
+        initialStart: function () {
             var _ref = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee() {
                 var response;
                 return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee$(_context) {
@@ -48473,36 +48477,36 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 3:
                                 response = _context.sent;
 
-                                console.log('async request');
+                                //console.log('async request');
                                 //console.log(response);
                                 this.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                                _context.next = 12;
+                                _context.next = 11;
                                 break;
 
-                            case 8:
-                                _context.prev = 8;
+                            case 7:
+                                _context.prev = 7;
                                 _context.t0 = _context['catch'](0);
 
                                 console.log('ChartControl.vue. initialstart controller error:');
                                 console.log(_context.t0.response);
 
-                            case 12:
+                            case 11:
                             case 'end':
                                 return _context.stop();
                         }
                     }
-                }, _callee, this, [[0, 8]]);
+                }, _callee, this, [[0, 7]]);
             }));
 
-            function getUser() {
+            function initialStart() {
                 return _ref.apply(this, arguments);
             }
 
-            return getUser;
+            return initialStart;
         }(),
 
         initialStartFunction: function initialStartFunction() {
-            var _this4 = this;
+            var _this3 = this;
 
             //alert('initial start func. this.modeToggleText: ' + this.modeToggleText);
 
@@ -48521,7 +48525,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                 this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
                 // Async request
-                this.getUser();
+                this.initialStart();
                 this.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                 this.startBroadCastFunction();
             } else {
@@ -48532,30 +48536,30 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                 axios.get('/historyperiod') // The table will be truncated, history loaded
                 .then(function (response) {
                     //console.log('ChartControl.vue. historyperiod response');
-                    _this4.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                    _this3.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                 }).catch(function (error) {
-                    console.log('ChartControl.vue. historyperiod controller error:');
+                    console.log('ChartControl.vue. line 237. historyperiod controller error:');
                     console.log(error.response);
                 });
             }
         },
         startBroadCastFunction: function startBroadCastFunction() {
-            var _this5 = this;
+            var _this4 = this;
 
             axios.get('/startbroadcast').then(function (response) {
                 console.log('ChartControl.vue. startBroadcast controller response: ');
-                _this5.broadcastAllowed = 'on';
+                _this4.broadcastAllowed = 'on';
             }).catch(function (error) {
                 console.log('ChartControl.vue startBroadcast controller error: ');
                 console.log(error.response);
             });
         },
         stopBroadCastFunction: function stopBroadCastFunction() {
-            var _this6 = this;
+            var _this5 = this;
 
             axios.get('/stopbroadcast').then(function (response) {
                 //console.log('ChartControl.vue. stopBroadcast controller response: ');
-                _this6.broadcastAllowed = 'off';
+                _this5.broadcastAllowed = 'off';
             }).catch(function (error) {
                 console.log('ChartControl.vue. stopBroadcast controller error: ');
                 console.log(error.response);
@@ -48563,7 +48567,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         }
     },
     created: function created() {
-        var _this7 = this;
+        var _this6 = this;
 
         // Console messages output to the page
         // Messages are streamed from php via websocket
@@ -48571,23 +48575,23 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         this.items = arr;
 
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this7.items.length < 15) {
+            if (_this6.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this7.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this6.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this7.items.shift();
-                _this7.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this6.items.shift();
+                _this6.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
 
         // When a connection error (broadcast stopped and other info messages) occurred in RatchetPawlSocket.php
         Echo.channel('Bush-channel').listen('ConnectionError', function (e) {
-            if (_this7.items.length < 15) {
+            if (_this6.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this7.items.push(e.update);
+                _this6.items.push(e.update);
             } else {
-                _this7.items.shift();
-                _this7.items.push(e.update);
+                _this6.items.shift();
+                _this6.items.push(e.update);
             }
         });
 
@@ -48766,7 +48770,10 @@ var render = function() {
         _vm._v("\n        Initial start:\n        "),
         _c(
           "button",
-          { attrs: { id: "initial-start" }, on: { click: _vm.initialStart } },
+          {
+            attrs: { id: "initial-start" },
+            on: { click: _vm.initialStartButton }
+          },
           [_vm._v("Run")]
         ),
         _c("br"),
@@ -48940,82 +48947,108 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             tradingAllowed: ''
         };
     },
-    created: function created() {
-        var chart1; // globally available
-        axios.get('/historybarsload').then(function (response) {
 
-            chart1 = Highcharts.stockChart('container', {
-                chart: {
-                    animation: false,
-                    renderTo: 'container', // div where the chart will be rendered
-                    height: document.height // Use window height to set height of the chart
-                },
-                yAxis: [{ // Primary yAxis
-                    title: {
-                        text: 'price',
-                        style: {
-                            color: 'purple'
-                        }
-                    }
-                }, { // Secondary yAxis
-                    title: {
-                        text: 'profit',
-                        style: {
-                            color: 'green'
-                        }
-                    },
-                    opposite: false
-                }],
+    methods: {
+        // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
+        HistoryBarsLoad: function HistoryBarsLoad(chart1) {
+            //console.log('Chart.vue. HistoryBarsLoad() function');
+            axios.get('/historybarsload') // Load history data from BR
+            .then(function (response) {
+                //console.log('Chart.vue. HistoryBarsLoad: function(). historybarsload controller response: ');
+                //console.log(response);
 
-                series: [{
-                    name: 'symbol name Chart.vue',
-                    visible: true,
-                    enableMouseTracking: true,
-                    type: 'candlestick',
-                    data: response.data['candles'],
-                    tooltip: {
-                        valueDecimals: 2, // Quantity of digits .00 in value when hover the cursor over the bar
-                        shape: 'square'
-                    },
-                    dataGrouping: {
-                        enabled: false
-                    }
-                }]
+                chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                //chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
+                //chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+            }).catch(function (error) {
+                console.log('Chart.vue. line 36 /historybarsload function controller error: ');
+                console.log(error.response);
             });
+        }
+    },
 
-            // Websocket event listener
-            Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-                //console.log(e.update);
-                var last = chart1.series[0].data[chart1.series[0].data.length - 1];
-                last.update({
-                    //'open': 1000,
-                    'high': e.update["tradeBarHigh"],
-                    'low': e.update["tradeBarLow"],
-                    'close': e.update["tradePrice"]
-                }, true);
-
-                // New bar is issued. Flag sent from CandleMaker.php
-                if (e.update["flag"]) {
-                    // e.update["flag"] = true
-                    console.log('Chart.vue. New bar is added');
-                    // Add bar to the chart
-                    chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
+    created: function created() {// First created
 
 
-                    axios.get('/pricechannelcalc') // Recalculate price channel
-                    .then(function (response) {
+    },
+    // created
+    mounted: function mounted() {
+        var _this = this;
+
+        // Then, later mounted
+
+        var chart1 = Highcharts.stockChart('container', {
+            chart: {
+                animation: false,
+                renderTo: 'container' // div where the chart will be rendered
+                //height: document.height, // Use window height to set height of the chart
+            },
+            yAxis: [{ // Primary yAxis
+                title: {
+                    text: 'price',
+                    style: {
+                        color: 'purple'
+                    }
+                }
+            }, { // Secondary yAxis
+                title: {
+                    text: 'profit',
+                    style: {
+                        color: 'green'
+                    }
+                },
+                opposite: false
+            }],
+
+            series: [{
+                name: 'symbol name Chart.vue',
+                visible: true,
+                enableMouseTracking: true,
+                type: 'candlestick',
+                tooltip: {
+                    valueDecimals: 2, // Quantity of digits .00 in value when hover the cursor over the bar
+                    shape: 'square'
+                },
+                dataGrouping: {
+                    enabled: false
+                }
+            }]
+        });
+
+        this.HistoryBarsLoad(chart1);
+
+        // Websocket event listener
+        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
+            //console.log(e.update);
+            var last = chart1.series[0].data[chart1.series[0].data.length - 1];
+            last.update({
+                //'open': 1000,
+                'high': e.update["tradeBarHigh"],
+                'low': e.update["tradeBarLow"],
+                'close': e.update["tradePrice"]
+            }, true);
+
+            // New bar is issued. Flag sent from CandleMaker.php
+            if (e.update["flag"]) {
+                // e.update["flag"] = true
+                console.log('Chart.vue. New bar is added');
+                // Add bar to the chart
+                chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
+
+
+                /*
+                axios.get('/pricechannelcalc') // Recalculate price channel
+                    .then(response => {
                         //console.log('ChartControl.vue. pricechannelcalc controller response: ');
                         //console.log(response);
-                    }).catch(function (error) {
+                    })
+                    .catch(error => {
                         console.log('ChartControl.vue. pricechannelcalc controller error: ');
                         console.log(error.response);
-                    });
-
-                    //HistoryBarsLoad(); // Load history data from BR
-
-
-                    /*
-                    // Update price channel
+                    })
+                       // Update price channel
                     var request2 = $.get('loaddata');
                     request2.done(function(response) {
                         console.log("Chart.vue: loading data request worked ok");
@@ -49024,68 +49057,32 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         chart.series[2].setData(response[2],true);// Price channel low
                     });
                     */
-                }
+            } // New bar added
 
-                /*
-                // TRADE FLAGS
-                // buy flag
-                if (e.update["flag"] == "buy") {
-                    console.log('buy');
-                    chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
-                }
-                 // buy flag
-                if (e.update["flag"] == "sell") {
-                    console.log('buy');
-                    chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
-                }
-                */
-            });
-        }) // Output returned data by controller
-        .catch(function (error) {
-            console.log('Chart.vue ChartInfo  controller error: ');
-            console.log(error.response);
-        });
+
+            /*
+            // TRADE FLAGS
+            // buy flag
+            if (e.update["flag"] == "buy") {
+                console.log('buy');
+                chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
+            }
+             // buy flag
+            if (e.update["flag"] == "sell") {
+                console.log('buy');
+                chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
+            }
+            */
+        }); // Echo
 
         // Event bus listener
         // This event is received from ChartControl.vue component when price channel update button is clicked
         this.$bus.$on('my-event', function ($event) {
-            //console.log('Chart.vue. My event has been triggered. Reload history data', $event) // Output $event parameter
-            HistoryBarsLoad(); // Load history data from DB
+            //console.log('Chart.vue. line 225. EVENT raised');
+            _this.HistoryBarsLoad(chart1); // Load history data from DB
         });
+    } // Mounted()
 
-        // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
-        // Button from ChartControl.vue component
-        function HistoryBarsLoad() {
-            console.log('Chart.vue. HistoryBarsLoad() function worked');
-            axios.get('/historybarsload') // Load history data from BR
-            .then(function (response) {
-                //console.log('Chart.vue. historybarsload controller response (from function): ');
-                chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
-                chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
-                chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
-                chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
-                chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
-            }).catch(function (error) {
-                console.log('Chart.vue. /historybarsload controller error (from function): ');
-                console.log(error.response);
-            });
-        }
-
-        /*
-        DELETE THIS CODE! IT IS ALREADY USED!
-        Echo.channel('Bush-channel').listen('BushBounce', (e, chart1) => {
-            console.log(e.update);
-            //var last = this.chart1.series[0].data[chart.series[0].data.length - 1];
-            var last = chart1.series[0].data[chart.series[0].data.length - 1];
-            last.update({
-                //'open': 1000,
-                'high': e.update["tradeBarHigh"],
-                'low': e.update["tradeBarLow"],
-                'close': e.update["tradePrice"]
-            }, true);
-             });
-        */
-    }
 });
 
 /***/ }),

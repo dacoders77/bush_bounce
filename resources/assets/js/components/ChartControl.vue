@@ -18,7 +18,7 @@
             <button v-on:click="historyTest" id="history-test">Test</button><br>
             -->
             Initial start:
-            <button v-on:click="initialStart" id="initial-start">Run</button><br>
+            <button v-on:click="initialStartButton" id="initial-start">Run</button><br>
             <!--
             Broadcast:
             <button v-on:click="startBroadcast" id="start-broadcast" :disabled="startButtonDisabled">Start</button>
@@ -88,6 +88,7 @@
                         console.log(error.response);
                     })
 
+                /*
                 axios.get('/pricechannelcalc' ) // + /this.priceChannelPeriod
                     .then(response => {
                         console.log('ChartControl.vue. pricechannelcalc response');
@@ -97,16 +98,19 @@
                         console.log('ChartControl.vue. pricechannelcalc controller error:');
                         console.log(error.response);
                     })
+                    */
 
             },
             // Initial start button handler
-            initialStart(){
+            initialStartButton(){
+                alert('Initial start button clicked');
                 this.initialStartFunction();
             },
             historyTest(){
                 // History test button click
             },
             modeToggle(){
+                console.log('entered modeToggle() line 113');
                 if (this.toggleFlag)
                 {
                     // Entering history mode from realtime
@@ -122,13 +126,13 @@
                         // call history period controller http://bounce.kk/public/historyperiod
                         axios.get('/historyperiod')
                             .then(response => {
-                                console.log('ChartControl.vue. historyperiodt controller response ');
+                                console.log('ChartControl.vue. line 128. historyperiodt controller response ');
                                 // Lets try to call the controller when history finished loading
                                 // fire event (load bars)
                                 this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
                             })
                             .catch(error => {
-                                console.log('ChartControl.vue historyperiod controller error: ');
+                                console.log('ChartControl.vue. line 128. historyperiod controller error: ');
                                 console.log(error.response);
                             });
 
@@ -147,7 +151,7 @@
                         //this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
 
                         // Async request
-                        this.getUser();
+                        this.initialStart();
 
                         this.startBroadCastFunction();
                         this.modeToggleText = "realtime";
@@ -155,12 +159,12 @@
                     }
                 }
             },
-            // Methods
+            // Methods (functions)
             chartInfo: function() {
                 // Chart info values from DB load
                 axios.get('/chartinfo')
                     .then(response => {
-                        console.log('ChartControl.vue. ChartInfo controller response: ');
+                        //console.log('ChartControl.vue. ChartInfo controller response: ');
                         this.symbol = response.data['symbol'];
                         this.netProfit = 'not ready yet';
                         this.requestedBars = response.data['request_bars'];
@@ -178,14 +182,15 @@
 
                     }) // Output returned data by controller
                     .catch(error => {
-                        console.log('ChartControl.vue. chartinfo controller error: ');
+                        console.log('ChartControl.vue. chartinfo controller error ');
                         console.log(error.response);
                     });
             },
-            getUser: async function() {
+            // Async axiso request function
+            initialStart: async function() {
                 try {
                     const response = await axios.get('/initialstart');
-                    console.log('async request');
+                    //console.log('async request');
                     //console.log(response);
                     this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                 } catch (error) {
@@ -214,7 +219,7 @@
 
                     this.stopBroadCastFunction(); // No need to stop broadcast. In the history mode it was already stopped
                     // Async request
-                    this.getUser();
+                    this.initialStart();
                     this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                     this.startBroadCastFunction();
                 }
@@ -230,7 +235,7 @@
                             this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                         })
                         .catch(error => {
-                            console.log('ChartControl.vue. historyperiod controller error:');
+                            console.log('ChartControl.vue. line 237. historyperiod controller error:');
                             console.log(error.response);
                         })
                 }
