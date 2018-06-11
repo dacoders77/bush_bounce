@@ -134,22 +134,35 @@ Route::get('/stopbroadcast', function () {
 });
 
 // Calculate price channel
-route::get('/pricechannelcalc', function(){
+Route::get('/pricechannelcalc', function(){
     App\Classes\PriceChannel::calculate(); // Calculate price channel
 });
 
 // Chart control form fields update
 Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
 
-// Initial start button click in ChartControl.vue
+// Initial start button click in ChartControl.vue. Button clicked in the real-time mode
 Route::get('/initialstart', function () {
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::load(); // Load history from www.bitfinex.com
-    //App\Classes\PriceChannel::calculate();
+    App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
 });
 
-// Load history data for determined period of time (delete it?)
+// Load history data for determined period of time. Button clicked in the history mode
 Route::get('/historyperiod', function(){
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::LoadPeriod();
 });
+
+Route::get('/last', function(){
+
+    $z = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
+
+    echo $z;
+});
+
+
+(array)DB::table('settings_realtime')
+    ->where('id', 1)
+    //->value('price_channel_period'));
+    ->first();

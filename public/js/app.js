@@ -48924,8 +48924,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 //console.log(response);
 
                 chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
-                //chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
-                //chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
                 //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
                 //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
             }).catch(function (error) {
@@ -48981,6 +48981,28 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 dataGrouping: {
                     enabled: false
                 }
+            }, {
+                name: 'Price channel high',
+                visible: true,
+                enableMouseTracking: true,
+                color: 'red',
+                lineWidth: 1,
+                //data: response.data['priceChannelHighValues'],
+                dataGrouping: {
+                    enabled: false
+                }
+
+            }, {
+                name: 'Price channel low',
+                visible: true,
+                enableMouseTracking: true,
+                color: 'red',
+                lineWidth: 1,
+                //data: response.data['priceChannelLowValues'],
+                dataGrouping: {
+                    enabled: false
+                }
+
             }]
         });
 
@@ -49001,8 +49023,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             if (e.update["flag"]) {
                 // e.update["flag"] = true
                 console.log('Chart.vue. New bar is added');
-                // Add bar to the chart
+                // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
                 chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
+                // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
+                chart1.series[1].addPoint([e.update["tradeDate"], e.update["priceChannelHighValue"]], true, false); // Price channel high
+                chart1.series[2].addPoint([e.update["tradeDate"], e.update["priceChannelLowValue"]], true, false); // Price channel low
 
 
                 /*

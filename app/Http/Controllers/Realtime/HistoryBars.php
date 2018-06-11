@@ -8,15 +8,18 @@ use Illuminate\Http;
 
 /**
  * Class HistoryBars
- * Loads historical bars from DB. Not from www.bitfinex.com
+ * Loads historical bars from DB and returns them to Chart.vue. Not from www.bitfinex.com
  * @package App\Http\Controllers\Realtime
  */
 class HistoryBars extends \App\Http\Controllers\Controller
 {
     public function load(){
 
-        $longTradeMarkers[] = "";
-        $shortTradeMarkers[] = "";
+        $candles = array();
+        $priceChannelHighValues = array();
+        $priceChannelLowValues = array();
+        $longTradeMarkers = array();
+        $shortTradeMarkers = array();
 
         $allDbValues = DB::table("asset_1")->get(); // Read the whole table from BD to $allDbValues
         foreach ($allDbValues as $rowValue) { // Go through all DB reacords

@@ -139,11 +139,11 @@ class CandleMaker
         /*
          * New bar is issued
          * When the time of the tick is > added time - add this bar to the DB
-         * @todo now volume is not accumulated. We record the last volume of the trade
+         * @todo now volume is not accumulated. We record is the last volume of the trade
          */
         if (floor($tickDate / 1000) >= $this->tt){
             $command->info("------------------- NEW BAR ISSUED ----------------------");
-            DB::table('asset_1')->insert(array( // Record to DB
+            DB::table('asset_1')->insert(array( // Add record to DB
                 'date' => gmdate("Y-m-d G:i:s", ($tickDate / 1000)), // Date in regular format. Converted from unix timestamp
                 'time_stamp' => $tickDate,
                 'open' => $tickPrice,
@@ -152,7 +152,6 @@ class CandleMaker
                 'low' => $tickPrice,
                 'volume' => $tickVolume,
             ));
-
                 /**
                  * We get settings values from DB one more time just in case it was changed.
                  * For example the price channel value. Otherwise the price channel value will remain the same
@@ -162,16 +161,24 @@ class CandleMaker
 
                 /** Set flag to true in order to drop seconds of the time and add time frame */
                 $this->isFirstTickInBar = true;
+                /** Calculate price channel. All records in the DB are gonna be used */
+                PriceChannel::calculate();
                 /** This flag informs Chart.vue that it needs to add new bar to the chart.  */
                 $messageArray['flag'] = true;
             }
+
+        // Get the last record of calculated price channel value
 
         $messageArray['tradeDate'] = $tickDate;
         $messageArray['tradeVolume'] = $tickVolume;
         $messageArray['tradePrice'] = $tickPrice; // Tick price = current price and close (when a bar is closed)
         $messageArray['tradeBarHigh'] = $this->barHigh; // High value of the bar
         $messageArray['tradeBarLow'] = $this->barLow; // Low value of the bar
-        event(new \App\Events\BushBounce($messageArray));
+        $messageArray['priceChannelHighValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
+        //$messageArray['priceChannelHighValue'] = 100;
+        $messageArray['priceChannelLowValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_low_value;
+
+        event(new \App\Events\BushBounce($messageArray)); // Event is received in Chart.vue
 
 
         /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
