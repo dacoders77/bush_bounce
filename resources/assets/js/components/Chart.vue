@@ -19,7 +19,9 @@
         },
         methods:{
             // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
+
             HistoryBarsLoad: function(chart1) {
+
                 //console.log('Chart.vue. HistoryBarsLoad() function');
                 axios.get('/historybarsload') // Load history data from BR
                     .then(response => {
@@ -36,7 +38,9 @@
                         console.log('Chart.vue. line 36 /historybarsload function controller error: ');
                         console.log(error.response);
                     })
+
             }
+
         },
 
         created() { // First created
@@ -220,7 +224,6 @@
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
-                //console.log('Chart.vue. line 225. EVENT raised');
                 this.HistoryBarsLoad(chart1); // Load history data from DB
             });
 

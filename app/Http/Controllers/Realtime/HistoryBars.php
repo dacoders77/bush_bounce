@@ -6,7 +6,11 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Http;
 
-
+/**
+ * Class HistoryBars
+ * Loads historical bars from DB. Not from www.bitfinex.com
+ * @package App\Http\Controllers\Realtime
+ */
 class HistoryBars extends \App\Http\Controllers\Controller
 {
     public function load(){
