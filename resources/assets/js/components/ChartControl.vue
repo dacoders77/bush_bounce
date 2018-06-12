@@ -80,8 +80,9 @@
                 try {
                     const response = await axios.post('/chartcontrolupdate', this.$data)
                     // read recalc price channel
-                    this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
-
+                    // use another type of event which reloads only the price channel instead the whole chart
+                    this.$bus.$emit('my-event', {param : "reload-price-channel"}); // Inform Chart.vue that chart bars must be reloaded
+                    // param : "reload-whole-chart"
                 } catch(error) {
                     console.log('ChartControl.vue. line 88. /chartcontrolupdate controller error');
                     console.log(error.response);
@@ -172,7 +173,7 @@
                         axios.get('/historyperiod')
                             .then(response => {
                                 //console.log('ChartControl.vue. line 121. /historyperiodt controller response ');
-                                this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
+                                this.$bus.$emit('my-event', {param : "reload-whole-chart"}); // Inform Chart.vue that chart bars must be reloaded
                             })
                             .catch(error => {
                                 console.log('ChartControl.vue. line 161. /historyperiod controller error: ');
@@ -236,7 +237,7 @@
                     axios.get('/historyperiod') // The table will be truncated, history loaded
                         .then(response => {
                             //console.log('ChartControl.vue. historyperiod response');
-                            this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                            this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                         })
                         .catch(error => {
                             console.log('ChartControl.vue. line 237. historyperiod controller error:');
@@ -252,7 +253,7 @@
                 try {
                     const response = await axios.get('/stopbroadcast'); // 3 requests. One goes after anther
                     const response2 = await axios.get('/initialstart'); // web.php: Truncate table then load new historical data from www.bitfinex.com
-                        this.$bus.$emit('my-event', {}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                        this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                     const response3 = await axios.get('/startbroadcast');
 
                 } catch (error) {

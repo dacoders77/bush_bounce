@@ -48372,8 +48372,9 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 response = _context.sent;
 
                                 // read recalc price channel
-                                this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
-
+                                // use another type of event which reloads only the price channel instead the whole chart
+                                this.$bus.$emit('my-event', { param: "reload-price-channel" }); // Inform Chart.vue that chart bars must be reloaded
+                                // param : "reload-whole-chart"
                                 _context.next = 11;
                                 break;
 
@@ -48497,7 +48498,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                     // Load history period
                     axios.get('/historyperiod').then(function (response) {
                         //console.log('ChartControl.vue. line 121. /historyperiodt controller response ');
-                        _this.$bus.$emit('my-event', {}); // Inform Chart.vue that chart bars must be reloaded
+                        _this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // Inform Chart.vue that chart bars must be reloaded
                     }).catch(function (error) {
                         console.log('ChartControl.vue. line 161. /historyperiod controller error: ');
                         console.log(error.response);
@@ -48547,7 +48548,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                 axios.get('/historyperiod') // The table will be truncated, history loaded
                 .then(function (response) {
                     //console.log('ChartControl.vue. historyperiod response');
-                    _this2.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                    _this2.$bus.$emit('my-event', { param: "reload-whole-chart" }); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                 }).catch(function (error) {
                     console.log('ChartControl.vue. line 237. historyperiod controller error:');
                     console.log(error.response);
@@ -48575,7 +48576,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 6:
                                 response2 = _context3.sent;
                                 // web.php: Truncate table then load new historical data from www.bitfinex.com
-                                this.$bus.$emit('my-event', {}); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                                this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                                 _context3.next = 10;
                                 return axios.get('/startbroadcast');
 
@@ -49009,32 +49010,36 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     methods: {
         // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
 
-        HistoryBarsLoad: function HistoryBarsLoad(chart1) {
+        HistoryBarsLoad: function HistoryBarsLoad(chart1, param) {
 
-            //console.log('Chart.vue. HistoryBarsLoad() function');
             axios.get('/historybarsload') // Load history data from BR
             .then(function (response) {
-                //console.log('Chart.vue. HistoryBarsLoad: function(). historybarsload controller response: ');
-                //console.log(response);
 
-                chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
-                chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
-                chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
-                //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
-                //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                // Two types of messages can be received: reload the whole chart or the price channel only
+                // The reason is to make chart reload faster
+                if (param == "reload-price-channel") {
+                    console.log('reload-price-channel');
+                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                }
+
+                // This type of message is called from ChartControl.vue. priceChannelUpdate line 84
+                if (param == "reload-whole-chart") {
+                    console.log('reload-whole-chart');
+                    chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                    //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                    //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                }
             }).catch(function (error) {
                 console.log('Chart.vue. line 36 /historybarsload function controller error: ');
                 console.log(error.response);
             });
         }
-
     },
-
-    created: function created() {// First created
-
-
+    created: function created() {// First created then Mounted
     },
-    // created
     mounted: function mounted() {
         var _this = this;
 
@@ -49100,9 +49105,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             }]
         });
 
-        this.HistoryBarsLoad(chart1);
+        // Load history data from DB and send "reload-whole-chart" parameter
+        this.HistoryBarsLoad(chart1, "reload-whole-chart");
 
-        // Websocket event listener
+        // Websocket event listener. Used only for updating and adding new bars to the chart
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
             //console.log(e.update);
             var last = chart1.series[0].data[chart1.series[0].data.length - 1];
@@ -49164,7 +49170,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         // Event bus listener
         // This event is received from ChartControl.vue component when price channel update button is clicked
         this.$bus.$on('my-event', function ($event) {
-            _this.HistoryBarsLoad(chart1); // Load history data from DB
+            //console.log($event.param);
+            _this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
         });
     } // Mounted()
 

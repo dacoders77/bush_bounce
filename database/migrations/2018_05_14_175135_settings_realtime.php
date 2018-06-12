@@ -39,7 +39,7 @@ class SettingsRealtime extends Migration
             'allow_trading' => 0,
             'commission_value' => 0.2,
             'history_from' => '2018-06-01',
-            'history_to' => '2018-06-05'
+            'history_to' => '2018-06-02'
         ));
     }
 

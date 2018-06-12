@@ -46,7 +46,8 @@ class PriceChannel
          * desc - from big values to small. asc - from small to big
          * in this case: desc. [0] element is the last record in DB. and it's id - quantity of records
          * @var json object $records Contains all DB data (records) in json format
-         * IT IS NOT A JSON! IT MOST LIKLEY LARAVEL OBJECT. BUTSCH WATED TO SEND ME THE LINK
+         * IT IS NOT A JSON! IT MOST LIKELY LARAVEL OBJECT. BUTSCH SENT ME THE LINK.
+         * @todo FIX WHAT BUTSH SAYS
          * https://laravel.com/docs/5.6/collections
          */
         $records = DB::table("asset_1")
@@ -96,6 +97,21 @@ class PriceChannel
                 /** Reset high, low price channel values */
                 $priceChannelHighValue = 0;
                 $priceChannelLowValue = 999999;
+            }
+            else
+            {
+                /** Update high and low values in DB for bars which were not used in calculation
+                 *  There is a case when first price channel with period 5 is calculated
+                 *  Then next price channel is calculated with period 6. This causes that calculated values from period 5
+                 *  remain in DB and spoil the chart. The price channel lines start to contain both values in the same series.
+                 *  In order to prevent this, for those bars that were not used for computation, price channel values are set to null
+                 */
+                DB::table("asset_1")
+                    ->where('time_stamp', $records[$elementIndex]->time_stamp)
+                    ->update([
+                        'price_channel_high_value' => null,
+                        'price_channel_low_value' => null
+                    ]);
             }
             $elementIndex++;
         }

@@ -20,34 +20,40 @@
         methods:{
             // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
 
-            HistoryBarsLoad: function(chart1) {
+            HistoryBarsLoad: function(chart1, param) {
 
-                //console.log('Chart.vue. HistoryBarsLoad() function');
+
+
                 axios.get('/historybarsload') // Load history data from BR
                     .then(response => {
-                        //console.log('Chart.vue. HistoryBarsLoad: function(). historybarsload controller response: ');
-                        //console.log(response);
 
-                        chart1.series[0].setData(response.data['candles'],true); // Candles. true - redraw the series. Candles
-                        chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
-                        chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
-                        //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
-                        //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                        // Two types of messages can be received: reload the whole chart or the price channel only
+                        // The reason is to make chart reload faster
+                        if (param == "reload-price-channel")
+                        {
+                            console.log('reload-price-channel');
+                            chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
+                            chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                        }
+
+                        // This type of message is called from ChartControl.vue. priceChannelUpdate line 84
+                        if (param == "reload-whole-chart") {
+                            console.log('reload-whole-chart');
+                            chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                            chart1.series[1].setData(response.data['priceChannelHighValues'], true);// High. Precancel high
+                            chart1.series[2].setData(response.data['priceChannelLowValues'], true);// Low. Price channel low
+                            //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                            //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                        }
                     })
                     .catch(error => {
                         console.log('Chart.vue. line 36 /historybarsload function controller error: ');
                         console.log(error.response);
                     })
-
             }
-
         },
-
-        created() { // First created
-
-
-
-        }, // created
+        created() { // First created then Mounted
+        },
         mounted(){ // Then, later mounted
 
             var chart1 = Highcharts.stockChart('container', {
@@ -155,11 +161,10 @@
                 ]
             });
 
-            this.HistoryBarsLoad(chart1);
+            // Load history data from DB and send "reload-whole-chart" parameter
+            this.HistoryBarsLoad(chart1, "reload-whole-chart");
 
-
-
-            // Websocket event listener
+            // Websocket event listener. Used only for updating and adding new bars to the chart
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
                 //console.log(e.update);
                 var last = chart1.series[0].data[chart1.series[0].data.length - 1];
@@ -230,9 +235,9 @@
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
-                this.HistoryBarsLoad(chart1); // Load history data from DB
+                //console.log($event.param);
+                this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
             });
-
 
         } // Mounted()
 
