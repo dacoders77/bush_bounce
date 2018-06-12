@@ -26,13 +26,13 @@ class ChartControl extends \App\Http\Controllers\Controller
                 'symbol' => $request->get('symbol'),
                 'history_from' => $request->get('historyFrom'),
                 'history_to' => $request->get('historyTo'),
+                'app_mode' => $request->get('appMode')
 
                 //'execution_time' => date("Y-m-d G:i:s", strtotime($request->get('basketExecTime')))
             ]);
 
         // Calculate price channel
-        //\App\Http\Controllers\Realtime\PriceChannel::calculate();
-        //PriceChannel::calculate();
+        \App\Classes\PriceChannel::calculate();
 
         //return json_encode($seriesData);
     }

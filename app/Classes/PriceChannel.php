@@ -28,7 +28,6 @@ class PriceChannel
         $priceChannelPeriod = DB::table('settings_realtime')
             ->where('id', 1)
             ->value('price_channel_period');
-        //$priceChannelPeriod = $priceChannelPeriod;
 
         /**
          * @var int elementIndex Loop index. If the price channel period is 5 the loop will go from 0 to 4.
@@ -54,6 +53,11 @@ class PriceChannel
             ->orderBy('time_stamp', 'desc')
             ->get(); // desc, asc - order. Read the whole table from BD to $records
 
+        /** @var int $quantityOfBars The quantity of bars for which the price channel will be calculated */
+        $quantityOfBars = (DB::table('asset_1')
+            ->orderBy('id', 'desc')
+            ->first())->id - $priceChannelPeriod - 1;
+
         /**
          * Calculate price channel max, min
          * First element in the array is the oldest
@@ -64,15 +68,12 @@ class PriceChannel
              * Indexex go like this 0,1,2,3,4,5,6 from left to the right
              * We must stop before $requestBars reaches the end of the array
              */
-            if ($elementIndex <=
-                DB::table('settings_realtime')
-                    ->where('id', 1)
-                    ->value('request_bars') - $priceChannelPeriod - 1)
+            if ($elementIndex <= $quantityOfBars)
             {
                 // Go from right to left
                 for ($i = $elementIndex ; $i < $elementIndex + $priceChannelPeriod; $i++)
                 {
-                    //echo "---------------$i for: " . $records[$i]->date . "<br>";
+                    echo "---------------$i for: " . $records[$i]->date . "<br>";
 
                     /** Find max value in interval */
                     if ($records[$i]->high > $priceChannelHighValue)
@@ -82,8 +83,7 @@ class PriceChannel
                         $priceChannelLowValue = $records[$i]->low;
                 }
 
-                //echo "$elementIndex " . $records[$elementIndex]->date . " " . $priceChannelHighValue . "<br>";
-
+                echo "$elementIndex " . $records[$elementIndex]->date . " " . $priceChannelHighValue . "<br>";
 
                 /** Update high and low values in DB */
                 DB::table("asset_1")

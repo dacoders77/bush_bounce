@@ -152,17 +152,10 @@ Route::get('/initialstart', function () {
 Route::get('/historyperiod', function(){
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::LoadPeriod();
+    App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
 });
 
-Route::get('/last', function(){
-
-    $z = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
-
-    echo $z;
+// Delete it
+Route::get('/chann', function(){
+    App\Classes\PriceChannel::calculate();
 });
-
-
-(array)DB::table('settings_realtime')
-    ->where('id', 1)
-    //->value('price_channel_period'));
-    ->first();
