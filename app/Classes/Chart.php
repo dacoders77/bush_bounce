@@ -33,11 +33,6 @@ use PhpParser\Node\Expr\Variable;
  */
 class Chart
 {
-
-
-
-
-
     public $trade_flag = "all";
     public $add_bar_long = true; // Count closed position on the same be the signal occurred. The problem is when the position is closed the close price of this bar goes to the next position
     public $add_bar_short = true;
@@ -46,11 +41,9 @@ class Chart
     public $firstPositionEver = true; // Skip the first trade record. When it occurs we ignore calculations and make accumulated_profit = 0. On the next step (next bar) there will be the link to this value
     public $firstEverTradeFlag = true; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
 
-
-
     /**
-     * Received message in websocket channel is sent to this method as an argument.
-     * A message is precessed, bars and trades are calculated.
+     * Received message in RatchetPawlSocket.php is sent to this method as an argument.
+     * A message is processed, bars and trades are calculated.
      *
      * @param \Ratchet\RFC6455\Messaging\MessageInterface $socketMessage
      * @param Command Variable type for colored and formatted console messages like alert, warning, error etc.
@@ -59,16 +52,11 @@ class Chart
      * are transmitted over websocket pusher broadcast service.
      * @see https://pusher.com/
      */
-    //public function index(\Ratchet\RFC6455\Messaging\MessageInterface $message, Command $command)
     public function index($nojsonMessage, Command $command)
     {
-
-
-
                 // NEW BAR IS ISSUED
                 if (floor(($nojsonMessage[2][1] / 1000)) >= $this->tt){
 
-                    // Experiment
                     // Add new bar to the DB
                     DB::table('asset_1')->insert(array( // Record to DB
                         'date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)), // Date in regular format. Converted from unix timestamp
@@ -327,8 +315,6 @@ class Chart
                         $this->firstPositionEver = false;
 
                     }
-
-
 
 
 

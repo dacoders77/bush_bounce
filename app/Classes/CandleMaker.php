@@ -14,7 +14,7 @@ use Mockery\Exception;
  * Class CandleMakers
  * Receives ticks from RatchetPawlSocket.php
  * Makes Candles and pass them to Chart.php
- * Also pass ticks to the front end and notifies the chart when a new bar is issued (via new bar issuer flag)
+ * Also pass ticks to the front end and notifies the chart when a new bar is issued (via new bar issued flag)
  *
  * @return ??
  */
@@ -167,16 +167,23 @@ class CandleMaker
                 $messageArray['flag'] = true;
             }
 
-        // Get the last record of calculated price channel value
 
+        /** Prepare message array */
         $messageArray['tradeDate'] = $tickDate;
         $messageArray['tradeVolume'] = $tickVolume;
         $messageArray['tradePrice'] = $tickPrice; // Tick price = current price and close (when a bar is closed)
         $messageArray['tradeBarHigh'] = $this->barHigh; // High value of the bar
         $messageArray['tradeBarLow'] = $this->barLow; // Low value of the bar
+
+        /** Get price channel */
         $messageArray['priceChannelHighValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
-        //$messageArray['priceChannelHighValue'] = 100;
         $messageArray['priceChannelLowValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_low_value;
+
+        /** Get trade and profit. All information is pulled from DB */
+        // read last position
+        // read last position profit
+        // read last accumulated profit
+
 
         event(new \App\Events\BushBounce($messageArray)); // Event is received in Chart.vue
 

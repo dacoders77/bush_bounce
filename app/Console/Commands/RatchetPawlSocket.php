@@ -37,7 +37,7 @@ class RatchetPawlSocket extends Command
     {
         parent::__construct();
         // DO NOT PLACE CODE IN THE CONSTRUCTOR
-        // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS AND MY CAUSE DIFFERENT PROBLEMS
+        // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MY CAUSE DIFFERENT PROBLEMS
         //$chart = new Classes\Chart();
         //$this->chart = new Classes\Chart(); // New instance of Chart class
     }
