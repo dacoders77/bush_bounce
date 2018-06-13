@@ -52,315 +52,305 @@ class Chart
      * are transmitted over websocket pusher broadcast service.
      * @see https://pusher.com/
      */
-    public function index($nojsonMessage, Command $command)
+    private $z = 0;
+    public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
     {
-                // NEW BAR IS ISSUED
-                if (floor(($nojsonMessage[2][1] / 1000)) >= $this->tt){
-
-                    // Add new bar to the DB
-                    DB::table('asset_1')->insert(array( // Record to DB
-                        'date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)), // Date in regular format. Converted from unix timestamp
-                        'time_stamp' => $nojsonMessage[2][1],
-                        'open' => $nojsonMessage[2][3],
-                        'close' => $nojsonMessage[2][3],
-                        'high' => $nojsonMessage[2][3],
-                        'low' => $nojsonMessage[2][3],
-                        'volume' => $nojsonMessage[2][2],
-                    ));
-
-                    // Get the price of the last trade
-                    $lastTradePrice = // Last trade price
-                        DB::table('asset_1')
-                            ->whereNotNull('trade_price') // not null trade price value
-                            ->orderBy('id', 'desc') // form biggest to smallest values
-                            ->value('trade_price'); // get trade price value
-
-
-                    // Calculate trade profit
-                    $tradeProfit = ($this->position != null ? (($this->position == "long" ? ($nojsonMessage[2][3] - $lastTradePrice) * $this->volume : ($lastTradePrice - $nojsonMessage[2][3]) * $this->volume)) : false); // Calculate trade profit only if the position is open. Because we reach this code all the time when high or low price channel boundary is exceeded
-
-                    if ($this->position != null){ // Do not calculate progit if there is not open position. If do not do this check - zeros in table occurs
-                        DB::table('asset_1')
-                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id)
-                            ->update([
-                                // Calculate trade profit only if the position is open. Because we reach this code all the time when high or low price channel boundary is exceeded
-                                'trade_profit' => $tradeProfit,
-                            ]);
-                    }
-
-                    $command->error("\n************************************** new bar issued");
-                    //event(new \App\Events\BushBounce('New bar issued'));
-                    $messageArray['flag'] = true; // Added true flag which will inform JS that new bar is issued
-                    $this->dateCompeareFlag = true;
-
-
-
-                    // Trades watch
-                    // Quantity of all records in DB
-                    /**
-                     * @todo read the whole record from the DB then access it by keys. No need to read each value over and over
-                     */
-                    $x = (DB::table('asset_1')->orderBy('time_stamp', 'desc')->get())[0]->id;
-
-                    // Get price
-                    // Channel value of previous (penultimate bar)
-                    $price_channel_high_value =
-                        DB::table('asset_1')
-                            ->where('id', ($x - 1)) // Penultimate record. One before last
-                            ->value('price_channel_high_value');
-
-                    $price_channel_low_value =
-                        DB::table('asset_1')
-                            ->where('id', ($x - 1)) // Penultimate record. One before last
-                            ->value('price_channel_low_value');
-
-                    $allow_trading =
-                        DB::table('settings_realtime')
-                            ->where('id', 'asset_1')
-                            ->value('allow_trading');
-
-                    $commisionValue =
-                        DB::table('settings_tester')
-                            ->where('id', 'asset_1')
-                            ->value('commission_value');
-
-
-                    // If > high price channel. BUY
-                    // price > price channel
-                    if (($nojsonMessage[2][3] > $price_channel_high_value) && ($this->trade_flag == "all" || $this->trade_flag == "long")){
-                        echo "####### HIGH TRADE!\n";
-                        //event(new \App\Events\BushBounce('Long trade has occurred!'));
-
-                        // trading allowed?
-                        if ($allow_trading == 1){
-
-                            // Is the the first trade ever?
-                            if ($this->firstEverTradeFlag){
-                                // open order buy vol = vol
-                                echo "---------------------- FIRST EVER TRADE\n";
-                                //event(new \App\Events\BushBounce('First ever trade'));
-                                app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
-                                $this->firstEverTradeFlag = false;
-                            }
-                            else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
-                            {
-                                // open order buy vol = vol * 2
-                                echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2\n";
-                                //event(new \App\Events\BushBounce('Not the first ever trade'));
-                                app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
-                                app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
-                            }
-                        }
-                        else{ // trading is not allowed
-                            $this->firstEverTradeFlag = true;
-                            echo "---------------------- TRADING NOT ALLOWED\n";
-                            //event(new \App\Events\BushBounce('Trading is not allowed'));
-                        }
-
 
+        //$lastTradePrice = // Last trade price
+        //    DB::table('asset_1')
+        //        ->where('id', $id - 1)->get();
 
-                        $this->trade_flag = "short"; // Trade flag. If this flag set to short -> don't enter this if and wait for channel low crossing (IF below)
-                        $this->position = "long";
-                        $this->add_bar_long = true;
+        //echo $barDate . " " . $lastTradePrice->first()->id . "<br>";
 
-
-                        // Add(update) trade info to the last(current) bar(record)
-                        DB::table('asset_1')
-                            ->where('id', $x)
-                            ->update([
-                                'trade_date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)),
-                                'trade_price' => $nojsonMessage[2][3],
-                                'trade_direction' => "buy",
-                                'trade_volume' => $this->volume,
-                                'trade_commission' => ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
-                                'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
-                            ]);
-
-                        echo "nojsonMessage[2][3]: " . $nojsonMessage[2][3] . "\n";
-                        echo "commisionValue: " . $commisionValue . "\n";
-                        echo "this volume: " . $this->volume . "\n";
-                        echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
-                        echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
-                        echo "sum: " . DB::table('asset_1')->sum('trade_commission') . "\n";
-
-                        $messageArray['flag'] = "buy"; // Send flag to VueJS app.js. On this event VueJS is informed that the trade occurred
-
-                    } // BUY trade
-
-
-
-
-
-                    // If < low price channel. SELL
-                    if (($nojsonMessage[2][3] < $price_channel_low_value) && ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
-                        echo "####### LOW TRADE!\n";
-                        //event(new \App\Events\BushBounce('Short trade!'));
-
-                        // trading allowed?
-                        if ($allow_trading == 1){
-
-                            // Is the the first trade ever?
-                            if ($this->firstEverTradeFlag){
-                                // open order buy vol = vol
-                                echo "---------------------- FIRST EVER TRADE\n";
-                                //event(new \App\Events\BushBounce('First ever trade'));
-                                app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
-                                $this->firstEverTradeFlag = false;
-                            }
-                            else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
-                            {
-                                // open order buy vol = vol * 2
-                                echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2\n";
-                                //event(new \App\Events\BushBounce('Not first ever trade'));
-                                app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
-                                app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
-                            }
-                        }
-                        else{ // trading is not allowed
-                            $this->firstEverTradeFlag = true;
-                            echo "---------------------- TRADING NOT ALLOWED\n";
-                            //event(new \App\Events\BushBounce('Trading is not allowed'));
-                        }
 
-                        $this->trade_flag = "long";
-                        $this->position = "short";
-                        $this->add_bar_short = true;
+        /*
+        $timeFrame =
+            DB::table('settings_realtime')
+                ->where('id', '1')
+                ->value('time_frame');
+        */
 
+        if ($mode == "backtest")
+        {
+            // One before last record
+            // Backtest mode. ID is sent from Backtest.php
+            $penUltimanteRow =
+                DB::table('asset_1')
+                    ->where('id', $id - 1)
+                    ->get() // Get row as a collection. A collection can contain may elements in it
+                    ->first(); // Get the first element from the collection. In this case there is only one
+        }
+        else
+        {
+            // Realtime mode. No ID of the record is sent. Get the quantity of all records using request
 
-                        // Add(update) trade info to the last(current) bar(record)
-                        // EXCLUDE THIS CODE TO SEPARATE CLASS!!!!!!!!!!!!!!!!!!!
-                        DB::table('asset_1')
-                            ->where('id', $x)
-                            ->update([
-                                'trade_date' => gmdate("Y-m-d G:i:s", ($nojsonMessage[2][1] / 1000)),
-                                'trade_price' => $nojsonMessage[2][3],
-                                'trade_direction' => "sell",
-                                'trade_volume' => $this->volume,
-                                'trade_commission' => ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
-                                'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume,
-                            ]);
+        }
 
-                        echo "nojsonMessage[2][3]: " . $nojsonMessage[2][3] . "\n";
-                        echo "commisionValue: " . $commisionValue . "\n";
-                        echo "this volume: " . $this->volume . "\n";
-                        echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "\n";
-                        echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "\n";
-                        echo "sum: " . DB::table('asset_1')->sum('trade_commission') . "\n";
 
-                        $messageArray['flag'] = "sell"; // Send flag to VueJS app.js
 
-                    } // Sell trade
 
 
 
 
-                    // ****RECALCULATED ACCUMULATED PROFIT****
-                    // Get the if of last row where trade direction is not null
+        // Get the price of the last trade
+        $lastTradePrice = // Last trade price
+            DB::table('asset_1')
+                ->whereNotNull('trade_price') // Not null trade price value
+                //->where('time_stamp', '<', $timeStamp) // Find the last trade. This check is needed only for historical back testing.
+                ->orderBy('id', 'desc') // Form biggest to smallest values
+                ->value('trade_price'); // Get trade price value
 
-                    $tradeDirection =
-                        DB::table('asset_1')
-                            ->where('id', (DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id))
-                            ->value('trade_direction');
+        // Calculate trade profit
+        // Calculate trade profit only if the position is open.
+        // Because we reach this code all the time when high or low price channel boundary is exceeded
+        $tradeProfit =
+            ($this->position != null ?
+                (($this->position == "long" ?
+                    ($barClosePrice - $lastTradePrice) * $this->volume :
+                    ($lastTradePrice - $barClosePrice) * $this->volume)
+                ) : false);
 
-                    if ($tradeDirection == null && $this->position != null){
+        // Do not calculate profit if there is no open position. If do not do this check - zeros in table occurs
+        if ($this->position != null){
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp)
+                ->update([
+                    // Calculate trade profit only if the position is open.
+                    // Because we reach this code all the time when high or low price channel boundary is exceeded
+                    'trade_profit' => $tradeProfit,
+                ]);
+        }
 
-                        $lastAccumProfitValue =
-                            DB::table('asset_1')
-                                ->whereNotNull('trade_direction')
-                                ->orderBy('id', 'desc')
-                                ->value('accumulated_profit');
-                        DB::table('asset_1')
-                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
-                            ->update([
-                                'accumulated_profit' => $lastAccumProfitValue + $tradeProfit
-                                //'accumulated_profit' => 789789
-                            ]);
 
-                        echo "Bar with no trade";
-                        echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit;
 
-                    }
+        //echo("\n************************************** new bar issued<br>");
+        $this->dateCompeareFlag = true;
 
-                    if ($tradeDirection != null && $this->firstPositionEver == false) // Means that at this bar trade has occurred
-                    {
 
-                        $nextToLastDirection =
-                            DB::table('asset_1')
-                                ->whereNotNull('trade_direction')
-                                ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
-                                ->value('accumulated_profit');
+        /** Trades watch. Channel value of previous (penultimate bar)*/
 
+        $price_channel_high_value = $penUltimanteRow->price_channel_high_value;
+        $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
 
-                        DB::table('asset_1')
-                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
-                            ->update([
-                                'accumulated_profit' => $nextToLastDirection + $tradeProfit
-                            ]);
+        $allow_trading =
+            DB::table('settings_realtime')
+                ->where('id', '1')
+                ->value('allow_trading');
 
-                        echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
-                        //event(new \App\Events\BushBounce('Bar with trade. Direction: ' . $nextToLastDirection));
-                    }
+        $commisionValue =
+            DB::table('settings_tester')
+                ->where('id', '1')
+                ->value('commission_value');
 
-                    /** 1. Skip the first trade. Record 0 to accumulated_profit cell. This code fires once only at the first trade */
-                    if ($tradeDirection != null && $this->firstPositionEver == true){
 
-                        DB::table('asset_1')
-                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // id of the last record. desc - descent order
-                            ->update([
-                                'accumulated_profit' => 0
-                            ]);
 
-                        echo "firstPositionEver!";
-                        //event(new \App\Events\BushBounce('First position(trade) ever'));
-                        $this->firstPositionEver = false;
+        //echo $allow_trading . " " . $commisionValue . " " . $price_channel_high_value . " " . $price_channel_low_value;
+        //echo $penUltimanteRow[0]->date . " " . $penUltimanteRow[0]->price_channel_high_value . "<br>";
 
-                    }
+        // If > high price channel. BUY
+        // price > price channel
+        if (($barClosePrice > $price_channel_high_value) && ($this->trade_flag == "all"
+                || $this->trade_flag == "long")){
+            echo "####### HIGH TRADE!<br>";
 
+            // trading allowed?
+            if ($allow_trading == 1){
 
-
-
-                    // NET PROFIT net_profit
-                    if ($this->position != null){
-
-                        $accumulatedProfit =
-                            DB::table('asset_1')
-                                ->where('id', (DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id))
-                                ->value('accumulated_profit');
-
-                        $accumulatedCommission =
-                            DB::table('asset_1')
-                                ->where('id', (DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id))
-                                ->value('accumulated_commission');
-
-                        DB::table('asset_1')
-                            ->where('id', DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id) // Quantity of all records in DB
-                            ->update([
-                                'net_profit' => $accumulatedProfit - $accumulatedCommission
-                            ]);
-
-                    }
-
-
-                } // New bar is issued
-
-                /** Add calculated values to associative array */
-                $messageArray['tradeId'] = $nojsonMessage[2][0]; // $messageArray['flag'] = true; And all these values will be sent to VueJS
-                $messageArray['tradeDate'] = $nojsonMessage[2][1];
-                $messageArray['tradeVolume'] = $nojsonMessage[2][2];
-                $messageArray['tradePrice'] = $nojsonMessage[2][3];
-                $messageArray['tradeBarHigh'] = $this->barHigh; // Bar high
-                $messageArray['tradeBarLow'] = $this->barLow; // Bar Low
-
-
-                /** Send filled associated array in the event as the parameter */
-                event(new \App\Events\BushBounce($messageArray));
-                //event(new eventTrigger($messageArray));
-
-                /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
-                if ($this->dateCompeareFlag == true){
-                    $this->barHigh = 0;
-                    $this->barLow = 9999999;
+                // Is the the first trade ever?
+                if ($this->firstEverTradeFlag){
+                    // open order buy vol = vol
+                    echo "---------------------- FIRST EVER TRADE<br>";
+                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
+                    $this->firstEverTradeFlag = false;
                 }
+                else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
+                {
+                    // open order buy vol = vol * 2
+                    echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>";
+                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
+                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
+                }
+            }
+            else{ // trading is not allowed
+                $this->firstEverTradeFlag = true;
+                echo "---------------------- TRADING NOT ALLOWED<br>";
+            }
+
+            $this->trade_flag = "short"; // Trade flag. If this flag set to short -> don't enter this if and wait for channel low crossing (IF below)
+            $this->position = "long";
+            $this->add_bar_long = true;
+
+            // Add(update) trade info to the last(current) bar(record)
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp)
+                ->update([
+                    'trade_date' => gmdate("Y-m-d G:i:s", ($timeStamp / 1000)),
+                    'trade_price' => $barClosePrice,
+                    'trade_direction' => "buy",
+                    'trade_volume' => $this->volume,
+                    'trade_commission' => ($barClosePrice * $commisionValue / 100) * $this->volume,
+                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume,
+                ]);
+
+            echo "Trade price: " . $barClosePrice . "<br>";
+            $messageArray['flag'] = "buy"; // Send flag to VueJS app.js. On this event VueJS is informed that the trade occurred
+
+        } // BUY trade
+
+
+
+        // If < low price channel. SELL
+        if (($barClosePrice < $price_channel_low_value) && ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
+            echo "####### LOW TRADE!<br>";
+            //event(new \App\Events\BushBounce('Short trade!'));
+
+            // trading allowed?
+            if ($allow_trading == 1){
+
+                // Is the the first trade ever?
+                if ($this->firstEverTradeFlag){
+                    // open order buy vol = vol
+                    echo "---------------------- FIRST EVER TRADE<br>";
+                    //event(new \App\Events\BushBounce('First ever trade'));
+                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
+                    $this->firstEverTradeFlag = false;
+                }
+                else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
+                {
+                    // open order buy vol = vol * 2
+                    echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>";
+                    //event(new \App\Events\BushBounce('Not first ever trade'));
+                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
+                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
+                }
+            }
+            else{ // trading is not allowed
+                $this->firstEverTradeFlag = true;
+                echo "---------------------- TRADING NOT ALLOWED<br>";
+                //event(new \App\Events\BushBounce('Trading is not allowed'));
+            }
+
+            $this->trade_flag = "long";
+            $this->position = "short";
+            $this->add_bar_short = true;
+
+
+            // Add(update) trade info to the last(current) bar(record)
+            // EXCLUDE THIS CODE TO SEPARATE CLASS!!!!!!!!!!!!!!!!!!!
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp)
+                ->update([
+                    'trade_date' => gmdate("Y-m-d G:i:s", ($timeStamp / 1000)),
+                    'trade_price' => $barClosePrice,
+                    'trade_direction' => "sell",
+                    'trade_volume' => $this->volume,
+                    'trade_commission' => ($barClosePrice * $commisionValue / 100) * $this->volume,
+                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume,
+                ]);
+
+            echo "Trade price: " . $barClosePrice . "<br>";
+            //echo "commisionValue: " . $commisionValue . "<br>";
+            //echo "this volume: " . $this->volume . "<br>";
+            //echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "<br>";
+            //echo "result: " . ($nojsonMessage[2][3] * $commisionValue / 100) * $this->volume . "<br>";
+            //echo "sum: " . DB::table('asset_1')->sum('trade_commission') . "<br>";
+
+            $messageArray['flag'] = "sell"; // Send flag to VueJS app.js
+
+        } // Sell trade
+
+
+
+
+        // ****RECALCULATED ACCUMULATED PROFIT****
+        // Get the if of last row where trade direction is not null
+
+        $tradeDirection =
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp)
+                ->value('trade_direction');
+
+        if ($tradeDirection == null && $this->position != null){
+
+            $lastAccumProfitValue =
+                DB::table('asset_1')
+                    ->whereNotNull('trade_direction')
+                    ->orderBy('id', 'desc')
+                    ->value('accumulated_profit');
+
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp) // id of the last record. desc - descent order
+                ->update([
+                    'accumulated_profit' => $lastAccumProfitValue + $tradeProfit
+                ]);
+
+            //echo "Bar with no trade<br>";
+            echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit . "<br>";
+
+        }
+
+        if ($tradeDirection != null && $this->firstPositionEver == false) // Means that at this bar trade has occurred
+        {
+            // INTERESTING VERSION OF PENULTIMANTE RECORD!
+            $nextToLastDirection =
+                DB::table('asset_1')
+                    ->whereNotNull('trade_direction')
+                    ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
+                    ->value('accumulated_profit');
+
+
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp) // id of the last record. desc - descent order
+                ->update([
+                    'accumulated_profit' => $nextToLastDirection + $tradeProfit
+                ]);
+
+            echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
+            //event(new \App\Events\BushBounce('Bar with trade. Direction: ' . $nextToLastDirection));
+        }
+
+        /** 1. Skip the first trade. Record 0 to accumulated_profit cell. This code fires once only at the first trade */
+        if ($tradeDirection != null && $this->firstPositionEver == true){
+
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp) // id of the last record. desc - descent order
+                ->update([
+                    'accumulated_profit' => 0
+                ]);
+
+            echo "firstPositionEver!<br>";
+            $this->firstPositionEver = false;
+        }
+
+
+        // NET PROFIT net_profit
+        if ($this->position != null){
+
+            $accumulatedProfit =
+                DB::table('asset_1')
+                    ->where('time_stamp', $timeStamp)
+                    ->value('accumulated_profit');
+
+            $accumulatedCommission =
+                DB::table('asset_1')
+                    ->where('time_stamp', $timeStamp)
+                    ->value('accumulated_commission');
+
+            DB::table('asset_1')
+                ->where('time_stamp', $timeStamp) // Quantity of all records in DB
+                ->update([
+                    'net_profit' => $accumulatedProfit - $accumulatedCommission
+                ]);
+
+        }
+
+
+
+
+
+
+
+
 
     }
 }

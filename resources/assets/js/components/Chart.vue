@@ -34,6 +34,8 @@
                             console.log('reload-price-channel');
                             chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
                             chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                            chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                            chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
                         }
 
                         // This type of message is called from ChartControl.vue. priceChannelUpdate line 84
@@ -42,8 +44,8 @@
                             chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
                             chart1.series[1].setData(response.data['priceChannelHighValues'], true);// High. Precancel high
                             chart1.series[2].setData(response.data['priceChannelLowValues'], true);// Low. Price channel low
-                            //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
-                            //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                            chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                            chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
                         }
                     })
                     .catch(error => {
@@ -117,7 +119,7 @@
                         }
 
                     },
-                    /*
+
                     {
                         name: 'Long markers',
                         visible: true,
@@ -125,7 +127,7 @@
                         type: 'scatter',
                         color: 'purple',
                         //lineWidth: 3,
-                        data: response.data['longTradeMarkers'],
+                        //data: response.data['longTradeMarkers'],
                         dataGrouping: {
                             enabled: false
                         },
@@ -137,6 +139,7 @@
                             symbol: 'triangle'
                         },
                     },
+
                     {
                         name: 'Short markers',
                         visible: true,
@@ -145,7 +148,7 @@
                         //yAxis: 1, // To which of two y axis this series should be linked
                         color: 'purple',
                         //lineWidth: 3,
-                        data: response.data['shortTradeMarkers'],
+                        //data: response.data['shortTradeMarkers'],
                         dataGrouping: {
                             enabled: false
                         },
@@ -157,7 +160,7 @@
                             symbol: 'triangle-down'
                         },
                     }
-                    */
+
                 ]
             });
 

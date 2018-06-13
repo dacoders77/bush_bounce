@@ -78,9 +78,9 @@
                 // In this controller price channel recalculation is called automatically
 
                 try {
-                    const response = await axios.post('/chartcontrolupdate', this.$data)
-                    // read recalc price channel
-                    // use another type of event which reloads only the price channel instead the whole chart
+                    const response = await axios.post('/chartcontrolupdate', this.$data); // Calculate price channel method is called from the inside of this controller
+                    const response2 = await axios.get('/profit'); // Calculate profit
+
                     this.$bus.$emit('my-event', {param : "reload-price-channel"}); // Inform Chart.vue that chart bars must be reloaded
                     // param : "reload-whole-chart"
                 } catch(error) {
@@ -225,26 +225,17 @@
             initialStartFunction: function () {
 
                 console.log('ChartControl.vue. Line 209. Entered Initial start function');
-
                 // Determine from which start (history or realtime) initial start button is clicked
                 if (this.appMode == "realtime")
                 {
+                    console.log('ChartControl.vue. line 178. Entered initial start realtime mode');
                     this.initialStartRealTime(); // Initial start in real-time mode
                 }
                 else
                 {
-                    console.log('ChartControl.vue. line 178. Entered history mode');
-                    axios.get('/historyperiod') // The table will be truncated, history loaded
-                        .then(response => {
-                            //console.log('ChartControl.vue. historyperiod response');
-                            this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                        })
-                        .catch(error => {
-                            console.log('ChartControl.vue. line 237. historyperiod controller error:');
-                            console.log(error.response);
-                        })
+                    console.log('ChartControl.vue. line 178. Entered initial start history mode');
+                    this.initialStartHistory(); // Initial start from history mode
                 }
-
             },
 
 
@@ -257,7 +248,19 @@
                     const response3 = await axios.get('/startbroadcast');
 
                 } catch (error) {
-                    console.log('ChartControl.vue. line 276. Initial start async error: ');
+                    console.log('ChartControl.vue. line 260. Initial realtime start async error: ');
+                    console.log(error.response);
+                }
+            },
+
+            initialStartHistory: async function() {
+                try {
+                    const response = await axios.get('/historyperiod');
+                    const response2 = await axios.get('/profit'); // Calculate profit
+
+                    this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                } catch (error) {
+                    console.log('ChartControl.vue. line 261. Initial history start async error: ');
                     console.log(error.response);
                 }
             }

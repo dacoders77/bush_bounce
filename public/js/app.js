@@ -1072,7 +1072,7 @@ module.exports = function normalizeComponent (
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(11);
-module.exports = __webpack_require__(47);
+module.exports = __webpack_require__(50);
 
 
 /***/ }),
@@ -1123,7 +1123,7 @@ var EventBus = new Vue({
 });
 
 Vue.component('chart-control', __webpack_require__(41));
-Vue.component('chart', __webpack_require__(44));
+Vue.component('chart', __webpack_require__(47));
 
 var app = new Vue({
     el: '#vue-app' // This #.. covers the whole code
@@ -48231,7 +48231,7 @@ var normalizeComponent = __webpack_require__(9)
 /* script */
 var __vue_script__ = __webpack_require__(42)
 /* template */
-var __vue_template__ = __webpack_require__(43)
+var __vue_template__ = __webpack_require__(46)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -48275,7 +48275,7 @@ module.exports = Component.exports
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator__);
 
 
@@ -48359,7 +48359,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
         priceChannelUpdate: function () {
             var _ref = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee() {
-                var response;
+                var response, response2;
                 return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee$(_context) {
                     while (1) {
                         switch (_context.prev = _context.next) {
@@ -48370,27 +48370,31 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                             case 3:
                                 response = _context.sent;
+                                _context.next = 6;
+                                return axios.get('/profit');
 
-                                // read recalc price channel
-                                // use another type of event which reloads only the price channel instead the whole chart
+                            case 6:
+                                response2 = _context.sent;
+                                // Calculate profit
+
                                 this.$bus.$emit('my-event', { param: "reload-price-channel" }); // Inform Chart.vue that chart bars must be reloaded
                                 // param : "reload-whole-chart"
-                                _context.next = 11;
+                                _context.next = 14;
                                 break;
 
-                            case 7:
-                                _context.prev = 7;
+                            case 10:
+                                _context.prev = 10;
                                 _context.t0 = _context['catch'](0);
 
                                 console.log('ChartControl.vue. line 88. /chartcontrolupdate controller error');
                                 console.log(_context.t0.response);
 
-                            case 11:
+                            case 14:
                             case 'end':
                                 return _context.stop();
                         }
                     }
-                }, _callee, this, [[0, 7]]);
+                }, _callee, this, [[0, 10]]);
             }));
 
             function priceChannelUpdate() {
@@ -48536,23 +48540,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         },
 
         initialStartFunction: function initialStartFunction() {
-            var _this2 = this;
 
             console.log('ChartControl.vue. Line 209. Entered Initial start function');
-
             // Determine from which start (history or realtime) initial start button is clicked
             if (this.appMode == "realtime") {
+                console.log('ChartControl.vue. line 178. Entered initial start realtime mode');
                 this.initialStartRealTime(); // Initial start in real-time mode
             } else {
-                console.log('ChartControl.vue. line 178. Entered history mode');
-                axios.get('/historyperiod') // The table will be truncated, history loaded
-                .then(function (response) {
-                    //console.log('ChartControl.vue. historyperiod response');
-                    _this2.$bus.$emit('my-event', { param: "reload-whole-chart" }); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                }).catch(function (error) {
-                    console.log('ChartControl.vue. line 237. historyperiod controller error:');
-                    console.log(error.response);
-                });
+                console.log('ChartControl.vue. line 178. Entered initial start history mode');
+                this.initialStartHistory(); // Initial start from history mode
             }
         },
 
@@ -48589,7 +48585,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 _context3.prev = 13;
                                 _context3.t0 = _context3['catch'](0);
 
-                                console.log('ChartControl.vue. line 276. Initial start async error: ');
+                                console.log('ChartControl.vue. line 260. Initial realtime start async error: ');
                                 console.log(_context3.t0.response);
 
                             case 17:
@@ -48605,11 +48601,57 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             }
 
             return initialStartRealTime;
+        }(),
+
+        initialStartHistory: function () {
+            var _ref4 = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee4() {
+                var response, response2;
+                return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee4$(_context4) {
+                    while (1) {
+                        switch (_context4.prev = _context4.next) {
+                            case 0:
+                                _context4.prev = 0;
+                                _context4.next = 3;
+                                return axios.get('/historyperiod');
+
+                            case 3:
+                                response = _context4.sent;
+                                _context4.next = 6;
+                                return axios.get('/profit');
+
+                            case 6:
+                                response2 = _context4.sent;
+                                // Calculate profit
+
+                                this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+                                _context4.next = 14;
+                                break;
+
+                            case 10:
+                                _context4.prev = 10;
+                                _context4.t0 = _context4['catch'](0);
+
+                                console.log('ChartControl.vue. line 261. Initial history start async error: ');
+                                console.log(_context4.t0.response);
+
+                            case 14:
+                            case 'end':
+                                return _context4.stop();
+                        }
+                    }
+                }, _callee4, this, [[0, 10]]);
+            }));
+
+            function initialStartHistory() {
+                return _ref4.apply(this, arguments);
+            }
+
+            return initialStartHistory;
         }()
 
     },
     created: function created() {
-        var _this3 = this;
+        var _this2 = this;
 
         // Console messages output to the page
         // Messages are streamed from php via websocket
@@ -48617,23 +48659,23 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         this.items = arr;
 
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this3.items.length < 15) {
+            if (_this2.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this3.items.shift();
-                _this3.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this2.items.shift();
+                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
 
         // When a connection error (broadcast stopped and other info messages) occurred in RatchetPawlSocket.php
         Echo.channel('Bush-channel').listen('ConnectionError', function (e) {
-            if (_this3.items.length < 15) {
+            if (_this2.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this3.items.push(e.update);
+                _this2.items.push(e.update);
             } else {
-                _this3.items.shift();
-                _this3.items.push(e.update);
+                _this2.items.shift();
+                _this2.items.push(e.update);
             }
         });
 
@@ -48649,20 +48691,20 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         axios.get('/chartinfo') // The table will be truncated, history loaded
         .then(function (response) {
             //console.log('ChartControl.vue. ChartInfo controller response: ');
-            _this3.symbol = response.data['symbol'];
-            _this3.netProfit = 'not ready yet';
-            _this3.requestedBars = response.data['request_bars'];
-            _this3.timeFrame = response.data['time_frame'];
-            _this3.requestBars = response.data['request_bars'];
-            _this3.commission = response.data['commission_value'];
-            _this3.tradingAllowed = response.data['allow_trading'];
-            _this3.priceChannelPeriod = response.data['price_channel_period'];
-            _this3.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
+            _this2.symbol = response.data['symbol'];
+            _this2.netProfit = 'not ready yet';
+            _this2.requestedBars = response.data['request_bars'];
+            _this2.timeFrame = response.data['time_frame'];
+            _this2.requestBars = response.data['request_bars'];
+            _this2.commission = response.data['commission_value'];
+            _this2.tradingAllowed = response.data['allow_trading'];
+            _this2.priceChannelPeriod = response.data['price_channel_period'];
+            _this2.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
 
-            _this3.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
+            _this2.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
 
-            _this3.historyFrom = response.data['history_from'];
-            _this3.historyTo = response.data['history_to'];
+            _this2.historyFrom = response.data['history_from'];
+            _this2.historyTo = response.data['history_to'];
         }).catch(function (error) {
             console.log('ChartControl.vue. line 344. /chartinfo controller error:');
             console.log(error.response);
@@ -48674,554 +48716,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 /* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c("div", [
-    _c("div", { staticStyle: { border: "thin solid green", padding: "5px" } }, [
-      _vm._v("\n        Symbol: "),
-      _c("input", {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.symbol,
-            expression: "symbol"
-          }
-        ],
-        staticClass: "form-control",
-        attrs: { type: "text", min: "1", max: "7" },
-        domProps: { value: _vm.symbol },
-        on: {
-          input: function($event) {
-            if ($event.target.composing) {
-              return
-            }
-            _vm.symbol = $event.target.value
-          }
-        }
-      }),
-      _c("br"),
-      _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
-      _c("br"),
-      _vm._v("\n        Requested bars (realtime): "),
-      _c("input", {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.requestBars,
-            expression: "requestBars"
-          }
-        ],
-        staticClass: "form-control",
-        attrs: { type: "number", min: "1", max: "100" },
-        domProps: { value: _vm.requestBars },
-        on: {
-          input: function($event) {
-            if ($event.target.composing) {
-              return
-            }
-            _vm.requestBars = $event.target.value
-          }
-        }
-      }),
-      _c("br"),
-      _vm._v("\n        Tst: "),
-      _c("input", {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.historyFrom,
-            expression: "historyFrom"
-          }
-        ],
-        staticClass: "form-control",
-        staticStyle: { width: "130px" },
-        attrs: { type: "date" },
-        domProps: { value: _vm.historyFrom },
-        on: {
-          input: function($event) {
-            if ($event.target.composing) {
-              return
-            }
-            _vm.historyFrom = $event.target.value
-          }
-        }
-      }),
-      _vm._v(" - "),
-      _c("input", {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.historyTo,
-            expression: "historyTo"
-          }
-        ],
-        staticClass: "form-control",
-        staticStyle: { width: "130px" },
-        attrs: { type: "date" },
-        domProps: { value: _vm.historyTo },
-        on: {
-          input: function($event) {
-            if ($event.target.composing) {
-              return
-            }
-            _vm.historyTo = $event.target.value
-          }
-        }
-      }),
-      _c("br"),
-      _vm._v("\n        Time frame: "),
-      _c("input", {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.timeFrame,
-            expression: "timeFrame"
-          }
-        ],
-        staticClass: "form-control",
-        attrs: { type: "number", min: "1", max: "100" },
-        domProps: { value: _vm.timeFrame },
-        on: {
-          input: function($event) {
-            if ($event.target.composing) {
-              return
-            }
-            _vm.timeFrame = $event.target.value
-          }
-        }
-      }),
-      _c("br"),
-      _vm._v("\n        Commission: " + _vm._s(_vm.commission)),
-      _c("br"),
-      _vm._v("\n        Trading allowed: " + _vm._s(_vm.tradingAllowed)),
-      _c("br"),
-      _vm._v("\n        Broadcast: " + _vm._s(_vm.broadcastAllowed)),
-      _c("br")
-    ]),
-    _vm._v(" "),
-    _c(
-      "div",
-      {
-        staticStyle: {
-          border: "thin solid darkgray",
-          padding: "5px",
-          "margin-top": "5px"
-        }
-      },
-      [
-        _vm._v("\n        Application mode: "),
-        _c(
-          "a",
-          {
-            attrs: { href: "" },
-            on: {
-              click: function($event) {
-                $event.preventDefault()
-                return _vm.modeToggle($event)
-              }
-            }
-          },
-          [_vm._v(_vm._s(_vm.appMode))]
-        ),
-        _c("br"),
-        _vm._v(" "),
-        _vm._v("\n        Initial start:\n        "),
-        _c(
-          "button",
-          {
-            attrs: { id: "initial-start" },
-            on: { click: _vm.initialStartButton }
-          },
-          [_vm._v("Run")]
-        ),
-        _c("br"),
-        _vm._v(" "),
-        _c(
-          "form",
-          {
-            on: {
-              submit: function($event) {
-                $event.preventDefault()
-                return _vm.priceChannelUpdate($event)
-              }
-            }
-          },
-          [
-            _vm._v("\n            Price channel / Stop channel period:"),
-            _c("br"),
-            _vm._v(" "),
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.priceChannelPeriod,
-                  expression: "priceChannelPeriod"
-                }
-              ],
-              staticClass: "form-control",
-              attrs: { type: "number", min: "1", max: "100" },
-              domProps: { value: _vm.priceChannelPeriod },
-              on: {
-                input: function($event) {
-                  if ($event.target.composing) {
-                    return
-                  }
-                  _vm.priceChannelPeriod = $event.target.value
-                }
-              }
-            }),
-            _vm._v(" "),
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.priceChannelPeriod,
-                  expression: "priceChannelPeriod"
-                }
-              ],
-              staticClass: "form-control",
-              attrs: { type: "number", min: "1", max: "100" },
-              domProps: { value: _vm.priceChannelPeriod },
-              on: {
-                input: function($event) {
-                  if ($event.target.composing) {
-                    return
-                  }
-                  _vm.priceChannelPeriod = $event.target.value
-                }
-              }
-            }),
-            _vm._v(" "),
-            _c("button", [_vm._v("Upd")]),
-            _vm._v(" "),
-            _c("br")
-          ]
-        )
-      ]
-    ),
-    _vm._v(" "),
-    _c(
-      "div",
-      {
-        staticStyle: {
-          border: "thin solid blue",
-          padding: "5px",
-          "margin-top": "5px"
-        }
-      },
-      _vm._l(_vm.items, function(item) {
-        return _c("span", [_vm._v("\n        " + _vm._s(item)), _c("br")])
-      })
-    )
-  ])
-}
-var staticRenderFns = []
-render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
-if (false) {
-  module.hot.accept()
-  if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-52976716", module.exports)
-  }
-}
+module.exports = __webpack_require__(44);
+
 
 /***/ }),
 /* 44 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var disposed = false
-var normalizeComponent = __webpack_require__(9)
-/* script */
-var __vue_script__ = __webpack_require__(45)
-/* template */
-var __vue_template__ = __webpack_require__(46)
-/* template functional */
-var __vue_template_functional__ = false
-/* styles */
-var __vue_styles__ = null
-/* scopeId */
-var __vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var __vue_module_identifier__ = null
-var Component = normalizeComponent(
-  __vue_script__,
-  __vue_template__,
-  __vue_template_functional__,
-  __vue_styles__,
-  __vue_scopeId__,
-  __vue_module_identifier__
-)
-Component.options.__file = "resources\\assets\\js\\components\\Chart.vue"
-
-/* hot reload */
-if (false) {(function () {
-  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), false)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-72bac812", Component.options)
-  } else {
-    hotAPI.reload("data-v-72bac812", Component.options)
-  }
-  module.hot.dispose(function (data) {
-    disposed = true
-  })
-})()}
-
-module.exports = Component.exports
-
-
-/***/ }),
-/* 45 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-    props: [],
-    data: function data() {
-        return {
-            symbol: '',
-            netProfit: 0,
-            requestedBars: '',
-            commission: '',
-            tradingAllowed: ''
-        };
-    },
-
-    methods: {
-        // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
-
-        HistoryBarsLoad: function HistoryBarsLoad(chart1, param) {
-
-            axios.get('/historybarsload') // Load history data from BR
-            .then(function (response) {
-
-                // Two types of messages can be received: reload the whole chart or the price channel only
-                // The reason is to make chart reload faster
-                if (param == "reload-price-channel") {
-                    console.log('reload-price-channel');
-                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
-                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
-                }
-
-                // This type of message is called from ChartControl.vue. priceChannelUpdate line 84
-                if (param == "reload-whole-chart") {
-                    console.log('reload-whole-chart');
-                    chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
-                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
-                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
-                    //chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
-                    //chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
-                }
-            }).catch(function (error) {
-                console.log('Chart.vue. line 36 /historybarsload function controller error: ');
-                console.log(error.response);
-            });
-        }
-    },
-    created: function created() {// First created then Mounted
-    },
-    mounted: function mounted() {
-        var _this = this;
-
-        // Then, later mounted
-
-        var chart1 = Highcharts.stockChart('container', {
-            chart: {
-                animation: false,
-                renderTo: 'container' // div where the chart will be rendered
-                //height: document.height, // Use window height to set height of the chart
-            },
-            yAxis: [{ // Primary yAxis
-                title: {
-                    text: 'price',
-                    style: {
-                        color: 'purple'
-                    }
-                }
-            }, { // Secondary yAxis
-                title: {
-                    text: 'profit',
-                    style: {
-                        color: 'green'
-                    }
-                },
-                opposite: false
-            }],
-
-            series: [{
-                name: 'symbol name Chart.vue',
-                visible: true,
-                enableMouseTracking: true,
-                type: 'candlestick',
-                tooltip: {
-                    valueDecimals: 2, // Quantity of digits .00 in value when hover the cursor over the bar
-                    shape: 'square'
-                },
-                dataGrouping: {
-                    enabled: false
-                }
-            }, {
-                name: 'Price channel high',
-                visible: true,
-                enableMouseTracking: true,
-                color: 'red',
-                lineWidth: 1,
-                //data: response.data['priceChannelHighValues'],
-                dataGrouping: {
-                    enabled: false
-                }
-
-            }, {
-                name: 'Price channel low',
-                visible: true,
-                enableMouseTracking: true,
-                color: 'red',
-                lineWidth: 1,
-                //data: response.data['priceChannelLowValues'],
-                dataGrouping: {
-                    enabled: false
-                }
-
-            }]
-        });
-
-        // Load history data from DB and send "reload-whole-chart" parameter
-        this.HistoryBarsLoad(chart1, "reload-whole-chart");
-
-        // Websocket event listener. Used only for updating and adding new bars to the chart
-        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            //console.log(e.update);
-            var last = chart1.series[0].data[chart1.series[0].data.length - 1];
-            last.update({
-                //'open': 1000,
-                'high': e.update["tradeBarHigh"],
-                'low': e.update["tradeBarLow"],
-                'close': e.update["tradePrice"]
-            }, true);
-
-            // New bar is issued. Flag sent from CandleMaker.php
-            if (e.update["flag"]) {
-                // e.update["flag"] = true
-                console.log('Chart.vue. New bar is added');
-                // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
-                chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
-                // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
-                chart1.series[1].addPoint([e.update["tradeDate"], e.update["priceChannelHighValue"]], true, false); // Price channel high
-                chart1.series[2].addPoint([e.update["tradeDate"], e.update["priceChannelLowValue"]], true, false); // Price channel low
-
-
-                /*
-                axios.get('/pricechannelcalc') // Recalculate price channel
-                    .then(response => {
-                        //console.log('ChartControl.vue. pricechannelcalc controller response: ');
-                        //console.log(response);
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. pricechannelcalc controller error: ');
-                        console.log(error.response);
-                    })
-                       // Update price channel
-                    var request2 = $.get('loaddata');
-                    request2.done(function(response) {
-                        console.log("Chart.vue: loading data request worked ok");
-                        chart.series[0].setData(response[0],true); // true - redraw the series. Candles
-                        chart.series[1].setData(response[1],true);// Precancel high
-                        chart.series[2].setData(response[2],true);// Price channel low
-                    });
-                    */
-            } // New bar added
-
-
-            /*
-            // TRADE FLAGS
-            // buy flag
-            if (e.update["flag"] == "buy") {
-                console.log('buy');
-                chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
-            }
-             // buy flag
-            if (e.update["flag"] == "sell") {
-                console.log('buy');
-                chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
-            }
-            */
-        }); // Echo
-
-        // Event bus listener
-        // This event is received from ChartControl.vue component when price channel update button is clicked
-        this.$bus.$on('my-event', function ($event) {
-            //console.log($event.param);
-            _this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
-        });
-    } // Mounted()
-
-});
-
-/***/ }),
-/* 46 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c("div")
-}
-var staticRenderFns = []
-render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
-if (false) {
-  module.hot.accept()
-  if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-72bac812", module.exports)
-  }
-}
-
-/***/ }),
-/* 47 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 48 */,
-/* 49 */,
-/* 50 */,
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(59);
-
-
-/***/ }),
-/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -49246,7 +48745,7 @@ var oldRuntime = hadRuntime && g.regeneratorRuntime;
 // Force reevalutation of runtime.js.
 g.regeneratorRuntime = undefined;
 
-module.exports = __webpack_require__(60);
+module.exports = __webpack_require__(45);
 
 if (hadRuntime) {
   // Restore the original runtime.
@@ -49262,7 +48761,7 @@ if (hadRuntime) {
 
 
 /***/ }),
-/* 60 */
+/* 45 */
 /***/ (function(module, exports) {
 
 /**
@@ -49993,6 +49492,578 @@ if (hadRuntime) {
   (function() { return this })() || Function("return this")()
 );
 
+
+/***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", [
+    _c("div", { staticStyle: { border: "thin solid green", padding: "5px" } }, [
+      _vm._v("\n        Symbol: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.symbol,
+            expression: "symbol"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "text", min: "1", max: "7" },
+        domProps: { value: _vm.symbol },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.symbol = $event.target.value
+          }
+        }
+      }),
+      _c("br"),
+      _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
+      _c("br"),
+      _vm._v("\n        Requested bars (realtime): "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.requestBars,
+            expression: "requestBars"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "number", min: "1", max: "100" },
+        domProps: { value: _vm.requestBars },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.requestBars = $event.target.value
+          }
+        }
+      }),
+      _c("br"),
+      _vm._v("\n        Tst: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.historyFrom,
+            expression: "historyFrom"
+          }
+        ],
+        staticClass: "form-control",
+        staticStyle: { width: "130px" },
+        attrs: { type: "date" },
+        domProps: { value: _vm.historyFrom },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.historyFrom = $event.target.value
+          }
+        }
+      }),
+      _vm._v(" - "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.historyTo,
+            expression: "historyTo"
+          }
+        ],
+        staticClass: "form-control",
+        staticStyle: { width: "130px" },
+        attrs: { type: "date" },
+        domProps: { value: _vm.historyTo },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.historyTo = $event.target.value
+          }
+        }
+      }),
+      _c("br"),
+      _vm._v("\n        Time frame: "),
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.timeFrame,
+            expression: "timeFrame"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "number", min: "1", max: "100" },
+        domProps: { value: _vm.timeFrame },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.timeFrame = $event.target.value
+          }
+        }
+      }),
+      _c("br"),
+      _vm._v("\n        Commission: " + _vm._s(_vm.commission)),
+      _c("br"),
+      _vm._v("\n        Trading allowed: " + _vm._s(_vm.tradingAllowed)),
+      _c("br"),
+      _vm._v("\n        Broadcast: " + _vm._s(_vm.broadcastAllowed)),
+      _c("br")
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticStyle: {
+          border: "thin solid darkgray",
+          padding: "5px",
+          "margin-top": "5px"
+        }
+      },
+      [
+        _vm._v("\n        Application mode: "),
+        _c(
+          "a",
+          {
+            attrs: { href: "" },
+            on: {
+              click: function($event) {
+                $event.preventDefault()
+                return _vm.modeToggle($event)
+              }
+            }
+          },
+          [_vm._v(_vm._s(_vm.appMode))]
+        ),
+        _c("br"),
+        _vm._v(" "),
+        _vm._v("\n        Initial start:\n        "),
+        _c(
+          "button",
+          {
+            attrs: { id: "initial-start" },
+            on: { click: _vm.initialStartButton }
+          },
+          [_vm._v("Run")]
+        ),
+        _c("br"),
+        _vm._v(" "),
+        _c(
+          "form",
+          {
+            on: {
+              submit: function($event) {
+                $event.preventDefault()
+                return _vm.priceChannelUpdate($event)
+              }
+            }
+          },
+          [
+            _vm._v("\n            Price channel / Stop channel period:"),
+            _c("br"),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.priceChannelPeriod,
+                  expression: "priceChannelPeriod"
+                }
+              ],
+              staticClass: "form-control",
+              attrs: { type: "number", min: "1", max: "100" },
+              domProps: { value: _vm.priceChannelPeriod },
+              on: {
+                input: function($event) {
+                  if ($event.target.composing) {
+                    return
+                  }
+                  _vm.priceChannelPeriod = $event.target.value
+                }
+              }
+            }),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.priceChannelPeriod,
+                  expression: "priceChannelPeriod"
+                }
+              ],
+              staticClass: "form-control",
+              attrs: { type: "number", min: "1", max: "100" },
+              domProps: { value: _vm.priceChannelPeriod },
+              on: {
+                input: function($event) {
+                  if ($event.target.composing) {
+                    return
+                  }
+                  _vm.priceChannelPeriod = $event.target.value
+                }
+              }
+            }),
+            _vm._v(" "),
+            _c("button", [_vm._v("Upd")]),
+            _vm._v(" "),
+            _c("br")
+          ]
+        )
+      ]
+    ),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticStyle: {
+          border: "thin solid blue",
+          padding: "5px",
+          "margin-top": "5px"
+        }
+      },
+      _vm._l(_vm.items, function(item) {
+        return _c("span", [_vm._v("\n        " + _vm._s(item)), _c("br")])
+      })
+    )
+  ])
+}
+var staticRenderFns = []
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-52976716", module.exports)
+  }
+}
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+var normalizeComponent = __webpack_require__(9)
+/* script */
+var __vue_script__ = __webpack_require__(48)
+/* template */
+var __vue_template__ = __webpack_require__(49)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources\\assets\\js\\components\\Chart.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-72bac812", Component.options)
+  } else {
+    hotAPI.reload("data-v-72bac812", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 48 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+    props: [],
+    data: function data() {
+        return {
+            symbol: '',
+            netProfit: 0,
+            requestedBars: '',
+            commission: '',
+            tradingAllowed: ''
+        };
+    },
+
+    methods: {
+        // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
+
+        HistoryBarsLoad: function HistoryBarsLoad(chart1, param) {
+
+            axios.get('/historybarsload') // Load history data from BR
+            .then(function (response) {
+
+                // Two types of messages can be received: reload the whole chart or the price channel only
+                // The reason is to make chart reload faster
+                if (param == "reload-price-channel") {
+                    console.log('reload-price-channel');
+                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                    chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
+                    chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
+                }
+
+                // This type of message is called from ChartControl.vue. priceChannelUpdate line 84
+                if (param == "reload-whole-chart") {
+                    console.log('reload-whole-chart');
+                    chart1.series[0].setData(response.data['candles'], true); // Candles. true - redraw the series. Candles
+                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                    chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
+                    chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
+                }
+            }).catch(function (error) {
+                console.log('Chart.vue. line 36 /historybarsload function controller error: ');
+                console.log(error.response);
+            });
+        }
+    },
+    created: function created() {// First created then Mounted
+    },
+    mounted: function mounted() {
+        var _this = this;
+
+        // Then, later mounted
+
+        var chart1 = Highcharts.stockChart('container', {
+            chart: {
+                animation: false,
+                renderTo: 'container' // div where the chart will be rendered
+                //height: document.height, // Use window height to set height of the chart
+            },
+            yAxis: [{ // Primary yAxis
+                title: {
+                    text: 'price',
+                    style: {
+                        color: 'purple'
+                    }
+                }
+            }, { // Secondary yAxis
+                title: {
+                    text: 'profit',
+                    style: {
+                        color: 'green'
+                    }
+                },
+                opposite: false
+            }],
+
+            series: [{
+                name: 'symbol name Chart.vue',
+                visible: true,
+                enableMouseTracking: true,
+                type: 'candlestick',
+                tooltip: {
+                    valueDecimals: 2, // Quantity of digits .00 in value when hover the cursor over the bar
+                    shape: 'square'
+                },
+                dataGrouping: {
+                    enabled: false
+                }
+            }, {
+                name: 'Price channel high',
+                visible: true,
+                enableMouseTracking: true,
+                color: 'red',
+                lineWidth: 1,
+                //data: response.data['priceChannelHighValues'],
+                dataGrouping: {
+                    enabled: false
+                }
+
+            }, {
+                name: 'Price channel low',
+                visible: true,
+                enableMouseTracking: true,
+                color: 'red',
+                lineWidth: 1,
+                //data: response.data['priceChannelLowValues'],
+                dataGrouping: {
+                    enabled: false
+                }
+
+            }, {
+                name: 'Long markers',
+                visible: true,
+                enableMouseTracking: true,
+                type: 'scatter',
+                color: 'purple',
+                //lineWidth: 3,
+                //data: response.data['longTradeMarkers'],
+                dataGrouping: {
+                    enabled: false
+                },
+                marker: {
+                    fillColor: 'lime',
+                    lineColor: 'green',
+                    lineWidth: 1,
+                    radius: 6,
+                    symbol: 'triangle'
+                }
+            }, {
+                name: 'Short markers',
+                visible: true,
+                enableMouseTracking: true,
+                type: 'scatter',
+                //yAxis: 1, // To which of two y axis this series should be linked
+                color: 'purple',
+                //lineWidth: 3,
+                //data: response.data['shortTradeMarkers'],
+                dataGrouping: {
+                    enabled: false
+                },
+                marker: {
+                    fillColor: 'red',
+                    lineColor: 'red',
+                    lineWidth: 1,
+                    radius: 6,
+                    symbol: 'triangle-down'
+                }
+            }]
+        });
+
+        // Load history data from DB and send "reload-whole-chart" parameter
+        this.HistoryBarsLoad(chart1, "reload-whole-chart");
+
+        // Websocket event listener. Used only for updating and adding new bars to the chart
+        Echo.channel('Bush-channel').listen('BushBounce', function (e) {
+            //console.log(e.update);
+            var last = chart1.series[0].data[chart1.series[0].data.length - 1];
+            last.update({
+                //'open': 1000,
+                'high': e.update["tradeBarHigh"],
+                'low': e.update["tradeBarLow"],
+                'close': e.update["tradePrice"]
+            }, true);
+
+            // New bar is issued. Flag sent from CandleMaker.php
+            if (e.update["flag"]) {
+                // e.update["flag"] = true
+                console.log('Chart.vue. New bar is added');
+                // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
+                chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
+                // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
+                chart1.series[1].addPoint([e.update["tradeDate"], e.update["priceChannelHighValue"]], true, false); // Price channel high
+                chart1.series[2].addPoint([e.update["tradeDate"], e.update["priceChannelLowValue"]], true, false); // Price channel low
+
+
+                /*
+                axios.get('/pricechannelcalc') // Recalculate price channel
+                    .then(response => {
+                        //console.log('ChartControl.vue. pricechannelcalc controller response: ');
+                        //console.log(response);
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. pricechannelcalc controller error: ');
+                        console.log(error.response);
+                    })
+                       // Update price channel
+                    var request2 = $.get('loaddata');
+                    request2.done(function(response) {
+                        console.log("Chart.vue: loading data request worked ok");
+                        chart.series[0].setData(response[0],true); // true - redraw the series. Candles
+                        chart.series[1].setData(response[1],true);// Precancel high
+                        chart.series[2].setData(response[2],true);// Price channel low
+                    });
+                    */
+            } // New bar added
+
+
+            /*
+            // TRADE FLAGS
+            // buy flag
+            if (e.update["flag"] == "buy") {
+                console.log('buy');
+                chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
+            }
+             // buy flag
+            if (e.update["flag"] == "sell") {
+                console.log('buy');
+                chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
+            }
+            */
+        }); // Echo
+
+        // Event bus listener
+        // This event is received from ChartControl.vue component when price channel update button is clicked
+        this.$bus.$on('my-event', function ($event) {
+            //console.log($event.param);
+            _this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
+        });
+    } // Mounted()
+
+});
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div")
+}
+var staticRenderFns = []
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-72bac812", module.exports)
+  }
+}
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
 
 /***/ })
 /******/ ]);

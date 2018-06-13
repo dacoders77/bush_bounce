@@ -1,12 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: slinger
- * Date: 6/12/2018
- * Time: 7:58 PM
- */
 
 namespace App\Classes;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class Backtest
@@ -18,14 +13,43 @@ namespace App\Classes;
  */
 class Backtest
 {
-    public function start(){
+    static public function start(){
 
-        // Get all records from DB
+        /** Empty calculated data like position, profit, accumulated profit etc */
+        DB::table("asset_1")
+            //->whereNotNull('net_profit')
+            ->whereNotNull('price_channel_high_value')
+            ->update([
+                'trade_date' => null,
+                'trade_price' => null,
+                'trade_commission' => null,
+                'accumulated_commission' => null,
+                'trade_direction' => null,
+                'trade_volume' => null,
+                'trade_profit' => null,
+                'accumulated_profit' => null,
+                'net_profit' => null,
+            ]);
 
-        // Foreach them, one by one
+        $chart = new Chart();
 
-        // On each iteration call Chart::index(bar date, close price)
+        $allDbValues = DB::table("asset_1")
+            ->whereNotNull('price_channel_high_value')
+            ->get(); // Read the whole table from BD to $allDbValues
 
+        $isFirstRecord = false;
+        foreach ($allDbValues as $rowValue) { // Go through all DB records
+
+            /** We need to pass the first bar. It is needed to avoid null price channel trade check because
+             * in Chart.php the penultimate value of the price channel is taken for calculation
+             * for the first iteration of foreach this value is always null
+             */
+            if ($isFirstRecord){
+                $chart->index("backtest", $rowValue->date, $rowValue->time_stamp, $rowValue->close, $rowValue->id);
+            }
+            else{
+                $isFirstRecord = true;
+            }
+        }
     }
-
 }

@@ -155,7 +155,12 @@ Route::get('/historyperiod', function(){
     App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
 });
 
-// Delete it
-Route::get('/chann', function(){
+// Backtest and profit calculation
+Route::get('/profit', function(){
+    \App\Classes\Backtest::start();
+});
+
+// Delete it. Price channel calculate
+Route::get('/calc', function(){
     App\Classes\PriceChannel::calculate();
 });

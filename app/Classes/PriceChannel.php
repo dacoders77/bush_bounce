@@ -66,7 +66,7 @@ class PriceChannel
          */
         foreach ($records as $record) {
             /**
-             * Indexex go like this 0,1,2,3,4,5,6 from left to the right
+             * Indexes go like this 0,1,2,3,4,5,6 from left to the right
              * We must stop before $requestBars reaches the end of the array
              */
             if ($elementIndex <= $quantityOfBars)
@@ -79,6 +79,7 @@ class PriceChannel
                     /** Find max value in interval */
                     if ($records[$i]->high > $priceChannelHighValue)
                         $priceChannelHighValue = $records[$i]->high;
+
                     /** Find low value in interval */
                     if ($records[$i]->low < $priceChannelLowValue)
                         $priceChannelLowValue = $records[$i]->low;
