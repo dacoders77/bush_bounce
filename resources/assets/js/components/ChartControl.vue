@@ -82,7 +82,7 @@
                     const response2 = await axios.get('/profit'); // Calculate profit
                     this.$bus.$emit('my-event', {param : "reload-price-channel"}); // Inform Chart.vue that chart bars must be reloaded
 
-                    const response3 = await axios.get('/chartinfo');
+                    const response3 = await axios.get('/chartinfo'); // Show net profit at the from. Is is recalculated each time update buttin is clicked
                     this.netProfit = parseFloat(response3.data['netProfit']).toFixed(2);
 
 
@@ -250,6 +250,9 @@
                         this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
                     const response3 = await axios.get('/startbroadcast');
 
+                    const response4 = await axios.get('/chartinfo'); // Show net profit at the from. Is is recalculated each time update buttin is clicked
+                    this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+
                 } catch (error) {
                     console.log('ChartControl.vue. line 260. Initial realtime start async error: ');
                     console.log(error.response);
@@ -260,8 +263,11 @@
                 try {
                     const response = await axios.get('/historyperiod');
                     const response2 = await axios.get('/profit'); // Calculate profit
-
                     this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
+
+                    const response4 = await axios.get('/chartinfo'); // Show net profit at the from. Is is recalculated each time update buttin is clicked
+                    this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+
                 } catch (error) {
                     console.log('ChartControl.vue. line 261. Initial history start async error: ');
                     console.log(error.response);
@@ -300,8 +306,19 @@
             });
 
             // Event bus listener
-            this.$bus.$on('my-event', ($event) => {
-                //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
+            // This event is fired in Chart.vue when new bar is issued
+            this.$bus.$on('new-bar-added', ($event) => {
+
+                // Show net profit at the from. Is is recalculated each time update buttin is clicked
+                axios.get('/chartinfo')
+                    .then(response => {
+                        this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. line 344. /chartinfo controller error:');
+                        console.log(error.response);
+                    })
+
             });
 
             // Load chart info values from DB

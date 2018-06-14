@@ -48383,7 +48383,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                             case 10:
                                 response3 = _context.sent;
-
+                                // Show net profit at the from. Is is recalculated each time update buttin is clicked
                                 this.netProfit = parseFloat(response3.data['netProfit']).toFixed(2);
 
                                 _context.next = 18;
@@ -48562,7 +48562,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         // Async axios request function
         initialStartRealTime: function () {
             var _ref3 = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee3() {
-                var response, response2, response3;
+                var response, response2, response3, response4;
                 return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee3$(_context3) {
                     while (1) {
                         switch (_context3.prev = _context3.next) {
@@ -48585,22 +48585,30 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                             case 10:
                                 response3 = _context3.sent;
-                                _context3.next = 17;
-                                break;
+                                _context3.next = 13;
+                                return axios.get('/chartinfo');
 
                             case 13:
-                                _context3.prev = 13;
+                                response4 = _context3.sent;
+                                // Show net profit at the from. Is is recalculated each time update buttin is clicked
+                                this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+
+                                _context3.next = 21;
+                                break;
+
+                            case 17:
+                                _context3.prev = 17;
                                 _context3.t0 = _context3['catch'](0);
 
                                 console.log('ChartControl.vue. line 260. Initial realtime start async error: ');
                                 console.log(_context3.t0.response);
 
-                            case 17:
+                            case 21:
                             case 'end':
                                 return _context3.stop();
                         }
                     }
-                }, _callee3, this, [[0, 13]]);
+                }, _callee3, this, [[0, 17]]);
             }));
 
             function initialStartRealTime() {
@@ -48612,7 +48620,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
         initialStartHistory: function () {
             var _ref4 = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee4() {
-                var response, response2;
+                var response, response2, response4;
                 return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee4$(_context4) {
                     while (1) {
                         switch (_context4.prev = _context4.next) {
@@ -48629,24 +48637,32 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 6:
                                 response2 = _context4.sent;
                                 // Calculate profit
-
                                 this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
-                                _context4.next = 14;
-                                break;
+
+                                _context4.next = 10;
+                                return axios.get('/chartinfo');
 
                             case 10:
-                                _context4.prev = 10;
+                                response4 = _context4.sent;
+                                // Show net profit at the from. Is is recalculated each time update buttin is clicked
+                                this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+
+                                _context4.next = 18;
+                                break;
+
+                            case 14:
+                                _context4.prev = 14;
                                 _context4.t0 = _context4['catch'](0);
 
                                 console.log('ChartControl.vue. line 261. Initial history start async error: ');
                                 console.log(_context4.t0.response);
 
-                            case 14:
+                            case 18:
                             case 'end':
                                 return _context4.stop();
                         }
                     }
-                }, _callee4, this, [[0, 10]]);
+                }, _callee4, this, [[0, 14]]);
             }));
 
             function initialStartHistory() {
@@ -48687,8 +48703,16 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         });
 
         // Event bus listener
-        this.$bus.$on('my-event', function ($event) {
-            //console.log('ChartControl.vue. My event has been triggered', $event) // Works good
+        // This event is fired in Chart.vue when new bar is issued
+        this.$bus.$on('new-bar-added', function ($event) {
+
+            // Show net profit at the from. Is is recalculated each time update buttin is clicked
+            axios.get('/chartinfo').then(function (response) {
+                _this2.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+            }).catch(function (error) {
+                console.log('ChartControl.vue. line 344. /chartinfo controller error:');
+                console.log(error.response);
+            });
         });
 
         // Load chart info values from DB
@@ -49992,6 +50016,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             if (e.update["flag"]) {
                 // e.update["flag"] = true
                 console.log('Chart.vue. New bar is added');
+
                 // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
                 chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
 
@@ -50007,6 +50032,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     console.log('Chart.vue. line 200 /historybarsload controller error: ');
                     console.log(error.response);
                 });
+
+                // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
+                _this.$bus.$emit('new-bar-added', {});
             } // New bar added
 
 

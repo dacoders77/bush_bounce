@@ -179,6 +179,7 @@
                 // New bar is issued. Flag sent from CandleMaker.php
                 if (e.update["flag"]) { // e.update["flag"] = true
                     console.log('Chart.vue. New bar is added');
+
                     // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
                     chart1.series[0].addPoint([e.update["tradeDate"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"]],true, false); // Works good
 
@@ -195,6 +196,9 @@
                             console.log('Chart.vue. line 200 /historybarsload controller error: ');
                             console.log(error.response);
                         })
+
+                    // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
+                    this.$bus.$emit('new-bar-added', {});
 
                 } // New bar added
 

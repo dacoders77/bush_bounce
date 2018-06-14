@@ -129,8 +129,13 @@ class Chart
         /** TRADES WATCH. Channel value of previous (penultimate bar)*/
         /** @todo replace aall $price_channel_low_value variables with $penUltimanteRow->price_channel_low_value*/
 
-        $price_channel_high_value = $penUltimanteRow->price_channel_high_value;
-        $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
+        try{
+            $price_channel_high_value = $penUltimanteRow->price_channel_high_value;
+            $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
+        }
+        catch (exception $exception ) {
+            echo "Chart.php line 137: " . $exception;
+        }
 
         $allow_trading =
             DB::table('settings_realtime')

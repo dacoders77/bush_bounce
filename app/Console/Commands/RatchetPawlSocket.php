@@ -94,7 +94,7 @@ class RatchetPawlSocket extends Command
                         if (!array_key_exists('event',$jsonMessage)) { // All messages except first two associated arrays
                             if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
                             {
-                                /** Chech whether broadcast is allowed only onece a second */
+                                /** Check whether broadcast is allowed only once a second */
                                 if ($this->isFirstTimeBroadcastCheck || $nojsonMessage[2][1] >= $this->addedTime)
                                 {
                                     $this->addedTime = $nojsonMessage[2][1] + 1000;
