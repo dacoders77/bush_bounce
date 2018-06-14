@@ -49,7 +49,7 @@
         data() {
             return {
                 symbol: '',
-                netProfit: 0,
+                netProfit: '',
                 requestedBars: '',
                 timeFrame: '',
                 requestBars: '',
@@ -80,9 +80,12 @@
                 try {
                     const response = await axios.post('/chartcontrolupdate', this.$data); // Calculate price channel method is called from the inside of this controller
                     const response2 = await axios.get('/profit'); // Calculate profit
-
                     this.$bus.$emit('my-event', {param : "reload-price-channel"}); // Inform Chart.vue that chart bars must be reloaded
-                    // param : "reload-whole-chart"
+
+                    const response3 = await axios.get('/chartinfo');
+                    this.netProfit = parseFloat(response3.data['netProfit']).toFixed(2);
+
+
                 } catch(error) {
                     console.log('ChartControl.vue. line 88. /chartcontrolupdate controller error');
                     console.log(error.response);
@@ -124,7 +127,7 @@
 
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
-                    this.netProfit = 'not ready yet';
+                    this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
                     this.requestedBars = response.data['request_bars'];
                     this.timeFrame = response.data['time_frame'];
                     this.requestBars = response.data['request_bars'];
@@ -309,7 +312,7 @@
                 .then(response => {
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
-                    this.netProfit = 'not ready yet';
+                    this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
                     this.requestedBars = response.data['request_bars'];
                     this.timeFrame = response.data['time_frame'];
                     this.requestBars = response.data['request_bars'];

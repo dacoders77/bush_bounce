@@ -74,7 +74,7 @@ class PriceChannel
                 // Go from right to left
                 for ($i = $elementIndex ; $i < $elementIndex + $priceChannelPeriod; $i++)
                 {
-                    echo "---------------$i for: " . $records[$i]->date . "<br>";
+                    //echo "---------------$i for: " . $records[$i]->date . "<br>";
 
                     /** Find max value in interval */
                     if ($records[$i]->high > $priceChannelHighValue)
@@ -85,7 +85,7 @@ class PriceChannel
                         $priceChannelLowValue = $records[$i]->low;
                 }
 
-                echo "$elementIndex " . $records[$elementIndex]->date . " " . $priceChannelHighValue . "<br>";
+                //echo "$elementIndex " . $records[$elementIndex]->date . " " . $priceChannelHighValue . "<br>";
 
                 /** Update high and low values in DB */
                 DB::table("asset_1")

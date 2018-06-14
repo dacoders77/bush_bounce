@@ -7,6 +7,7 @@
  */
 
 namespace App\Classes;
+use App\Console\Commands\RatchetPawlSocket;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
 
@@ -32,21 +33,7 @@ class CandleMaker
     public function __construct()
     {
         $this->isFirstTickInBar = true;
-
-        /*
-        $this->timeFrame =
-            DB::table('settings_realtime')
-                ->where('id', '1')
-                ->value('time_frame');
-
-        $this->symbol = "t" .
-            DB::table('settings_realtime')
-                ->where('id', '1')
-                ->value('symbol');
-        */
-
         $this->settings = DB::table('settings_realtime')->first();
-
     }
 
     /**
@@ -59,9 +46,12 @@ class CandleMaker
      * @param double        $tickVolume The volume of the trade. Can be less than 1
      * @param Command       $command Needed for throwing colored meddages to the console output (->info, ->error etc.)
      */
-    public function index($tickPrice, $tickDate, $tickVolume, $command){
+    public function index($tickPrice, $tickDate, $tickVolume, $chart, $command){
 
-        //DB::table('asset_1')->truncate();
+        echo "**********************************************CandleMaker.php<br>\n";
+
+        //$chart = new Chart(); // Moved new instance creation to Ratchet class
+
 
         /** First time ever application run check. Table is empty */
         if(!DB::table('asset_1')->first())
@@ -80,7 +70,7 @@ class CandleMaker
             ));
         }
 
-        echo "isFirstTickInBar: " . $this->isFirstTickInBar . "\n";
+        //echo "isFirstTickInBar: " . $this->isFirstTickInBar . "\n";
 
         /** Take seconds off and add 1 min. Do it only once per interval (for example 1min) */
         if ($this->isFirstTickInBar) {
@@ -129,8 +119,8 @@ class CandleMaker
             echo 'DB record update error: ' . $e->getMessage();
         }
 
-        $command->error("current tick: " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)));
-        echo " time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
+        $command->error("current tick   : " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)));
+                   echo "time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
         echo "time frame: " . $this->settings->time_frame . "\n";
 
         //echo "************* tick: " . floor($tickDate / 1000) . "\n";
@@ -142,8 +132,14 @@ class CandleMaker
          * @todo now volume is not accumulated. We record is the last volume of the trade
          */
         if (floor($tickDate / 1000) >= $this->tt){
+
             $command->info("------------------- NEW BAR ISSUED ----------------------");
-            DB::table('asset_1')->insert(array( // Add record to DB
+
+            /** Send tick to Chart.php in order to calculate profit and position marks */
+            $chart->index("history", gmdate("Y-m-d G:i:s", ($tickDate / 1000)), $tickDate, $tickPrice, 1234);
+
+            /** Add bar to DB */
+            DB::table('asset_1')->insert(array(
                 'date' => gmdate("Y-m-d G:i:s", ($tickDate / 1000)), // Date in regular format. Converted from unix timestamp
                 'time_stamp' => $tickDate,
                 'open' => $tickPrice,
@@ -161,10 +157,20 @@ class CandleMaker
 
                 /** Set flag to true in order to drop seconds of the time and add time frame */
                 $this->isFirstTickInBar = true;
-                /** Calculate price channel. All records in the DB are gonna be used */
+
+                /** Calculate price channel. All records in the DB are gonna be used
+                 * @todo When bars are added, no need go through all bars and calculate price channel. We can go only through price channel perid bars and get the value. In this case PriceChannel class must have a parameter whether to calculate the whole data or just a period
+                 */
                 PriceChannel::calculate();
-                /** This flag informs Chart.vue that it needs to add new bar to the chart.  */
+
+                /** This flag informs Chart.vue that it needs to add new bar to the chart.
+                 * We reach this code only when new bar is issued and only in this case this flag is added.
+                 * In all other cases $messageArray[] array does not contain flag ['flag'] which means that Chart.vue is
+                 * not adding new bar and updating the current one
+                 */
                 $messageArray['flag'] = true;
+
+
             }
 
 
@@ -184,8 +190,8 @@ class CandleMaker
         // read last position profit
         // read last accumulated profit
 
-
         event(new \App\Events\BushBounce($messageArray)); // Event is received in Chart.vue
+
 
 
         /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */

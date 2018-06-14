@@ -15,6 +15,8 @@ class Backtest
 {
     static public function start(){
 
+        $chart = new Chart();
+
         /** Empty calculated data like position, profit, accumulated profit etc */
         DB::table("asset_1")
             //->whereNotNull('net_profit')
@@ -31,7 +33,7 @@ class Backtest
                 'net_profit' => null,
             ]);
 
-        $chart = new Chart();
+
 
         $allDbValues = DB::table("asset_1")
             ->whereNotNull('price_channel_high_value')

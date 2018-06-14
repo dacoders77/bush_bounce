@@ -164,3 +164,8 @@ Route::get('/profit', function(){
 Route::get('/calc', function(){
     App\Classes\PriceChannel::calculate();
 });
+
+// Delete it
+Route::get('/per', function(){
+    App\Classes\History::LoadPeriod();
+});

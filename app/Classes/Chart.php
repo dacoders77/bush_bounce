@@ -55,41 +55,40 @@ class Chart
     private $z = 0;
     public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
     {
-
-        //$lastTradePrice = // Last trade price
-        //    DB::table('asset_1')
-        //        ->where('id', $id - 1)->get();
-
-        //echo $barDate . " " . $lastTradePrice->first()->id . "<br>";
-
-
-        /*
-        $timeFrame =
-            DB::table('settings_realtime')
-                ->where('id', '1')
-                ->value('time_frame');
-        */
+        echo "**********************************************Chart.php!<br>\n";
 
         if ($mode == "backtest")
         {
+            /** @var int $recordId id of the record in DB
+             * In backtest mode id is sent as a parameter. In realtime - pulled from DB
+             */
+            $recordId = $id;
+
             // One before last record
             // Backtest mode. ID is sent from Backtest.php
             $penUltimanteRow =
                 DB::table('asset_1')
-                    ->where('id', $id - 1)
+                    ->where('id', $recordId - 1)
                     ->get() // Get row as a collection. A collection can contain may elements in it
                     ->first(); // Get the first element from the collection. In this case there is only one
         }
         else
         {
             // Realtime mode. No ID of the record is sent. Get the quantity of all records using request
+            // Get the price of the last trade
+            $recordId = // Last trade price
+                DB::table('asset_1')
+                    ->whereNotNull('price_channel_high_value')
+                    //->where('time_stamp', '<', $timeStamp)
+                    ->orderBy('id', 'desc')
+                    ->value('id');
 
+            $penUltimanteRow =
+                DB::table('asset_1')
+                    ->where('id', $recordId - 1)
+                    ->get()
+                    ->first();
         }
-
-
-
-
-
 
 
         // Get the price of the last trade
@@ -113,21 +112,22 @@ class Chart
         // Do not calculate profit if there is no open position. If do not do this check - zeros in table occurs
         if ($this->position != null){
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp)
+                ->where('id', $recordId)
                 ->update([
                     // Calculate trade profit only if the position is open.
-                    // Because we reach this code all the time when high or low price channel boundary is exceeded
+                    // Because we reach this code on each new bar is issued when high or low price channel boundary is exceeded
                     'trade_profit' => $tradeProfit,
                 ]);
         }
 
+        echo "trade profit: " . $tradeProfit . "\n";
 
-
-        //echo("\n************************************** new bar issued<br>");
         $this->dateCompeareFlag = true;
 
 
-        /** Trades watch. Channel value of previous (penultimate bar)*/
+
+        /** TRADES WATCH. Channel value of previous (penultimate bar)*/
+        /** @todo replace aall $price_channel_low_value variables with $penUltimanteRow->price_channel_low_value*/
 
         $price_channel_high_value = $penUltimanteRow->price_channel_high_value;
         $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
@@ -143,15 +143,17 @@ class Chart
                 ->value('commission_value');
 
 
+        echo "penultim:" . $penUltimanteRow->date . " price channel  : " . $penUltimanteRow->price_channel_high_value . "\n";
+        echo "bar date:" . $barDate . " bar close price: " .$barClosePrice . "\n";
+        echo "$this->trade_flag: " . $this->trade_flag . "\n";
 
-        //echo $allow_trading . " " . $commisionValue . " " . $price_channel_high_value . " " . $price_channel_low_value;
-        //echo $penUltimanteRow[0]->date . " " . $penUltimanteRow[0]->price_channel_high_value . "<br>";
+
 
         // If > high price channel. BUY
         // price > price channel
         if (($barClosePrice > $price_channel_high_value) && ($this->trade_flag == "all"
                 || $this->trade_flag == "long")){
-            echo "####### HIGH TRADE!<br>";
+            echo "####### HIGH TRADE!<br>\n";
 
             // trading allowed?
             if ($allow_trading == 1){
@@ -159,30 +161,30 @@ class Chart
                 // Is the the first trade ever?
                 if ($this->firstEverTradeFlag){
                     // open order buy vol = vol
-                    echo "---------------------- FIRST EVER TRADE<br>";
+                    echo "---------------------- FIRST EVER TRADE<br>\n";
                     app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
                     $this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
-                    echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>";
+                    echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
                     app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
                     app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
                 }
             }
             else{ // trading is not allowed
                 $this->firstEverTradeFlag = true;
-                echo "---------------------- TRADING NOT ALLOWED<br>";
+                echo "---------------------- TRADING NOT ALLOWED\n";
             }
 
-            $this->trade_flag = "short"; // Trade flag. If this flag set to short -> don't enter this if and wait for channel low crossing (IF below)
+            $this->trade_flag = "short"; // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
             $this->position = "long";
             $this->add_bar_long = true;
 
             // Add(update) trade info to the last(current) bar(record)
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp)
+                ->where('id', $recordId)
                 ->update([
                     'trade_date' => gmdate("Y-m-d G:i:s", ($timeStamp / 1000)),
                     'trade_price' => $barClosePrice,
@@ -192,7 +194,7 @@ class Chart
                     'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume,
                 ]);
 
-            echo "Trade price: " . $barClosePrice . "<br>";
+            echo "Trade price: " . $barClosePrice . "<br>\n";
             $messageArray['flag'] = "buy"; // Send flag to VueJS app.js. On this event VueJS is informed that the trade occurred
 
         } // BUY trade
@@ -201,7 +203,7 @@ class Chart
 
         // If < low price channel. SELL
         if (($barClosePrice < $price_channel_low_value) && ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
-            echo "####### LOW TRADE!<br>";
+            echo "####### LOW TRADE!<br>\n";
             //event(new \App\Events\BushBounce('Short trade!'));
 
             // trading allowed?
@@ -210,7 +212,7 @@ class Chart
                 // Is the the first trade ever?
                 if ($this->firstEverTradeFlag){
                     // open order buy vol = vol
-                    echo "---------------------- FIRST EVER TRADE<br>";
+                    echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
                     app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
                     $this->firstEverTradeFlag = false;
@@ -218,7 +220,7 @@ class Chart
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
-                    echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>";
+                    echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
                     //event(new \App\Events\BushBounce('Not first ever trade'));
                     app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
                     app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
@@ -226,7 +228,7 @@ class Chart
             }
             else{ // trading is not allowed
                 $this->firstEverTradeFlag = true;
-                echo "---------------------- TRADING NOT ALLOWED<br>";
+                echo "---------------------- TRADING NOT ALLOWED<br>\n";
                 //event(new \App\Events\BushBounce('Trading is not allowed'));
             }
 
@@ -238,7 +240,7 @@ class Chart
             // Add(update) trade info to the last(current) bar(record)
             // EXCLUDE THIS CODE TO SEPARATE CLASS!!!!!!!!!!!!!!!!!!!
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp)
+                ->where('id', $recordId)
                 ->update([
                     'trade_date' => gmdate("Y-m-d G:i:s", ($timeStamp / 1000)),
                     'trade_price' => $barClosePrice,
@@ -248,7 +250,7 @@ class Chart
                     'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume,
                 ]);
 
-            echo "Trade price: " . $barClosePrice . "<br>";
+            echo "Trade price: " . $barClosePrice . "<br>\n";
             //echo "commisionValue: " . $commisionValue . "<br>";
             //echo "this volume: " . $this->volume . "<br>";
             //echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "<br>";
@@ -267,7 +269,7 @@ class Chart
 
         $tradeDirection =
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp)
+                ->where('id', $recordId)
                 ->value('trade_direction');
 
         if ($tradeDirection == null && $this->position != null){
@@ -279,13 +281,13 @@ class Chart
                     ->value('accumulated_profit');
 
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp) // id of the last record. desc - descent order
+                ->where('id', $recordId)
                 ->update([
                     'accumulated_profit' => $lastAccumProfitValue + $tradeProfit
                 ]);
 
             //echo "Bar with no trade<br>";
-            echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit . "<br>";
+            echo "lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $tradeProfit . "<br>\n";
 
         }
 
@@ -300,12 +302,12 @@ class Chart
 
 
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp) // id of the last record. desc - descent order
+                ->where('id', $recordId)
                 ->update([
                     'accumulated_profit' => $nextToLastDirection + $tradeProfit
                 ]);
 
-            echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
+            //echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
             //event(new \App\Events\BushBounce('Bar with trade. Direction: ' . $nextToLastDirection));
         }
 
@@ -313,12 +315,12 @@ class Chart
         if ($tradeDirection != null && $this->firstPositionEver == true){
 
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp) // id of the last record. desc - descent order
+                ->where('id', $recordId)
                 ->update([
                     'accumulated_profit' => 0
                 ]);
 
-            echo "firstPositionEver!<br>";
+            echo "firstPositionEver!<br>\n";
             $this->firstPositionEver = false;
         }
 
@@ -328,16 +330,16 @@ class Chart
 
             $accumulatedProfit =
                 DB::table('asset_1')
-                    ->where('time_stamp', $timeStamp)
+                    ->where('id', $recordId)
                     ->value('accumulated_profit');
 
             $accumulatedCommission =
                 DB::table('asset_1')
-                    ->where('time_stamp', $timeStamp)
+                    ->where('id', $recordId)
                     ->value('accumulated_commission');
 
             DB::table('asset_1')
-                ->where('time_stamp', $timeStamp) // Quantity of all records in DB
+                ->where('id', $recordId)
                 ->update([
                     'net_profit' => $accumulatedProfit - $accumulatedCommission
                 ]);

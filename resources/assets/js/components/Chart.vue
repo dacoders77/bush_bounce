@@ -22,8 +22,6 @@
 
             HistoryBarsLoad: function(chart1, param) {
 
-
-
                 axios.get('/historybarsload') // Load history data from BR
                     .then(response => {
 
@@ -183,36 +181,20 @@
                     console.log('Chart.vue. New bar is added');
                     // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
                     chart1.series[0].addPoint([e.update["tradeDate"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"]],true, false); // Works good
+
                     // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
-                    chart1.series[1].addPoint([e.update["tradeDate"],e.update["priceChannelHighValue"]],true, false); // Price channel high
-                    chart1.series[2].addPoint([e.update["tradeDate"],e.update["priceChannelLowValue"]],true, false); // Price channel low
-
-
-
-
-
-                /*
-                axios.get('/pricechannelcalc') // Recalculate price channel
-                    .then(response => {
-                        //console.log('ChartControl.vue. pricechannelcalc controller response: ');
-                        //console.log(response);
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. pricechannelcalc controller error: ');
-                        console.log(error.response);
-                    })
-
-
-
-                    // Update price channel
-                    var request2 = $.get('loaddata');
-                    request2.done(function(response) {
-                        console.log("Chart.vue: loading data request worked ok");
-                        chart.series[0].setData(response[0],true); // true - redraw the series. Candles
-                        chart.series[1].setData(response[1],true);// Precancel high
-                        chart.series[2].setData(response[2],true);// Price channel low
-                    });
-                    */
+                    axios.get('/historybarsload') // Load history data from BR
+                        .then(response => {
+                            console.log('reload-price-channel 2');
+                            chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
+                            chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                            chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                            chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                        })
+                        .catch(error => {
+                            console.log('Chart.vue. line 200 /historybarsload controller error: ');
+                            console.log(error.response);
+                        })
 
                 } // New bar added
 

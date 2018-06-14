@@ -31,11 +31,22 @@ class ChartInfo extends Controller
                 ->value('accumulated_profit'));
         */
 
+        $netProfit =
+            DB::table('asset_1')
+                ->whereNotNull('net_profit')
+                ->orderBy('id', 'desc')
+                ->value('net_profit');
+
+        $response = ChartInfo::arrayPush((array)DB::table('settings_realtime')->where('id', 1)->first(), 'netProfit', $netProfit);
+
+
         return
+        $response;
+        /*
             (array)DB::table('settings_realtime')
                 ->where('id', 1)
-                //->value('price_channel_period'));
                 ->first();
+        */
     }
 
     function arrayPush($array, $key, $value){

@@ -27,6 +27,7 @@ class RatchetPawlSocket extends Command
      * @var string
      */
     protected $description = 'Ratchet/pawl websocket client console application';
+    public $chart;
 
     /**
      * Create a new command instance.
@@ -76,9 +77,6 @@ class RatchetPawlSocket extends Command
                      *
                      */
 
-
-
-
                     if (true) // DELETE THIS IF
                     {
                         /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
@@ -122,9 +120,10 @@ class RatchetPawlSocket extends Command
                                      * @param double        $nojsonMessage[2][3] ($tickPrice) Price of the trade
                                      * @param integer       $nojsonMessage[2][1] ($tickDate) Timestamp
                                      * @param double        $nojsonMessage[2][2] ($tickVolume) Volume of the trade
+                                     * @param Classes\Chart $chart Chart class instance
                                      * @param command       $command variable for graphical strings output to the console
                                      */
-                                    $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $this);
+                                    $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $chart, $this);
                                 }
                             }
                         }

@@ -48332,7 +48332,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
     data: function data() {
         return {
             symbol: '',
-            netProfit: 0,
+            netProfit: '',
             requestedBars: '',
             timeFrame: '',
             requestBars: '',
@@ -48359,7 +48359,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
         priceChannelUpdate: function () {
             var _ref = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee() {
-                var response, response2;
+                var response, response2, response3;
                 return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee$(_context) {
                     while (1) {
                         switch (_context.prev = _context.next) {
@@ -48376,25 +48376,32 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 6:
                                 response2 = _context.sent;
                                 // Calculate profit
-
                                 this.$bus.$emit('my-event', { param: "reload-price-channel" }); // Inform Chart.vue that chart bars must be reloaded
-                                // param : "reload-whole-chart"
-                                _context.next = 14;
-                                break;
+
+                                _context.next = 10;
+                                return axios.get('/chartinfo');
 
                             case 10:
-                                _context.prev = 10;
+                                response3 = _context.sent;
+
+                                this.netProfit = parseFloat(response3.data['netProfit']).toFixed(2);
+
+                                _context.next = 18;
+                                break;
+
+                            case 14:
+                                _context.prev = 14;
                                 _context.t0 = _context['catch'](0);
 
                                 console.log('ChartControl.vue. line 88. /chartcontrolupdate controller error');
                                 console.log(_context.t0.response);
 
-                            case 14:
+                            case 18:
                             case 'end':
                                 return _context.stop();
                         }
                     }
-                }, _callee, this, [[0, 10]]);
+                }, _callee, this, [[0, 14]]);
             }));
 
             function priceChannelUpdate() {
@@ -48437,7 +48444,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                                 //console.log('ChartControl.vue. ChartInfo controller response: ');
                                 this.symbol = response.data['symbol'];
-                                this.netProfit = 'not ready yet';
+                                this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
                                 this.requestedBars = response.data['request_bars'];
                                 this.timeFrame = response.data['time_frame'];
                                 this.requestBars = response.data['request_bars'];
@@ -48692,7 +48699,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         .then(function (response) {
             //console.log('ChartControl.vue. ChartInfo controller response: ');
             _this2.symbol = response.data['symbol'];
-            _this2.netProfit = 'not ready yet';
+            _this2.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
             _this2.requestedBars = response.data['request_bars'];
             _this2.timeFrame = response.data['time_frame'];
             _this2.requestBars = response.data['request_bars'];
@@ -49987,30 +49994,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 console.log('Chart.vue. New bar is added');
                 // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
                 chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
+
                 // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
-                chart1.series[1].addPoint([e.update["tradeDate"], e.update["priceChannelHighValue"]], true, false); // Price channel high
-                chart1.series[2].addPoint([e.update["tradeDate"], e.update["priceChannelLowValue"]], true, false); // Price channel low
-
-
-                /*
-                axios.get('/pricechannelcalc') // Recalculate price channel
-                    .then(response => {
-                        //console.log('ChartControl.vue. pricechannelcalc controller response: ');
-                        //console.log(response);
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. pricechannelcalc controller error: ');
-                        console.log(error.response);
-                    })
-                       // Update price channel
-                    var request2 = $.get('loaddata');
-                    request2.done(function(response) {
-                        console.log("Chart.vue: loading data request worked ok");
-                        chart.series[0].setData(response[0],true); // true - redraw the series. Candles
-                        chart.series[1].setData(response[1],true);// Precancel high
-                        chart.series[2].setData(response[2],true);// Price channel low
-                    });
-                    */
+                axios.get('/historybarsload') // Load history data from BR
+                .then(function (response) {
+                    console.log('reload-price-channel 2');
+                    chart1.series[1].setData(response.data['priceChannelHighValues'], true); // High. Precancel high
+                    chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
+                    chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
+                    chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
+                }).catch(function (error) {
+                    console.log('Chart.vue. line 200 /historybarsload controller error: ');
+                    console.log(error.response);
+                });
             } // New bar added
 
 
