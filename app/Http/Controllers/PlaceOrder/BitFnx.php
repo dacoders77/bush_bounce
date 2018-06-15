@@ -7,7 +7,7 @@
  */
 
 namespace App\Http\Controllers\PlaceOrder;
-
+use Illuminate\Support\Facades\DB;
 /**
  * Bitfinex exchange New Order PHP sample API request
  *
@@ -31,12 +31,11 @@ class BitFnx
      * Request Prepare
      *
      * @param string $restAuthEndpoint   Authenticated end point. https://bitfinex.readme.io/v2/docs/rest-auth
-     * @param decimal $volume            Order volume
      * @param string $direction          Order direction
      * @return array                     Json server responce associative array
      */
 
-    public function requestPrepare(string $restAuthEndpoint, float $volume, string $direction) {
+    public function requestPrepare(string $restAuthEndpoint, string $direction) {
 
         // Assign key values
         $this->apiKey = $_ENV['BIT_FINEX_PUBLIC_API_KEY']; // Api keys go here
@@ -48,8 +47,9 @@ class BitFnx
 
         $data = array(
             'request' => $request, // Request params MUST go here. New order: https://bitfinex.readme.io/v1/reference#rest-auth-new-order
-            'symbol'=> 'ETHUSD', // ETHUSD ETCUSD
-            'amount' => number_format($volume,2), //$volume, // 0.02
+            'symbol'=> DB::table('settings_realtime')->where('id', 1)->value('symbol'), // 'ETHUSD' 'ETCUSD'
+            //'amount' => number_format(floatval(DB::table('settings_realtime')->where('id', 1)->value('symbol')),2), //$volume, // 0.02
+            'amount' => number_format(DB::table('settings_realtime')->where('id', 1)->value('volume'),2),
             'price' => '1000',
             'exchange' => 'bitfinex',
             'side' => $direction,

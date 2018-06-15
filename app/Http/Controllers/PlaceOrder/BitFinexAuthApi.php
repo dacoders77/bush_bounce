@@ -21,7 +21,7 @@ use GuzzleHttp\Client;
  */
 class BitFinexAuthApi extends Controller
 {
-    public function placeOrder($volume, $direction)
+    public function placeOrder($direction)
     {
 
         $bitFnx = new BitFnx(); // Created new instance of the class
@@ -40,7 +40,7 @@ class BitFinexAuthApi extends Controller
         // Create new instance of guzzle and pass $data array as the set of headers
         // 3 values are sent: X-BFX-APIKEY, X-BFX-PAYLOAD, X-BFX-SIGNATURE
         // Function requestPrepare() call and passing $restAuthEndpoint to it as a parameter
-        $z = $bitFnx->requestPrepare($restAuthEndpoint, $volume, $direction);
+        $z = $bitFnx->requestPrepare($restAuthEndpoint, $direction);
 
         dump($z); // Dump $z 
         //echo "Payload: " . $bitFnx->pay . "<br>";

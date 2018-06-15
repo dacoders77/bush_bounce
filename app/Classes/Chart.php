@@ -37,7 +37,7 @@ class Chart
     public $add_bar_long = true; // Count closed position on the same be the signal occurred. The problem is when the position is closed the close price of this bar goes to the next position
     public $add_bar_short = true;
     public $position; // Current position
-    public $volume = "0.025"; // Asset amount for order opening
+    public $volume; // Asset amount for order opening
     public $firstPositionEver = true; // Skip the first trade record. When it occurs we ignore calculations and make accumulated_profit = 0. On the next step (next bar) there will be the link to this value
     public $firstEverTradeFlag = true; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
 
@@ -56,6 +56,8 @@ class Chart
     public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
     {
         echo "**********************************************Chart.php!<br>\n";
+
+        $this->volume = floatval(DB::table('settings_realtime')->where('id', 1)->value('symbol'));
 
         if ($mode == "backtest")
         {
@@ -177,15 +179,15 @@ class Chart
                 if ($this->firstEverTradeFlag){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
                     $this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"buy");
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
                 }
             }
             else{ // trading is not allowed
@@ -229,15 +231,15 @@ class Chart
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"sell");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
                     $this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"sell");
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"sell");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
                 }
             }
             else{ // trading is not allowed

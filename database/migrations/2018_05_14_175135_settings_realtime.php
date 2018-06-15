@@ -19,6 +19,7 @@ class SettingsRealtime extends Migration
             $table->boolean('broadcast_stop');
             $table->boolean('initial_start');
             $table->string('symbol');
+            $table->double('volume')->nullable();
             $table->integer('time_frame');
             $table->integer('request_bars');
             $table->integer('price_channel_period');
@@ -34,6 +35,7 @@ class SettingsRealtime extends Migration
             'broadcast_stop' => 1,
             'time_frame' => 1,
             'symbol' => "BTCUSD",
+            'volume' => 0.025,
             'request_bars' => 30,
             'price_channel_period' => 10,
             'allow_trading' => 0,
