@@ -66,11 +66,20 @@ class Chart
 
             // One before last record
             // Backtest mode. ID is sent from Backtest.php
-            $penUltimanteRow =
-                DB::table('asset_1')
-                    ->where('id', $recordId - 1)
-                    ->get() // Get row as a collection. A collection can contain may elements in it
-                    ->first(); // Get the first element from the collection. In this case there is only one
+            if (!is_null(DB::table('asset_1')->where('id', $recordId - 1)->get()->first())) // Null check
+            {
+                $penUltimanteRow =
+                    DB::table('asset_1')
+                        ->where('id', $recordId - 1)
+                        ->get() // Get row as a collection. A collection can contain may elements in it
+                        ->first(); // Get the first element from the collection. In this case there is only one
+            }
+            else{
+                echo "NULL object catched. Chart.php line 78";
+                die();
+            }
+
+
         }
         else
         {
@@ -116,7 +125,7 @@ class Chart
                 ->update([
                     // Calculate trade profit only if the position is open.
                     // Because we reach this code on each new bar is issued when high or low price channel boundary is exceeded
-                    'trade_profit' => $tradeProfit,
+                    'trade_profit' => round($tradeProfit, 4),
                 ]);
         }
 
@@ -130,12 +139,13 @@ class Chart
         /** @todo replace aall $price_channel_low_value variables with $penUltimanteRow->price_channel_low_value*/
 
         try{
-            $price_channel_high_value = $penUltimanteRow->price_channel_high_value;
+            $price_channel_high_value = $penUltimanteRow->price_channel_high_value; // THIS CODE THROWS THE ERROR: trying to get property on non object
             $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
         }
         catch (exception $exception ) {
             echo "Chart.php line 137: " . $exception;
         }
+
 
         $allow_trading =
             DB::table('settings_realtime')
@@ -187,7 +197,7 @@ class Chart
             $this->position = "long";
             $this->add_bar_long = true;
 
-            // Add(update) trade info to the last(current) bar(record)
+            // Update trade info to the last(current) bar(record)
             DB::table('asset_1')
                 ->where('id', $recordId)
                 ->update([
@@ -195,8 +205,8 @@ class Chart
                     'trade_price' => $barClosePrice,
                     'trade_direction' => "buy",
                     'trade_volume' => $this->volume,
-                    'trade_commission' => ($barClosePrice * $commisionValue / 100) * $this->volume,
-                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume,
+                    'trade_commission' => round(($barClosePrice * $commisionValue / 100) * $this->volume, 4),
+                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume, 4),
                 ]);
 
             echo "Trade price: " . $barClosePrice . "<br>\n";
@@ -251,11 +261,14 @@ class Chart
                     'trade_price' => $barClosePrice,
                     'trade_direction' => "sell",
                     'trade_volume' => $this->volume,
-                    'trade_commission' => ($barClosePrice * $commisionValue / 100) * $this->volume,
-                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume,
+                    'trade_commission' => round(($barClosePrice * $commisionValue / 100) * $this->volume, 4),
+                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume, 4),
                 ]);
 
+
             echo "Trade price: " . $barClosePrice . "<br>\n";
+            echo "jopa" . round(($barClosePrice * $commisionValue / 100) * $this->volume, 4) . "\n";
+            //die();
             //echo "commisionValue: " . $commisionValue . "<br>";
             //echo "this volume: " . $this->volume . "<br>";
             //echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "<br>";
@@ -288,7 +301,7 @@ class Chart
             DB::table('asset_1')
                 ->where('id', $recordId)
                 ->update([
-                    'accumulated_profit' => $lastAccumProfitValue + $tradeProfit
+                    'accumulated_profit' => round($lastAccumProfitValue + $tradeProfit, 4)
                 ]);
 
             //echo "Bar with no trade<br>";
@@ -337,16 +350,23 @@ class Chart
                 DB::table('asset_1')
                     ->where('id', $recordId)
                     ->value('accumulated_profit');
-
+            /*
             $accumulatedCommission =
                 DB::table('asset_1')
                     ->where('id', $recordId)
                     ->value('accumulated_commission');
+            */
+            $accumulatedCommission =
+                DB::table('asset_1')
+                    ->whereNotNull('accumulated_commission')
+                        ->orderBy('id', 'desc')
+                        ->value('accumulated_commission');
 
             DB::table('asset_1')
                 ->where('id', $recordId)
                 ->update([
-                    'net_profit' => $accumulatedProfit - $accumulatedCommission
+                    // net profit = accum_profit - last accum_commission
+                    'net_profit' => round($accumulatedProfit - $accumulatedCommission, 4)
                 ]);
 
         }

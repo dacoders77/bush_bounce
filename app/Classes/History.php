@@ -37,13 +37,6 @@ class History
         //        ->value('initial_start'))){
         if (true){
 
-            /*
-            echo "request bars: " .
-                DB::table('settings_realtime')
-                    ->where('id', env("SETTING_ID"))
-                    ->value('request_bars');
-            */
-
             DB::table('asset_1') // Drop all records in the table
                 ->truncate();
 

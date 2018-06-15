@@ -51,6 +51,7 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
+
         echo "*****Ratchet websocket console command(app) started!*****\n";
         event(new \App\Events\ConnectionError("Connection started"));
         //event(new \App\Events\BushBounce('*** Ratchet websocket console app started ***'));
