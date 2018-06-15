@@ -132,7 +132,7 @@
                     this.timeFrame = response.data['time_frame'];
                     this.requestBars = response.data['request_bars'];
                     this.commission = response.data['commission_value'];
-                    this.tradingAllowed = response.data['allow_trading'];
+                    this.tradingAllowed = ((response.data['allow_trading'] == '1') ? 'true' : 'false');
                     this.priceChannelPeriod = response.data['price_channel_period'];
                     this.broadcastAllowed = ((response.data['app_mode'] == 'history') ? 'on' : 'off');
 
@@ -313,6 +313,7 @@
                 axios.get('/chartinfo')
                     .then(response => {
                         this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                        this.tradingAllowed = ((response.data['allow_trading'] == '1') ? 'true' : 'false');
                     })
                     .catch(error => {
                         console.log('ChartControl.vue. line 344. /chartinfo controller error:');
@@ -334,7 +335,7 @@
                     this.timeFrame = response.data['time_frame'];
                     this.requestBars = response.data['request_bars'];
                     this.commission = response.data['commission_value'];
-                    this.tradingAllowed = response.data['allow_trading'];
+                    this.tradingAllowed = ((response.data['allow_trading'] == '1') ? 'true' : 'false');
                     this.priceChannelPeriod = response.data['price_channel_period'];
                     this.broadcastAllowed = ((response.data['app_mode'] == 'history') ? 'off' : 'on');
 

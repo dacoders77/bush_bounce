@@ -177,15 +177,15 @@ class Chart
                 if ($this->firstEverTradeFlag){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
-                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"buy");
                     $this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
-                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
-                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"buy");
                 }
             }
             else{ // trading is not allowed
@@ -229,16 +229,15 @@ class Chart
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
-                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"sell");
                     $this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
-                    //event(new \App\Events\BushBounce('Not first ever trade'));
-                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
-                    app('App\Http\Controllers\PlaceOrder')->index($this->volume,"sell");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"sell");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder($this->volume,"sell");
                 }
             }
             else{ // trading is not allowed

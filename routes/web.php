@@ -166,6 +166,9 @@ Route::get('/calc', function(){
 });
 
 // Delete it
-Route::get('/per', function(){
-    App\Classes\History::LoadPeriod();
+Route::get('/order', function(){
+    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder(0.25,"buy");
 });
+
+// Place order and volume and direction of the trade to it
+route::get('/placeorder/{volume}/{direction}', 'PlaceOrder\BitFinexAuthApi@PlaceOrder');

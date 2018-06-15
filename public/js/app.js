@@ -48449,7 +48449,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 this.timeFrame = response.data['time_frame'];
                                 this.requestBars = response.data['request_bars'];
                                 this.commission = response.data['commission_value'];
-                                this.tradingAllowed = response.data['allow_trading'];
+                                this.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
                                 this.priceChannelPeriod = response.data['price_channel_period'];
                                 this.broadcastAllowed = response.data['app_mode'] == 'history' ? 'on' : 'off';
 
@@ -48709,6 +48709,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             // Show net profit at the from. Is is recalculated each time update buttin is clicked
             axios.get('/chartinfo').then(function (response) {
                 _this2.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                _this2.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
             }).catch(function (error) {
                 console.log('ChartControl.vue. line 344. /chartinfo controller error:');
                 console.log(error.response);
@@ -48728,7 +48729,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             _this2.timeFrame = response.data['time_frame'];
             _this2.requestBars = response.data['request_bars'];
             _this2.commission = response.data['commission_value'];
-            _this2.tradingAllowed = response.data['allow_trading'];
+            _this2.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
             _this2.priceChannelPeriod = response.data['price_channel_period'];
             _this2.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
 
