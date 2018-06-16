@@ -57,7 +57,7 @@ class Chart
     {
         echo "**********************************************Chart.php!<br>\n";
 
-        $this->volume = floatval(DB::table('settings_realtime')->where('id', 1)->value('symbol'));
+        $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
 
         if ($mode == "backtest")
         {
@@ -65,23 +65,6 @@ class Chart
              * In backtest mode id is sent as a parameter. In realtime - pulled from DB
              */
             $recordId = $id;
-
-            // One before last record
-            // Backtest mode. ID is sent from Backtest.php
-            if (!is_null(DB::table('asset_1')->where('id', $recordId - 1)->get()->first())) // Null check
-            {
-                $penUltimanteRow =
-                    DB::table('asset_1')
-                        ->where('id', $recordId - 1)
-                        ->get() // Get row as a collection. A collection can contain may elements in it
-                        ->first(); // Get the first element from the collection. In this case there is only one
-            }
-            else{
-                echo "NULL object catched. Chart.php line 78";
-                die();
-            }
-
-
         }
         else
         {
@@ -93,13 +76,36 @@ class Chart
                     //->where('time_stamp', '<', $timeStamp)
                     ->orderBy('id', 'desc')
                     ->value('id');
+        }
 
+
+        /** We do this check because sometimes, dont really understand under which circumstances, we gett
+         * trying to get property of non-object
+         */
+        if (!is_null(DB::table('asset_1')->where('id', 9999)->get()->first())) // $recordId - 1
+        {
+            // One before last record
+            // Backtest mode. ID is sent from Backtest.php
             $penUltimanteRow =
                 DB::table('asset_1')
                     ->where('id', $recordId - 1)
-                    ->get()
-                    ->first();
+                    ->get() // Get row as a collection. A collection can contain may elements in it
+                    ->first(); // Get the first element from the collection. In this case there is only one
         }
+        else
+        {
+            echo "Null check. Chart.php line 85";
+            event(new \App\Events\ConnectionError("ERROR! Chart.php line 85. Null check penultimate rec. Terminated"));
+            die();
+        }
+
+
+
+
+
+
+
+
 
 
         // Get the price of the last trade
@@ -140,13 +146,9 @@ class Chart
         /** TRADES WATCH. Channel value of previous (penultimate bar)*/
         /** @todo replace aall $price_channel_low_value variables with $penUltimanteRow->price_channel_low_value*/
 
-        try{
-            $price_channel_high_value = $penUltimanteRow->price_channel_high_value; // THIS CODE THROWS THE ERROR: trying to get property on non object
-            $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
-        }
-        catch (exception $exception ) {
-            echo "Chart.php line 137: " . $exception;
-        }
+        $price_channel_high_value = $penUltimanteRow->price_channel_high_value; // THIS CODE THROWS THE ERROR: trying to get property on non object
+        $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
+
 
 
         $allow_trading =
@@ -268,8 +270,7 @@ class Chart
 
 
             echo "Trade price: " . $barClosePrice . "<br>\n";
-            echo "jopa" . round(($barClosePrice * $commisionValue / 100) * $this->volume, 4) . "\n";
-            //die();
+            echo "trade_commission zxc:" . round(($barClosePrice * $commisionValue / 100) * $this->volume, 4) . "\n";
             //echo "commisionValue: " . $commisionValue . "<br>";
             //echo "this volume: " . $this->volume . "<br>";
             //echo "percent: " . ($nojsonMessage[2][3] * $commisionValue / 100) . "<br>";
