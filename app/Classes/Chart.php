@@ -66,7 +66,7 @@ class Chart
              */
             $recordId = $id;
         }
-        else
+        else // history
         {
             // Realtime mode. No ID of the record is sent. Get the quantity of all records using request
             // Get the price of the last trade
@@ -82,7 +82,7 @@ class Chart
         /** We do this check because sometimes, dont really understand under which circumstances, we gett
          * trying to get property of non-object
          */
-        if (!is_null(DB::table('asset_1')->where('id', 9999)->get()->first())) // $recordId - 1
+        if (!is_null(DB::table('asset_1')->where('id', $recordId - 1)->get()->first())) // $recordId - 1
         {
             // One before last record
             // Backtest mode. ID is sent from Backtest.php

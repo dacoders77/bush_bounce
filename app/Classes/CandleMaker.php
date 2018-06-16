@@ -136,7 +136,8 @@ class CandleMaker
             $command->info("------------------- NEW BAR ISSUED ----------------------");
 
             /** Send tick to Chart.php in order to calculate profit and position marks */
-            $chart->index("history", gmdate("Y-m-d G:i:s", ($tickDate / 1000)), $tickDate, $tickPrice, 1234);
+            //($mode, $barDate, $timeStamp, $barClosePrice, $id)
+            $chart->index("history", gmdate("Y-m-d G:i:s", ($tickDate / 1000)), $tickDate, $tickPrice, null);
 
             /** Add bar to DB */
             DB::table('asset_1')->insert(array(
