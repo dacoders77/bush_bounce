@@ -59,11 +59,11 @@ class Chart
 
         $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
 
+        /** @var int $recordId id of the record in DB
+         * In backtest mode id is sent as a parameter. In realtime - pulled from DB
+         */
         if ($mode == "backtest")
         {
-            /** @var int $recordId id of the record in DB
-             * In backtest mode id is sent as a parameter. In realtime - pulled from DB
-             */
             $recordId = $id;
         }
         else // history
@@ -126,6 +126,8 @@ class Chart
                     ($lastTradePrice - $barClosePrice) * $this->volume)
                 ) : false);
 
+        event(new \App\Events\ConnectionError("INFO. Chart.php line 124. profit: " . ($barClosePrice - $lastTradePrice) * $this->volume));
+
         // Do not calculate profit if there is no open position. If do not do this check - zeros in table occurs
         if ($this->position != null){
             DB::table('asset_1')
@@ -138,7 +140,6 @@ class Chart
         }
 
         echo "trade profit: " . $tradeProfit . "\n";
-
         $this->dateCompeareFlag = true;
 
 
