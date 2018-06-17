@@ -39,7 +39,7 @@ class Chart
     public $position; // Current position
     public $volume; // Asset amount for order opening
     public $firstPositionEver = true; // Skip the first trade record. When it occurs we ignore calculations and make accumulated_profit = 0. On the next step (next bar) there will be the link to this value
-    public $firstEverTradeFlag = true; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
+    public $firstEverTradeFlag; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
     public $tradeProfit;
 
     /**
@@ -60,6 +60,8 @@ class Chart
 
         $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
         $this->trade_flag = DB::table('settings_realtime')->where('id', 1)->value('trade_flag');
+
+        //$this->firstEverTradeFlag = DB::table('settings_realtime')->where('id', 1)->value('initial_start');
 
         /** @var int $recordId id of the record in DB
          * In backtest mode id is sent as a parameter. In realtime - pulled from DB
@@ -216,11 +218,12 @@ class Chart
             if ($allow_trading == 1){
 
                 // Is the the first trade ever?
-                if ($this->firstEverTradeFlag){
+                if ($this->trade_flag == "all"){
+                //if ($this->firstEverTradeFlag){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
-                    $this->firstEverTradeFlag = false;
+                    //$this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
@@ -231,7 +234,7 @@ class Chart
                 }
             }
             else{ // trading is not allowed
-                $this->firstEverTradeFlag = true;
+                //$this->firstEverTradeFlag = true;
                 echo "---------------------- TRADING NOT ALLOWED\n";
             }
 
@@ -266,12 +269,13 @@ class Chart
             if ($allow_trading == 1){
 
                 // Is the the first trade ever?
-                if ($this->firstEverTradeFlag){
+                //if ($this->firstEverTradeFlag){
+                if ($this->trade_flag == "all"){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
-                    $this->firstEverTradeFlag = false;
+                    //$this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
@@ -282,7 +286,7 @@ class Chart
                 }
             }
             else{ // trading is not allowed
-                $this->firstEverTradeFlag = true;
+                //$this->firstEverTradeFlag = true;
                 echo "---------------------- TRADING NOT ALLOWED<br>\n";
             }
 
@@ -340,6 +344,7 @@ class Chart
 
         }
 
+        /** @todo try to remove this $firstPositionEver flag */
         if ($this->trade_flag != "all" && $this->firstPositionEver == false){
         //if ($tradeDirection != null && $this->firstPositionEver == false) // Means that at this bar trade has occurred
 
