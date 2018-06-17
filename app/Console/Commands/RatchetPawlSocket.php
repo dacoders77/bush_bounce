@@ -54,7 +54,9 @@ class RatchetPawlSocket extends Command
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
         event(new \App\Events\ConnectionError("Connection started"));
-        //event(new \App\Events\BushBounce('*** Ratchet websocket console app started ***'));
+
+        /** Reset trade flag. If it is not reseted, it will contain previous position state */
+        DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'all']);
 
         /**
          * Ratchet/pawl websocket lib

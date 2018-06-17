@@ -143,6 +143,8 @@ Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
 
 // Initial start button click in ChartControl.vue. Button clicked in the real-time mode
 Route::get('/initialstart', function () {
+    // Set trade_flag to all. in the DB
+    DB::table('settings_realtime')->where('id', 1)->update(['trade_flag' => 'all']);
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::load(); // Load history from www.bitfinex.com
     App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
@@ -157,6 +159,8 @@ Route::get('/historyperiod', function(){
 
 // Backtest and profit calculation
 Route::get('/profit', function(){
+    // Set trade_flag to all. in the DB
+    DB::table('settings_realtime')->where('id', 1)->update(['trade_flag' => 'all']);
     \App\Classes\Backtest::start();
 });
 

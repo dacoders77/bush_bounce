@@ -24,6 +24,7 @@ class SettingsRealtime extends Migration
             $table->integer('request_bars');
             $table->integer('price_channel_period');
             $table->boolean('allow_trading');
+            $table->string('trade_flag'); // Long or short trade flag. Indicates a position state
             $table->float('commission_value')->nullable();
             $table->date('history_from')->nullable();
             $table->date('history_to')->nullable();
@@ -31,7 +32,7 @@ class SettingsRealtime extends Migration
 
         DB::table('settings_realtime')->insert(array(
             'initial_start' => 1,
-            'app_mode' => "history",
+            'app_mode' => 'history',
             'broadcast_stop' => 1,
             'time_frame' => 1,
             'symbol' => "BTCUSD",
@@ -39,6 +40,7 @@ class SettingsRealtime extends Migration
             'request_bars' => 30,
             'price_channel_period' => 10,
             'allow_trading' => 0,
+            'trade_flag' => 'all',
             'commission_value' => 0.2,
             'history_from' => '2018-06-01',
             'history_to' => '2018-06-02'
