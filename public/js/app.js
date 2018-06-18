@@ -48769,9 +48769,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             _this.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
             _this.priceChannelPeriod = response.data['price_channel_period'];
             _this.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
-
             _this.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
-
+            _this.priceChannelFormDisabled = response.data['app_mode'] == 'history' ? true : false; // Disable price channel period and upd button
             _this.historyFrom = response.data['history_from'];
             _this.historyTo = response.data['history_to'];
         }).catch(function (error) {

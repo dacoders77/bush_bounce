@@ -347,9 +347,8 @@
                     this.tradingAllowed = ((response.data['allow_trading'] == '1') ? 'true' : 'false');
                     this.priceChannelPeriod = response.data['price_channel_period'];
                     this.broadcastAllowed = ((response.data['app_mode'] == 'history') ? 'off' : 'on');
-
                     this.appMode = ((response.data['app_mode'] == 'history') ? 'history' : 'realtime');
-
+                    this.priceChannelFormDisabled = ((response.data['app_mode'] == 'history') ? true : false); // Disable price channel period and upd button
                     this.historyFrom = response.data['history_from'];
                     this.historyTo = response.data['history_to'];
                 })
