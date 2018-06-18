@@ -25,11 +25,11 @@
             <button v-on:click="stopBroadcast" id="stop-broadcast" :disabled="stopButtonDisabled">Stop</button>
             <br>
             -->
-            <form v-on:submit.prevent="priceChannelUpdate">
+            <form v-on:submit.prevent="priceChannelUpdate" :disabled="priceChannelFormDisabled">
                 Price channel / Stop channel period:<br>
-                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod">
-                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod">
-                <button>Upd</button>
+                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" :disabled="priceChannelFormDisabled">
+                <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" :disabled="priceChannelFormDisabled">
+                <button :disabled="priceChannelFormDisabled">Upd</button>
                 <br>
             </form>
         </div>
@@ -60,8 +60,11 @@
                 broadcastAllowed: '',
                 appMode: '',
                 toggleFlag: true,
-                startButtonDisabled: true,
-                stopButtonDisabled: true,
+
+                startButtonDisabled: true, // delete it
+                stopButtonDisabled: true, // delete it
+
+                priceChannelFormDisabled: '', // Disable upd button and both price channel fields
                 historyFrom: '',
                 historyTo: ''
             }
@@ -91,19 +94,6 @@
                     console.log(error.response);
                 }
 
-                /*
-                axios.post('/chartcontrolupdate', this.$data)
-                    .then(response => {
-                        // Price channel series is returned
-                        // Update it on the chart
-                        // Price channel high
-                        // Price channel low
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. Form field changed event error:');
-                        console.log(error.response);
-                    })
-                    */
             },
             // Initial start button handler
             initialStartButton(){
@@ -113,12 +103,10 @@
             historyTest(){
                 // History test button click
             },
+            // Switch app mode. Histry - real-time and back
             modeToggle(){
                 console.log('ChartControl.vue. line 100. entered modeToggle()');
                 this.chartInfo(); // Load chart control values. App mode, request bars etc.
-
-                // Run the function when /chartInfo controller finished loading data
-                // Call mode toggle only when link is clicked
             },
 
             chartInfo: async function() {
@@ -135,18 +123,20 @@
                     this.tradingAllowed = ((response.data['allow_trading'] == '1') ? 'true' : 'false');
                     this.priceChannelPeriod = response.data['price_channel_period'];
                     this.broadcastAllowed = ((response.data['app_mode'] == 'history') ? 'on' : 'off');
-
                     this.appMode = ((response.data['app_mode'] == 'history') ? 'history' : 'realtime');
-
+                    this.priceChannelFormDisabled = ((response.data['app_mode'] == 'history') ? true : false); // Disable price channel period and upd button
                     this.historyFrom = response.data['history_from'];
                     this.historyTo = response.data['history_to'];
 
-                    // mode toggle was here
                     this.toggleMode();
 
                 } catch (error) {
                     console.log('ChartControl.vue. line 152. \chartinfo controller error');
                     console.log(error.response);
+                }
+
+                if (this.priceChannelPeriod >= this.requestedBars){
+                    alert("Price channel period is greater or equal to the quantity of requested bars. No price channel will be plotted! Decrease price channel period or encrease quantity of bars.");
                 }
             },
 
@@ -161,39 +151,13 @@
                     //var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                     if (true) {
                         this.toggleFlag = false;
-                        this.startButtonDisabled = true;
-                        this.stopButtonDisabled = true;
+                        this.startButtonDisabled = true; // delete it
+                        this.stopButtonDisabled = true; // delete it
 
-                        axios.get('/stopbroadcast')
-                            .then(response => {
-                            })
-                            .catch(error => {
-                                console.log('ChartControl.vue. line 150. /stopbroadcast controller error:');
-                                console.log(error.response);
-                            })
-
-                        // Load history period
-                        axios.get('/historyperiod')
-                            .then(response => {
-                                //console.log('ChartControl.vue. line 121. /historyperiodt controller response ');
-                                this.$bus.$emit('my-event', {param : "reload-whole-chart"}); // Inform Chart.vue that chart bars must be reloaded
-                            })
-                            .catch(error => {
-                                console.log('ChartControl.vue. line 161. /historyperiod controller error: ');
-                                console.log(error.response);
-                            });
-
+                        // Put all 3 requests over here. Make ir async
                         this.appMode = "history";
 
-                        // Update app_mode in DB
-                        axios.post('/chartcontrolupdate', this.$data)
-                            .then(response => {
-                            })
-                            .catch(error => {
-                                console.log('ChartControl.vue. line 170. /chartcontrolupdate. controller error: ');
-                                console.log(error.response);
-                            });
-
+                        this.enterRealTimeMode();
 
                     }
                 }
@@ -204,11 +168,11 @@
                     //var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (true) {
                         this.toggleFlag = true;
-                        this.startButtonDisabled = false;
-                        this.stopButtonDisabled = false;
+                        this.startButtonDisabled = false; // delete it
+                        this.stopButtonDisabled = false; // delete it
+
 
                         this.initialStartRealTime();
-
                         this.appMode = "realtime";
 
                         // Update app_mode in DB
@@ -272,8 +236,53 @@
                     console.log('ChartControl.vue. line 261. Initial history start async error: ');
                     console.log(error.response);
                 }
-            }
+            },
 
+
+            enterRealTimeMode: async function() {
+
+                try {
+                    const response = await axios.get('/stopbroadcast');
+                    const response2 = await axios.get('/historyperiod');
+                        this.$bus.$emit('my-event', {param : "reload-whole-chart"}); // Inform Chart.vue that chart bars must be reloaded
+                    const response3 = await axios.post('/chartcontrolupdate', this.$data); // Update form data and calculate price channe;
+
+                } catch (error) {
+                    console.log('ChartControl.vue. line 252. Enter realtime mode error: ');
+                    console.log(error.response);
+                }
+
+                /*
+                axios.get('/stopbroadcast')
+                    .then(response => {
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. line 150. /stopbroadcast controller error:');
+                        console.log(error.response);
+                    })
+
+                // Load history period
+                axios.get('/historyperiod')
+                    .then(response => {
+                        //console.log('ChartControl.vue. line 121. /historyperiodt controller response ');
+                        this.$bus.$emit('my-event', {param : "reload-whole-chart"}); // Inform Chart.vue that chart bars must be reloaded
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. line 161. /historyperiod controller error: ');
+                        console.log(error.response);
+                    });
+
+                // Update app_mode in DB
+                axios.post('/chartcontrolupdate', this.$data)
+                    .then(response => {
+                    })
+                    .catch(error => {
+                        console.log('ChartControl.vue. line 170. /chartcontrolupdate. controller error: ');
+                        console.log(error.response);
+                    });
+                */
+
+            }
 
 
         },
@@ -348,9 +357,6 @@
                     console.log('ChartControl.vue. line 344. /chartinfo controller error:');
                     console.log(error.response);
                 })
-
-
-
 
 
         },

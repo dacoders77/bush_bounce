@@ -161,8 +161,8 @@ class Chart
                     'trade_profit' => round($this->tradeProfit, 4),
                 ]);
 
-            event(new \App\Events\ConnectionError("INFO. Chart.php line 141. trade profit calculated "));
-            echo "trade profit calculated. Chart.php line 157: " . $this->tradeProfit . "\n";
+            //event(new \App\Events\ConnectionError("INFO. Chart.php line 164. trade profit calculated "));
+            echo "trade profit calculated. Chart.php line 165: " . $this->tradeProfit . "\n";
 
 
         }

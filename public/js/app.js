@@ -48343,8 +48343,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             broadcastAllowed: '',
             appMode: '',
             toggleFlag: true,
-            startButtonDisabled: true,
-            stopButtonDisabled: true,
+
+            startButtonDisabled: true, // delete it
+            stopButtonDisabled: true, // delete it
+
+            priceChannelFormDisabled: '', // Disable upd button and both price channel fields
             historyFrom: '',
             historyTo: ''
         };
@@ -48418,12 +48421,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         historyTest: function historyTest() {
             // History test button click
         },
+
+        // Switch app mode. Histry - real-time and back
         modeToggle: function modeToggle() {
             console.log('ChartControl.vue. line 100. entered modeToggle()');
             this.chartInfo(); // Load chart control values. App mode, request bars etc.
-
-            // Run the function when /chartInfo controller finished loading data
-            // Call mode toggle only when link is clicked
         },
 
 
@@ -48452,31 +48454,35 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 this.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
                                 this.priceChannelPeriod = response.data['price_channel_period'];
                                 this.broadcastAllowed = response.data['app_mode'] == 'history' ? 'on' : 'off';
-
                                 this.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
-
+                                this.priceChannelFormDisabled = response.data['app_mode'] == 'history' ? true : false; // Disable price channel period and upd button
                                 this.historyFrom = response.data['history_from'];
                                 this.historyTo = response.data['history_to'];
 
-                                // mode toggle was here
                                 this.toggleMode();
 
-                                _context2.next = 23;
+                                _context2.next = 24;
                                 break;
 
-                            case 19:
-                                _context2.prev = 19;
+                            case 20:
+                                _context2.prev = 20;
                                 _context2.t0 = _context2['catch'](0);
 
                                 console.log('ChartControl.vue. line 152. \chartinfo controller error');
                                 console.log(_context2.t0.response);
 
-                            case 23:
+                            case 24:
+
+                                if (this.priceChannelPeriod >= this.requestedBars) {
+                                    alert("Price channel period is greater or equal to the quantity of requested bars. No price channel will be plotted! Decrease price channel period or encrease quantity of bars.");
+                                }
+
+                            case 25:
                             case 'end':
                                 return _context2.stop();
                         }
                     }
-                }, _callee2, this, [[0, 19]]);
+                }, _callee2, this, [[0, 20]]);
             }));
 
             function chartInfo() {
@@ -48487,8 +48493,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         }(),
 
         toggleMode: function toggleMode() {
-            var _this = this;
-
             // Determine app_mode, read it from DB. We must read it each time the mode is toggled
 
             if (this.appMode == "realtime") {
@@ -48498,30 +48502,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                 //var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                 if (true) {
                     this.toggleFlag = false;
-                    this.startButtonDisabled = true;
-                    this.stopButtonDisabled = true;
+                    this.startButtonDisabled = true; // delete it
+                    this.stopButtonDisabled = true; // delete it
 
-                    axios.get('/stopbroadcast').then(function (response) {}).catch(function (error) {
-                        console.log('ChartControl.vue. line 150. /stopbroadcast controller error:');
-                        console.log(error.response);
-                    });
-
-                    // Load history period
-                    axios.get('/historyperiod').then(function (response) {
-                        //console.log('ChartControl.vue. line 121. /historyperiodt controller response ');
-                        _this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // Inform Chart.vue that chart bars must be reloaded
-                    }).catch(function (error) {
-                        console.log('ChartControl.vue. line 161. /historyperiod controller error: ');
-                        console.log(error.response);
-                    });
-
+                    // Put all 3 requests over here. Make ir async
                     this.appMode = "history";
 
-                    // Update app_mode in DB
-                    axios.post('/chartcontrolupdate', this.$data).then(function (response) {}).catch(function (error) {
-                        console.log('ChartControl.vue. line 170. /chartcontrolupdate. controller error: ');
-                        console.log(error.response);
-                    });
+                    this.enterRealTimeMode();
                 }
             } else // history
                 {
@@ -48530,11 +48517,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                     //var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (true) {
                         this.toggleFlag = true;
-                        this.startButtonDisabled = false;
-                        this.stopButtonDisabled = false;
+                        this.startButtonDisabled = false; // delete it
+                        this.stopButtonDisabled = false; // delete it
+
 
                         this.initialStartRealTime();
-
                         this.appMode = "realtime";
 
                         // Update app_mode in DB
@@ -48670,11 +48657,61 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             }
 
             return initialStartHistory;
+        }(),
+
+        enterRealTimeMode: function () {
+            var _ref5 = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee5() {
+                var response, response2, response3;
+                return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee5$(_context5) {
+                    while (1) {
+                        switch (_context5.prev = _context5.next) {
+                            case 0:
+                                _context5.prev = 0;
+                                _context5.next = 3;
+                                return axios.get('/stopbroadcast');
+
+                            case 3:
+                                response = _context5.sent;
+                                _context5.next = 6;
+                                return axios.get('/historyperiod');
+
+                            case 6:
+                                response2 = _context5.sent;
+
+                                this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // Inform Chart.vue that chart bars must be reloaded
+                                _context5.next = 10;
+                                return axios.post('/chartcontrolupdate', this.$data);
+
+                            case 10:
+                                response3 = _context5.sent;
+                                _context5.next = 17;
+                                break;
+
+                            case 13:
+                                _context5.prev = 13;
+                                _context5.t0 = _context5['catch'](0);
+
+                                console.log('ChartControl.vue. line 252. Enter realtime mode error: ');
+                                console.log(_context5.t0.response);
+
+                            case 17:
+                            case 'end':
+                                return _context5.stop();
+                        }
+                    }
+                }, _callee5, this, [[0, 13]]);
+            }));
+
+            function enterRealTimeMode() {
+                return _ref5.apply(this, arguments);
+            }
+
+            return enterRealTimeMode;
         }()
 
     },
     created: function created() {
-        var _this2 = this;
+        var _this = this;
 
         // Console messages output to the page
         // Messages are streamed from php via websocket
@@ -48682,23 +48719,23 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         this.items = arr;
 
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
-            if (_this2.items.length < 15) {
+            if (_this.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             } else {
-                _this2.items.shift();
-                _this2.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this.items.shift();
+                _this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
             }
         });
 
         // When a connection error (broadcast stopped and other info messages) occurred in RatchetPawlSocket.php
         Echo.channel('Bush-channel').listen('ConnectionError', function (e) {
-            if (_this2.items.length < 15) {
+            if (_this.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this2.items.push(e.update);
+                _this.items.push(e.update);
             } else {
-                _this2.items.shift();
-                _this2.items.push(e.update);
+                _this.items.shift();
+                _this.items.push(e.update);
             }
         });
 
@@ -48708,8 +48745,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
             // Show net profit at the from. Is is recalculated each time update buttin is clicked
             axios.get('/chartinfo').then(function (response) {
-                _this2.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
-                _this2.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
+                _this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                _this.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
             }).catch(function (error) {
                 console.log('ChartControl.vue. line 344. /chartinfo controller error:');
                 console.log(error.response);
@@ -48723,20 +48760,20 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         axios.get('/chartinfo') // The table will be truncated, history loaded
         .then(function (response) {
             //console.log('ChartControl.vue. ChartInfo controller response: ');
-            _this2.symbol = response.data['symbol'];
-            _this2.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
-            _this2.requestedBars = response.data['request_bars'];
-            _this2.timeFrame = response.data['time_frame'];
-            _this2.requestBars = response.data['request_bars'];
-            _this2.commission = response.data['commission_value'];
-            _this2.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
-            _this2.priceChannelPeriod = response.data['price_channel_period'];
-            _this2.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
+            _this.symbol = response.data['symbol'];
+            _this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+            _this.requestedBars = response.data['request_bars'];
+            _this.timeFrame = response.data['time_frame'];
+            _this.requestBars = response.data['request_bars'];
+            _this.commission = response.data['commission_value'];
+            _this.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
+            _this.priceChannelPeriod = response.data['price_channel_period'];
+            _this.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
 
-            _this2.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
+            _this.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
 
-            _this2.historyFrom = response.data['history_from'];
-            _this2.historyTo = response.data['history_to'];
+            _this.historyFrom = response.data['history_from'];
+            _this.historyTo = response.data['history_to'];
         }).catch(function (error) {
             console.log('ChartControl.vue. line 344. /chartinfo controller error:');
             console.log(error.response);
@@ -49701,6 +49738,7 @@ var render = function() {
         _c(
           "form",
           {
+            attrs: { disabled: _vm.priceChannelFormDisabled },
             on: {
               submit: function($event) {
                 $event.preventDefault()
@@ -49722,7 +49760,12 @@ var render = function() {
                 }
               ],
               staticClass: "form-control",
-              attrs: { type: "number", min: "1", max: "100" },
+              attrs: {
+                type: "number",
+                min: "1",
+                max: "100",
+                disabled: _vm.priceChannelFormDisabled
+              },
               domProps: { value: _vm.priceChannelPeriod },
               on: {
                 input: function($event) {
@@ -49744,7 +49787,12 @@ var render = function() {
                 }
               ],
               staticClass: "form-control",
-              attrs: { type: "number", min: "1", max: "100" },
+              attrs: {
+                type: "number",
+                min: "1",
+                max: "100",
+                disabled: _vm.priceChannelFormDisabled
+              },
               domProps: { value: _vm.priceChannelPeriod },
               on: {
                 input: function($event) {
@@ -49756,7 +49804,11 @@ var render = function() {
               }
             }),
             _vm._v(" "),
-            _c("button", [_vm._v("Upd")]),
+            _c(
+              "button",
+              { attrs: { disabled: _vm.priceChannelFormDisabled } },
+              [_vm._v("Upd")]
+            ),
             _vm._v(" "),
             _c("br")
           ]
