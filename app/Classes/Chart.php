@@ -223,6 +223,7 @@ class Chart
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 226. BUY ORDER. "));
                     //$this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
@@ -231,6 +232,7 @@ class Chart
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 235 . SELL ORDER. "));
                 }
             }
             else{ // trading is not allowed
@@ -275,6 +277,7 @@ class Chart
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 280. SELL ORDER. "));
                     //$this->firstEverTradeFlag = false;
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
@@ -283,6 +286,7 @@ class Chart
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 226. SELL ORDER. "));
                 }
             }
             else{ // trading is not allowed
