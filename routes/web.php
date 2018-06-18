@@ -175,4 +175,4 @@ Route::get('/order', function(){
 });
 
 // Place order and volume and direction of the trade to it
-route::get('/placeorder/{volume}/{direction}', 'PlaceOrder\BitFinexAuthApi@PlaceOrder');
+route::get('/placeorder/{direction}', 'PlaceOrder\BitFinexAuthApi@PlaceOrder');

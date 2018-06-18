@@ -47,12 +47,13 @@ class BitFnx
 
         $data = array(
             'request' => $request, // Request params MUST go here. New order: https://bitfinex.readme.io/v1/reference#rest-auth-new-order
+
             'symbol'=> DB::table('settings_realtime')->where('id', 1)->value('symbol'), // 'ETHUSD' 'ETCUSD'
             //'amount' => number_format(floatval(DB::table('settings_realtime')->where('id', 1)->value('symbol')),2), //$volume, // 0.02
-            'amount' => number_format(DB::table('settings_realtime')->where('id', 1)->value('volume'),2),
+            'amount' => (string)floatval(DB::table('settings_realtime')->where('id', 1)->value('volume')),
             'price' => '1000',
             'exchange' => 'bitfinex',
-            'side' => $direction,
+            'side' => $direction, //
             // Exchange market - exchanger order. market - margin order. If you need to open a short position - use 'market'. It is impossible to go short with 'exchange order'
             // Funds must be located at Margin wallet if you go short and long.
             'type' => 'market'

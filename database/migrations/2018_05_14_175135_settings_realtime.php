@@ -36,7 +36,7 @@ class SettingsRealtime extends Migration
             'broadcast_stop' => 1,
             'time_frame' => 1,
             'symbol' => "BTCUSD",
-            'volume' => 0.025,
+            'volume' => 0.002,
             'request_bars' => 30,
             'price_channel_period' => 10,
             'allow_trading' => 0,

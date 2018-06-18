@@ -11,8 +11,10 @@ class RatchetPawlSocket extends Command
     private $isFirstTimeBroadcastCheck = false;
     /** @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
     private $addedTime = null;
-    /** @var  bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
+    /** @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
     private $isBroadCastAllowed;
+    private $settings;
+
 
     /**
      * The name and signature of the console command.
@@ -103,6 +105,11 @@ class RatchetPawlSocket extends Command
                                     $this->addedTime = $nojsonMessage[2][1] + 1000;
                                     $this->isFirstTimeBroadcastCheck = false;
 
+                                    /** @var collection $settings The whole row from settings table.
+                                     * Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
+                                     *  We already have this functionality here - broadcast allowed check*/
+                                    $this->settings = DB::table('settings_realtime')->first(); // Read settings and pass it to CandleMaker
+
                                     if (DB::table('settings_realtime')
                                             ->where('id', 1)
                                             ->value('broadcast_stop') == 0)
@@ -124,9 +131,10 @@ class RatchetPawlSocket extends Command
                                      * @param integer       $nojsonMessage[2][1] ($tickDate) Timestamp
                                      * @param double        $nojsonMessage[2][2] ($tickVolume) Volume of the trade
                                      * @param Classes\Chart $chart Chart class instance
+                                     * @param collection    $settings Row of settings from DB
                                      * @param command       $command variable for graphical strings output to the console
                                      */
-                                    $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $chart, $this);
+                                    $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $chart, $this->settings, $this);
                                 }
                             }
                         }

@@ -33,7 +33,7 @@ class CandleMaker
     public function __construct()
     {
         $this->isFirstTickInBar = true;
-        $this->settings = DB::table('settings_realtime')->first();
+        //$this->settings = DB::table('settings_realtime')->first(); // Removed to ratchet. Delete it
     }
 
     /**
@@ -44,13 +44,17 @@ class CandleMaker
      * @param double        $tickPrice The price of the current trade (tick)
      * @param date          $tickDate The date of the trade
      * @param double        $tickVolume The volume of the trade. Can be less than 1
+     * @param collection    $settings Row of settings from DB
      * @param Command       $command Needed for throwing colored meddages to the console output (->info, ->error etc.)
      */
-    public function index($tickPrice, $tickDate, $tickVolume, $chart, $command){
+    public function index($tickPrice, $tickDate, $tickVolume, $chart, $settings, $command){
 
         echo "**********************************************CandleMaker.php<br>\n";
 
         //$chart = new Chart(); // Moved new instance creation to Ratchet class
+
+        /** @todo remove this variable. use just $settings*/
+        $this->settings = $settings;
 
 
         /** First time ever application run check. Table is empty */
@@ -70,11 +74,10 @@ class CandleMaker
             ));
         }
 
-        //echo "isFirstTickInBar: " . $this->isFirstTickInBar . "\n";
 
         /** Take seconds off and add 1 min. Do it only once per interval (for example 1min) */
         if ($this->isFirstTickInBar) {
-            //echo "xx:" . $this->isFirstTickInBar . "\n";
+
             $x = date("Y-m-d H:i", $tickDate / 1000) . "\n"; // Take seconds off. Convert timestamp to date
             $this->tt = strtotime($x . $this->settings->time_frame . "minute");
             $this->isFirstTickInBar = false;
@@ -82,11 +85,7 @@ class CandleMaker
 
         //echo "current time: " . date("Y-m-d H:i", $tickDate / 1000) . "\n";
 
-        //echo
-        //    "Ticker: " . $this->symbol .
-        //    " time: " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)) .
-        //    " price: " . $tickPrice .
-        //    " vol: " . $tickVolume . "\n";
+
 
         /** Calculate high and low of the bar then pass it to the chart in $messageArray */
         if ($tickPrice > $this->barHigh) // High
