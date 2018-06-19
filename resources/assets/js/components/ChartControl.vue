@@ -128,10 +128,11 @@
                     this.historyFrom = response.data['history_from'];
                     this.historyTo = response.data['history_to'];
 
+                    // When chart info is loaded go to toggleMode, where the mode is switched
                     this.toggleMode();
 
                 } catch (error) {
-                    console.log('ChartControl.vue. line 152. \chartinfo controller error');
+                    console.log('ChartControl.vue. line 134. \chartinfo controller error');
                     console.log(error.response);
                 }
 
@@ -141,11 +142,12 @@
             },
 
             toggleMode: function(){
-                // Determine app_mode, read it from DB. We must read it each time the mode is toggled
+                // Determine app_mode, read it from DB. We must read it each time the mode is toggle app mode. From history to real-time and back
 
+                // Entering history mode from realtime
                 if (this.appMode == "realtime")
                 {
-                    // Entering history mode from realtime
+
                     console.log("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
 
                     //var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
@@ -161,10 +163,13 @@
 
                     }
                 }
-                else // history
+                //Entering real-time mode from history
+                else
                 {
-                    // Entering real-time mode from history
                     console.log("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
+
+                    // Set trading flag to true
+
                     //var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (true) {
                         this.toggleFlag = true;
@@ -175,12 +180,20 @@
                         this.initialStartRealTime();
                         this.appMode = "realtime";
 
-                        // Update app_mode in DB
-                        axios.post('/chartcontrolupdate', this.$data)
+                        // Set allow_trading flag in DB to true
+                        axios.get('/settradingallowedtrue') // Update app_mode in DB
                             .then(response => {
                             })
                             .catch(error => {
-                                console.log('ChartControl.vue. line 191. /chartcontrolupdate. controller error: ');
+                                console.log('ChartControl.vue. line 189. /settradingallowedfalse. controller error: ');
+                                console.log(error.response);
+                            });
+
+                        axios.post('/chartcontrolupdate', this.$data) // Update app_mode in DB
+                            .then(response => {
+                            })
+                            .catch(error => {
+                                console.log('ChartControl.vue. line 196. /chartcontrolupdate. controller error: ');
                                 console.log(error.response);
                             });
                     }
@@ -242,7 +255,9 @@
             enterRealTimeMode: async function() {
 
                 try {
-                    const response = await axios.get('/stopbroadcast');
+
+                    const response = await axios.get('/settradingallowedfalse'); // Set allow_trading flag in DB to false
+                    const response1 = await axios.get('/stopbroadcast');
                     const response2 = await axios.get('/historyperiod');
                         this.$bus.$emit('my-event', {param : "reload-whole-chart"}); // Inform Chart.vue that chart bars must be reloaded
                     const response3 = await axios.post('/chartcontrolupdate', this.$data); // Update form data and calculate price channe;

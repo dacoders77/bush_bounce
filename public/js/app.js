@@ -48459,6 +48459,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 this.historyFrom = response.data['history_from'];
                                 this.historyTo = response.data['history_to'];
 
+                                // When chart info is loaded go to toggleMode, where the mode is switched
                                 this.toggleMode();
 
                                 _context2.next = 24;
@@ -48468,7 +48469,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 _context2.prev = 20;
                                 _context2.t0 = _context2['catch'](0);
 
-                                console.log('ChartControl.vue. line 152. \chartinfo controller error');
+                                console.log('ChartControl.vue. line 134. \chartinfo controller error');
                                 console.log(_context2.t0.response);
 
                             case 24:
@@ -48493,10 +48494,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         }(),
 
         toggleMode: function toggleMode() {
-            // Determine app_mode, read it from DB. We must read it each time the mode is toggled
+            // Determine app_mode, read it from DB. We must read it each time the mode is toggle app mode. From history to real-time and back
 
+            // Entering history mode from realtime
             if (this.appMode == "realtime") {
-                // Entering history mode from realtime
+
                 console.log("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
 
                 //var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
@@ -48510,10 +48512,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                     this.enterRealTimeMode();
                 }
-            } else // history
-                {
-                    // Entering real-time mode from history
+            }
+            //Entering real-time mode from history
+            else {
                     console.log("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
+
+                    // Set trading flag to true
+
                     //var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (true) {
                         this.toggleFlag = true;
@@ -48524,9 +48529,16 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                         this.initialStartRealTime();
                         this.appMode = "realtime";
 
-                        // Update app_mode in DB
-                        axios.post('/chartcontrolupdate', this.$data).then(function (response) {}).catch(function (error) {
-                            console.log('ChartControl.vue. line 191. /chartcontrolupdate. controller error: ');
+                        // Set allow_trading flag in DB to true
+                        axios.get('/settradingallowedtrue') // Update app_mode in DB
+                        .then(function (response) {}).catch(function (error) {
+                            console.log('ChartControl.vue. line 189. /settradingallowedfalse. controller error: ');
+                            console.log(error.response);
+                        });
+
+                        axios.post('/chartcontrolupdate', this.$data) // Update app_mode in DB
+                        .then(function (response) {}).catch(function (error) {
+                            console.log('ChartControl.vue. line 196. /chartcontrolupdate. controller error: ');
                             console.log(error.response);
                         });
                     }
@@ -48661,45 +48673,50 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
         enterRealTimeMode: function () {
             var _ref5 = _asyncToGenerator( /*#__PURE__*/__WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.mark(function _callee5() {
-                var response, response2, response3;
+                var response, response1, response2, response3;
                 return __WEBPACK_IMPORTED_MODULE_0_babel_runtime_regenerator___default.a.wrap(function _callee5$(_context5) {
                     while (1) {
                         switch (_context5.prev = _context5.next) {
                             case 0:
                                 _context5.prev = 0;
                                 _context5.next = 3;
-                                return axios.get('/stopbroadcast');
+                                return axios.get('/settradingallowedfalse');
 
                             case 3:
                                 response = _context5.sent;
                                 _context5.next = 6;
-                                return axios.get('/historyperiod');
+                                return axios.get('/stopbroadcast');
 
                             case 6:
+                                response1 = _context5.sent;
+                                _context5.next = 9;
+                                return axios.get('/historyperiod');
+
+                            case 9:
                                 response2 = _context5.sent;
 
                                 this.$bus.$emit('my-event', { param: "reload-whole-chart" }); // Inform Chart.vue that chart bars must be reloaded
-                                _context5.next = 10;
+                                _context5.next = 13;
                                 return axios.post('/chartcontrolupdate', this.$data);
 
-                            case 10:
+                            case 13:
                                 response3 = _context5.sent;
-                                _context5.next = 17;
+                                _context5.next = 20;
                                 break;
 
-                            case 13:
-                                _context5.prev = 13;
+                            case 16:
+                                _context5.prev = 16;
                                 _context5.t0 = _context5['catch'](0);
 
                                 console.log('ChartControl.vue. line 252. Enter realtime mode error: ');
                                 console.log(_context5.t0.response);
 
-                            case 17:
+                            case 20:
                             case 'end':
                                 return _context5.stop();
                         }
                     }
-                }, _callee5, this, [[0, 13]]);
+                }, _callee5, this, [[0, 16]]);
             }));
 
             function enterRealTimeMode() {

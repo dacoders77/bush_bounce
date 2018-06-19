@@ -176,3 +176,13 @@ Route::get('/order', function(){
 
 // Place order and volume and direction of the trade to it
 route::get('/placeorder/{direction}', 'PlaceOrder\BitFinexAuthApi@PlaceOrder');
+
+// Set trading_allowd flag to true. This method is called when the app mode is swithced to real-time
+Route::get('/settradingallowedtrue', function () {
+    DB::table('settings_realtime')->where('id', 1)->update(['allow_trading' => 1]);
+});
+
+// Set trading_allowd flag to false. This method is called when the app mode is swithced to history. No trades in history must be opened
+Route::get('/settradingallowedfalse', function () {
+    DB::table('settings_realtime')->where('id', 1)->update(['allow_trading' => 0]);
+});
