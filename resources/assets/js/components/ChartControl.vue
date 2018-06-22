@@ -2,6 +2,7 @@
     <div>
         <div style="border: thin solid green; padding: 5px">
             Symbol: <input type="text" min="1" max="7" class="form-control" v-model="symbol"/><br>
+            Volume: {{ volume }}<br>
             Net profit: {{ netProfit }}<br>
             Requested bars (realtime): <input type="number" min="1" max="100" class="form-control" v-model="requestBars"/><br>
             Tst: <input type="date" class="form-control" v-model="historyFrom" style="width: 130px"> - <input type="date" class="form-control" v-model="historyTo" style="width: 130px"><br>
@@ -49,6 +50,7 @@
         data() {
             return {
                 symbol: '',
+                volume: '',
                 netProfit: '',
                 requestedBars: '',
                 timeFrame: '',
@@ -115,6 +117,7 @@
 
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
+                    this.volume = response.data['volume'];
                     this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
                     this.requestedBars = response.data['request_bars'];
                     this.timeFrame = response.data['time_frame'];
@@ -309,12 +312,13 @@
             this.items = arr;
 
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
+                var tickDate = new Date(e.update["tradeDate"]);
                 if (this.items.length < 15) { // 15 - quantity of rows in quotes window
-                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"] + " | " + tickDate.getHours() + ":" + tickDate.getMinutes() + ":" + tickDate.getSeconds());
                 }
                 else {
                     this.items.shift();
-                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                    this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"] + " | " + tickDate.getHours() + ":" + tickDate.getMinutes() + ":" + tickDate.getSeconds());
                 }
             });
 
@@ -354,6 +358,7 @@
                 .then(response => {
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
+                    this.volume = response.data['volume'];
                     this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
                     this.requestedBars = response.data['request_bars'];
                     this.timeFrame = response.data['time_frame'];

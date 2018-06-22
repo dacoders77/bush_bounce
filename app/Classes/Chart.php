@@ -12,6 +12,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Events\eventTrigger;
 use PhpParser\Node\Expr\Variable;
+use Illuminate\Support\Facades\Log;
 
 
 /**
@@ -57,11 +58,14 @@ class Chart
     public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
     {
         echo "**********************************************Chart.php!<br>\n";
+        Log::debug("Entered Chart.php line 61");
 
         $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
         $this->trade_flag = DB::table('settings_realtime')->where('id', 1)->value('trade_flag');
 
-        //$this->firstEverTradeFlag = DB::table('settings_realtime')->where('id', 1)->value('initial_start');
+        echo "\\\\\\\\this->position: " . $this->position . " this->trade_flag: " . $this->trade_flag . "\n";
+        Log::debug("Chart.php line 65. Pulled trade_flag out of DB: " . $this->trade_flag);
+        event(new \App\Events\ConnectionError("this->trade_flag: " . $this->trade_flag));
 
         /** @var int $recordId id of the record in DB
          * In backtest mode id is sent as a parameter. In realtime - pulled from DB
@@ -100,26 +104,11 @@ class Chart
         {
             echo "Null check. Chart.php line 85";
             event(new \App\Events\ConnectionError("ERROR! Chart.php line 85. Null check penultimate rec. Terminated"));
-            die();
+            //die();
         }
 
 
 
-
-
-        // Calculate trade profit
-        // Calculate trade profit only if the position is open.
-        // Because we reach this code all the time when high or low price channel boundary is exceeded
-
-
-
-        // profit calc was here
-
-
-
-        //event(new \App\Events\ConnectionError("INFO. Chart.php line 124. profit: " . ($barClosePrice - $lastTradePrice) * $this->volume));
-
-        echo "\\\\\\\\this->position: " . $this->position . " this->trade_flag: " . $this->trade_flag . "\n";
 
         // Do not calculate profit if there is no open position. If do not do this check - zeros in table occur
         // $this->trade_flag != "all" if it is "all" - it means that it is a first or initial start
@@ -163,13 +152,9 @@ class Chart
 
             //event(new \App\Events\ConnectionError("INFO. Chart.php line 164. trade profit calculated "));
             echo "trade profit calculated. Chart.php line 165: " . $this->tradeProfit . "\n";
-
-
         }
 
         $this->dateCompeareFlag = true;
-
-
 
         /** TRADES WATCH. Channel value of previous (penultimate bar)*/
         /** @todo replace aall $price_channel_low_value variables with $penUltimanteRow->price_channel_low_value*/
@@ -192,14 +177,6 @@ class Chart
                 ->value('commission_value');
 
 
-        /*
-        $this->trade_flag =
-            DB::table('settings_realtime')
-                ->where('id', '1')
-                ->value('trade_flag');
-        */
-
-
         echo "penultim:" . $penUltimanteRow->date . " price channel  : " . $penUltimanteRow->price_channel_high_value . "\n";
         echo "bar date:" . $barDate . " bar close price: " .$barClosePrice . "\n";
 
@@ -210,9 +187,10 @@ class Chart
         // $this->trade_flag == "all" is used only when the first trade occurs, then it turns to "long" or "short".
         // When the trade is about to happen we don't know yet
         // whether it is gonna be long or short. This condition allows to enter both IF, long and short.
-        if (($barClosePrice > $price_channel_high_value) && ($this->trade_flag == "all"
-                || $this->trade_flag == "long")){
+        if (($barClosePrice > $price_channel_high_value) &&
+            ($this->trade_flag == "all" || $this->trade_flag == "long")){
             echo "####### HIGH TRADE!<br>\n";
+            Log::debug("Chart.php line 193. Bar closed higher than upper price channel. trade_flag: " . $this->trade_flag);
 
             // Trading allowed? This value is pulled from DB. If false orders are not sent to the exchange
             if ($allow_trading == 1){
@@ -240,7 +218,9 @@ class Chart
                 echo "---------------------- TRADING NOT ALLOWED\n";
             }
 
-            DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'short']); // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
+            // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
+            DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'short']);
+
             $this->position = "long";
             $this->add_bar_long = true;
 
@@ -264,8 +244,10 @@ class Chart
 
 
         // If < low price channel. SELL
-        if (($barClosePrice < $price_channel_low_value) && ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
+        if (($barClosePrice < $price_channel_low_value) &&
+            ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
             echo "####### LOW TRADE!<br>\n";
+            Log::debug("Chart.php line 193. Bar closed lower than lower channel. trade_flag: " . $this->trade_flag);
 
             // trading allowed?
             if ($allow_trading == 1){

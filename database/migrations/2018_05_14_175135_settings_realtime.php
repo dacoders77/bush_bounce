@@ -22,6 +22,7 @@ class SettingsRealtime extends Migration
             $table->double('volume')->nullable();
             $table->integer('time_frame');
             $table->integer('request_bars');
+            $table->integer('skip_ticks_msec');
             $table->integer('price_channel_period');
             $table->boolean('allow_trading');
             $table->string('trade_flag'); // Long or short trade flag. Indicates a position state
@@ -38,6 +39,7 @@ class SettingsRealtime extends Migration
             'symbol' => "BTCUSD",
             'volume' => 0.002,
             'request_bars' => 30,
+            'skip_ticks_msec' => 1000,
             'price_channel_period' => 10,
             'allow_trading' => 0,
             'trade_flag' => 'all',

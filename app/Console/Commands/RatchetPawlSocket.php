@@ -4,13 +4,22 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Classes;
+use Illuminate\Support\Facades\Log;
 
 class RatchetPawlSocket extends Command
 {
     /** @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
-    private $isFirstTimeBroadcastCheck = false;
+    private $isFirstTimeBroadcastCheck = true;
+
+    /** @var bool $isFirstTimeTickCheck First tick check. Used in order to decrease quantity of ticks because pusher limit exceeds sometime*/
+    private $isFirstTimeTickCheck = true;
+
     /** @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
     private $addedTime = null;
+
+    /** @var integer $addedTickTime The same but for ticks*/
+    private $addedTickTime = null;
+
     /** @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
     private $isBroadCastAllowed;
     private $settings;
@@ -56,6 +65,9 @@ class RatchetPawlSocket extends Command
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
         event(new \App\Events\ConnectionError("Connection started"));
+
+        Log::useDailyFiles(storage_path().'/logs/debug.log'); // Setup log name and math. Logs are created daily
+        Log::debug("*****Ratchet websocket console command(app) started!*****");
 
         /** Reset trade flag. If it is not reseted, it will contain previous position state */
         DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'all']);
@@ -107,8 +119,8 @@ class RatchetPawlSocket extends Command
 
                                     /** @var collection $settings The whole row from settings table.
                                      * Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
-                                     *  We already have this functionality here - broadcast allowed check*/
-                                    $this->settings = DB::table('settings_realtime')->first(); // Read settings and pass it to CandleMaker
+                                     * We already have this functionality here - broadcast allowed check*/
+                                    $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
 
                                     if (DB::table('settings_realtime')
                                             ->where('id', 1)
@@ -124,8 +136,14 @@ class RatchetPawlSocket extends Command
                                     }
                                 }
 
-                                if ($this->isBroadCastAllowed)
+                                /**
+                                 * 1st condition $this->isFirstTimeTickCheck - enter here only once when the app starts
+                                 * 2nd tick time > computed time and broadcast is allowed
+                                 */
+                                if ($this->isFirstTimeTickCheck || ($nojsonMessage[2][1] >= $this->addedTickTime && $this->isBroadCastAllowed))
                                 {
+                                    $this->isFirstTimeTickCheck = false;
+                                    $this->addedTickTime = $nojsonMessage[2][1] + $this->settings->skip_ticks_msec; // Allow ticks not frequenter than twice a second
                                     /**
                                      * @param double        $nojsonMessage[2][3] ($tickPrice) Price of the trade
                                      * @param integer       $nojsonMessage[2][1] ($tickDate) Timestamp
@@ -139,14 +157,6 @@ class RatchetPawlSocket extends Command
                             }
                         }
 
-                        /**
-                         * 1. connection starts with assets list request from DB. ALWAYS
-                         * 2. stop connection
-                         * 3. start connection
-                         *
-                         *  scenario 2
-                         * 1.  connection restart
-                         */
                     }
 
 

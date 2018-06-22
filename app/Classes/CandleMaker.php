@@ -10,6 +10,7 @@ namespace App\Classes;
 use App\Console\Commands\RatchetPawlSocket;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class CandleMakers

@@ -1225,7 +1225,7 @@ window.Pusher = __webpack_require__(37);
 
 window.Echo = new __WEBPACK_IMPORTED_MODULE_0_laravel_echo___default.a({
   broadcaster: 'pusher',
-  key: "2b46347b60f2aec00074", // 2b46347b60f2aec00074  process.env.MIX_PUSHER_APP_KEY
+  key: "3a40effb90c7fb29313c", // 2b46347b60f2aec00074  process.env.MIX_PUSHER_APP_KEY
   cluster: "ap1", // "ap1" process.env.MIX_PUSHER_APP_CLUSTER
   encrypted: true
 });
@@ -48326,12 +48326,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 //
 //
 //
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: [],
     data: function data() {
         return {
             symbol: '',
+            volume: '',
             netProfit: '',
             requestedBars: '',
             timeFrame: '',
@@ -48446,6 +48448,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
                                 //console.log('ChartControl.vue. ChartInfo controller response: ');
                                 this.symbol = response.data['symbol'];
+                                this.volume = response.data['volume'];
                                 this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
                                 this.requestedBars = response.data['request_bars'];
                                 this.timeFrame = response.data['time_frame'];
@@ -48462,28 +48465,28 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 // When chart info is loaded go to toggleMode, where the mode is switched
                                 this.toggleMode();
 
-                                _context2.next = 24;
+                                _context2.next = 25;
                                 break;
 
-                            case 20:
-                                _context2.prev = 20;
+                            case 21:
+                                _context2.prev = 21;
                                 _context2.t0 = _context2['catch'](0);
 
                                 console.log('ChartControl.vue. line 134. \chartinfo controller error');
                                 console.log(_context2.t0.response);
 
-                            case 24:
+                            case 25:
 
                                 if (this.priceChannelPeriod >= this.requestedBars) {
                                     alert("Price channel period is greater or equal to the quantity of requested bars. No price channel will be plotted! Decrease price channel period or encrease quantity of bars.");
                                 }
 
-                            case 25:
+                            case 26:
                             case 'end':
                                 return _context2.stop();
                         }
                     }
-                }, _callee2, this, [[0, 20]]);
+                }, _callee2, this, [[0, 21]]);
             }));
 
             function chartInfo() {
@@ -48736,12 +48739,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         this.items = arr;
 
         Echo.channel('Bush-channel').listen('BushBounce', function (e) {
+            var tickDate = new Date(e.update["tradeDate"]);
             if (_this.items.length < 15) {
                 // 15 - quantity of rows in quotes window
-                _this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"] + " | " + tickDate.getHours() + ":" + tickDate.getMinutes() + ":" + tickDate.getSeconds());
             } else {
                 _this.items.shift();
-                _this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"]);
+                _this.items.push('Price: ' + e.update["tradePrice"] + ' Vol: ' + e.update["tradeVolume"] + " | " + tickDate.getHours() + ":" + tickDate.getMinutes() + ":" + tickDate.getSeconds());
             }
         });
 
@@ -48778,6 +48782,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         .then(function (response) {
             //console.log('ChartControl.vue. ChartInfo controller response: ');
             _this.symbol = response.data['symbol'];
+            _this.volume = response.data['volume'];
             _this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
             _this.requestedBars = response.data['request_bars'];
             _this.timeFrame = response.data['time_frame'];
@@ -49610,6 +49615,8 @@ var render = function() {
           }
         }
       }),
+      _c("br"),
+      _vm._v("\n        Volume: " + _vm._s(_vm.volume)),
       _c("br"),
       _vm._v("\n        Net profit: " + _vm._s(_vm.netProfit)),
       _c("br"),
