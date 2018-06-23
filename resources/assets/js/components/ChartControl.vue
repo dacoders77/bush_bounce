@@ -1,7 +1,7 @@
 <template>
     <div>
         <div style="border: thin solid green; padding: 5px">
-            Symbol: <input type="text" min="1" max="7" class="form-control" v-model="symbol"/><br>
+            Symbol: <input type="text" min="1" max="7" class="form-control" v-model="symbol"/><span> v.23.1</span><br>
             Volume: {{ volume }}<br>
             Net profit: {{ netProfit }}<br>
             Requested bars (realtime): <input type="number" min="1" max="100" class="form-control" v-model="requestBars"/><br>

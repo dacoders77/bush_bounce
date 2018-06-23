@@ -200,23 +200,16 @@
                     // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
                     this.$bus.$emit('new-bar-added', {});
 
-                } // New bar added
+                }
+                // Initial start was initiated from the server. php artisan ratchet start
+                if (e.update["serverInitialStart"]) {
+
+                    // Load history data from DB and send "reload-whole-chart" parameter
+                    this.HistoryBarsLoad(chart1, "reload-whole-chart");
+                }
 
 
-            /*
-            // TRADE FLAGS
-            // buy flag
-            if (e.update["flag"] == "buy") {
-                console.log('buy');
-                chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
-            }
 
-            // buy flag
-            if (e.update["flag"] == "sell") {
-                console.log('buy');
-                chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
-            }
-            */
 
 
         }); // Echo
@@ -228,7 +221,7 @@
                 this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
             });
 
-        } // Mounted()
+        }
 
     }
 </script>

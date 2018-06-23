@@ -69,8 +69,10 @@ class RatchetPawlSocket extends Command
         Log::useDailyFiles(storage_path().'/logs/debug.log'); // Setup log name and math. Logs are created daily
         Log::debug("*****Ratchet websocket console command(app) started!*****");
 
-        /** Reset trade flag. If it is not reseted, it will contain previous position state */
-        DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'all']);
+        /** Reset trade flag. If it is not reseted, it will contain previous position state.
+         * Reset code is moved to a separate controller.
+         */
+        app('App\Http\Controllers\initialstart')->index(); // Moved all inital start code to a separate controller
 
         /**
          * Ratchet/pawl websocket lib
@@ -175,7 +177,8 @@ class RatchetPawlSocket extends Command
                     //'event' => 'ping', // 'event' => 'ping'
                     'event' => 'subscribe',
                     'channel' => 'trades',
-                    'symbol' => 'tBTCUSD'  // tBTCUSD tETHUSD tETHBTC $this->symbol $this->symbol
+                    'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // tBTCUSD tETHUSD tETHBTC
+
                 ]);
 
                 /* Multiple symbols subscription

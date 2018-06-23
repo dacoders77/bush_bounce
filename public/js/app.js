@@ -49615,6 +49615,7 @@ var render = function() {
           }
         }
       }),
+      _c("span", [_vm._v(" v.23.1")]),
       _c("br"),
       _vm._v("\n        Volume: " + _vm._s(_vm.volume)),
       _c("br"),
@@ -50111,22 +50112,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                 // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
                 _this.$bus.$emit('new-bar-added', {});
-            } // New bar added
-
-
-            /*
-            // TRADE FLAGS
-            // buy flag
-            if (e.update["flag"] == "buy") {
-                console.log('buy');
-                chart1.series[3].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
             }
-             // buy flag
-            if (e.update["flag"] == "sell") {
-                console.log('buy');
-                chart1.series[4].addPoint([e.update["tradeDate"], e.update["tradePrice"]],true, false);
+            // Initial start was initiated from the server. php artisan ratchet start
+            if (e.update["serverInitialStart"]) {
+
+                // Load history data from DB and send "reload-whole-chart" parameter
+                _this.HistoryBarsLoad(chart1, "reload-whole-chart");
             }
-            */
         }); // Echo
 
         // Event bus listener
@@ -50135,8 +50127,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             //console.log($event.param);
             _this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
         });
-    } // Mounted()
-
+    }
 });
 
 /***/ }),

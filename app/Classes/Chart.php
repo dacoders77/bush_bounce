@@ -63,9 +63,6 @@ class Chart
         $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
         $this->trade_flag = DB::table('settings_realtime')->where('id', 1)->value('trade_flag');
 
-        echo "\\\\\\\\this->position: " . $this->position . " this->trade_flag: " . $this->trade_flag . "\n";
-        Log::debug("Chart.php line 65. Pulled trade_flag out of DB: " . $this->trade_flag);
-        event(new \App\Events\ConnectionError("this->trade_flag: " . $this->trade_flag));
 
         /** @var int $recordId id of the record in DB
          * In backtest mode id is sent as a parameter. In realtime - pulled from DB
@@ -84,6 +81,10 @@ class Chart
                     //->where('time_stamp', '<', $timeStamp)
                     ->orderBy('id', 'desc')
                     ->value('id');
+
+            echo "\\\\\\\\this->position: " . $this->position . " this->trade_flag: " . $this->trade_flag . "\n";
+            Log::debug("Chart.php line 65. Pulled trade_flag out of DB: " . $this->trade_flag);
+            event(new \App\Events\ConnectionError("Chart.php. Line68. this->trade_flag: " . $this->trade_flag));
         }
 
 
@@ -190,7 +191,7 @@ class Chart
         if (($barClosePrice > $price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
             echo "####### HIGH TRADE!<br>\n";
-            Log::debug("Chart.php line 193. Bar closed higher than upper price channel. trade_flag: " . $this->trade_flag);
+            Log::debug("Chart.php line 193. ####### HIGH TRADE!. Bar closed higher than upper price channel. trade_flag: " . $this->trade_flag);
 
             // Trading allowed? This value is pulled from DB. If false orders are not sent to the exchange
             if ($allow_trading == 1){
@@ -245,9 +246,9 @@ class Chart
 
         // If < low price channel. SELL
         if (($barClosePrice < $price_channel_low_value) &&
-            ($this->trade_flag == "all"  || $this->trade_flag == "short")) { // price < price channel
+            ($this->trade_flag == "all"  || $this->trade_flag == "short")) {
             echo "####### LOW TRADE!<br>\n";
-            Log::debug("Chart.php line 193. Bar closed lower than lower channel. trade_flag: " . $this->trade_flag);
+            Log::debug("Chart.php line 193. ####### LOW TRADE!. Bar closed lower than lower channel. trade_flag: " . $this->trade_flag);
 
             // trading allowed?
             if ($allow_trading == 1){

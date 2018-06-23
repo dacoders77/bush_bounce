@@ -142,13 +142,7 @@ Route::get('/pricechannelcalc', function(){
 Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
 
 // Initial start button click in ChartControl.vue. Button clicked in the real-time mode
-Route::get('/initialstart', function () {
-    // Set trade_flag to all. in the DB
-    DB::table('settings_realtime')->where('id', 1)->update(['trade_flag' => 'all']); // First ever trade flag
-    DB::table('asset_1')->truncate(); // Clear the table
-    App\Classes\History::load(); // Load history from www.bitfinex.com
-    App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
-});
+Route::get('/initialstart', 'Index@initialstart');
 
 // Load history data for determined period of time. Button clicked in the history mode
 Route::get('/historyperiod', function(){
