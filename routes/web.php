@@ -142,7 +142,7 @@ Route::get('/pricechannelcalc', function(){
 Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
 
 // Initial start button click in ChartControl.vue. Button clicked in the real-time mode
-Route::get('/initialstart', 'Index@initialstart');
+Route::get('/initialstart', 'initialstart@index');
 
 // Load history data for determined period of time. Button clicked in the history mode
 Route::get('/historyperiod', function(){
