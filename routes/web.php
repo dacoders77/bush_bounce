@@ -102,17 +102,17 @@ Route::get('/realtime', function ()
 })->name('main.view')->middleware('auth'); // realtime.blade.php
 
 // Chart Info. Trading symbol, net profit, commission value etc.
-Route::get('/chartinfo', 'ChartInfo@load')->name('ChartInfo');
+Route::get('/chartinfo', 'ChartInfo@load')->name('ChartInfo')->middleware('auth');
 
 // Load history bars from local DB (not www.bitfinex.com)
-route::get('/historybarsload', 'realtime\HistoryBars@load');
+route::get('/historybarsload', 'realtime\HistoryBars@load')->middleware('auth');
 
 // Truncate history data table
-route::get('/tabletruncate', 'Table@truncate');
+//route::get('/tabletruncate', 'Table@truncate');
 
 // Test pusher event DELETE IT
 Route::get('event', function () {
-    event(new \App\Events\BushBounce('How are you?'));
+    event(new \App\Events\BushBounce('An event'));
 });
 
 // Startbroadcast
@@ -122,7 +122,7 @@ Route::get('/startbroadcast', function () {
         ->update([
             'broadcast_stop' => 0
         ]);
-});
+})->middleware('auth');
 
 // Stop broadcast (console command)
 Route::get('/stopbroadcast', function () {
@@ -131,42 +131,42 @@ Route::get('/stopbroadcast', function () {
         ->update([
             'broadcast_stop' => 1
         ]);
-});
+})->middleware('auth');
 
 // Calculate price channel
 Route::get('/pricechannelcalc', function(){
-    App\Classes\PriceChannel::calculate(); // Calculate price channel
+    App\Classes\PriceChannel::calculate()->middleware('auth'); // Calculate price channel
 });
 
 // Chart control form fields update
-Route::post('/chartcontrolupdate', 'realtime\ChartControl@update');
+Route::post('/chartcontrolupdate', 'realtime\ChartControl@update')->middleware('auth');
 
 // Initial start button click in ChartControl.vue. Button clicked in the real-time mode
-Route::get('/initialstart', 'initialstart@index');
+Route::get('/initialstart', 'initialstart@index')->middleware('auth');
 
 // Load history data for determined period of time. Button clicked in the history mode
 Route::get('/historyperiod', function(){
     DB::table('asset_1')->truncate(); // Clear the table
     App\Classes\History::LoadPeriod();
     App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
-});
+})->middleware('auth');
 
 // Backtest and profit calculation
 Route::get('/profit', function(){
     // Set trade_flag to all. in the DB
     DB::table('settings_realtime')->where('id', 1)->update(['trade_flag' => 'all']);
     \App\Classes\Backtest::start();
-});
+})->middleware('auth');
 
 // Delete it. Price channel calculate
 Route::get('/calc', function(){
     App\Classes\PriceChannel::calculate();
-});
+})->middleware('auth');
 
 // Delete it
 Route::get('/order', function(){
     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder(0.25,"buy");
-});
+})->middleware('auth');
 
 // Place order and volume and direction of the trade to it
 route::get('/placeorder/{direction}', 'PlaceOrder\BitFinexAuthApi@PlaceOrder');
@@ -174,12 +174,13 @@ route::get('/placeorder/{direction}', 'PlaceOrder\BitFinexAuthApi@PlaceOrder');
 // Set trading_allowd flag to true. This method is called when the app mode is swithced to real-time
 Route::get('/settradingallowedtrue', function () {
     DB::table('settings_realtime')->where('id', 1)->update(['allow_trading' => 1]);
-});
+})->middleware('auth');
 
 // Set trading_allowd flag to false. This method is called when the app mode is swithced to history. No trades in history must be opened
 Route::get('/settradingallowedfalse', function () {
     DB::table('settings_realtime')->where('id', 1)->update(['allow_trading' => 0]);
-});
-Auth::routes();
+})->middleware('auth');
 
+
+Auth::routes(); // Created by make:auth. DONT DELETE!
 Route::get('/home', 'HomeController@index')->name('home');
