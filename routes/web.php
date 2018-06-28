@@ -95,11 +95,11 @@ route::get('/change_asset/{z}', 'ChangeAsset@index'); // Controller call and pas
 
 // Realtime
 
-// Chart page
+// Chart page. We start from this page
 Route::get('/realtime', function ()
 {
     return View::make('/Realtime/Chart');
-})->name('main.view'); // realtime.blade.php
+})->name('main.view')->middleware('auth'); // realtime.blade.php
 
 // Chart Info. Trading symbol, net profit, commission value etc.
 Route::get('/chartinfo', 'ChartInfo@load')->name('ChartInfo');
@@ -180,3 +180,6 @@ Route::get('/settradingallowedtrue', function () {
 Route::get('/settradingallowedfalse', function () {
     DB::table('settings_realtime')->where('id', 1)->update(['allow_trading' => 0]);
 });
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
