@@ -141,7 +141,7 @@ Route::get('/pricechannelcalc', function(){
 // Chart control form fields update
 Route::post('/chartcontrolupdate', 'realtime\ChartControl@update')->middleware('auth');
 
-// Initial start button click in ChartControl.vue. Button clicked in the real-time mode
+// Initial start button click in ChartControl.vue. Button clicked in real-time mode
 Route::get('/initialstart', 'initialstart@index')->middleware('auth');
 
 // Load history data for determined period of time. Button clicked in the history mode

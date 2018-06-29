@@ -23,6 +23,8 @@ class RatchetPawlSocket extends Command
     /** @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
     private $isBroadCastAllowed;
     private $settings;
+    /** @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
+    private $initStartFlag = true;
 
 
     /**
@@ -30,7 +32,7 @@ class RatchetPawlSocket extends Command
      *
      * @var string
      */
-    protected $signature = 'ratchet:start';
+    protected $signature = 'ratchet:start {--init}'; // php artisan ratchet:start --init
 
     /**
      * The console command description.
@@ -64,15 +66,27 @@ class RatchetPawlSocket extends Command
     {
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
+
         event(new \App\Events\ConnectionError("Connection started"));
 
         Log::useDailyFiles(storage_path().'/logs/debug.log'); // Setup log name and math. Logs are created daily
         Log::debug("*****Ratchet websocket console command(app) started!*****");
+        Log::debug("initial start flag from console = " . $this->option('init'));
 
-        /** Reset trade flag. If it is not reseted, it will contain previous position state.
+        /**
+         * Reset trade flag. If it is not reseted, it will contain previous position state.
          * Reset code is moved to a separate controller.
+         * Do the reset only if the command was started from comsole, we check input option
+         * in order to determine wwhether the command was started manually or caused by reconnect.
+         * $this->option('init') can not be set to false that is why We use additional flag to do
+         * the initial start only when started from console
          */
-        app('App\Http\Controllers\initialstart')->index(); // Moved all inital start code to a separate controller
+        if($this->option('init') && $this->initStartFlag)
+        {
+            app('App\Http\Controllers\initialstart')->index(); // Moved all inital start code to a separate controller
+            $this->initStartFlag = false;
+        }
+
 
         /**
          * Ratchet/pawl websocket lib
@@ -168,6 +182,7 @@ class RatchetPawlSocket extends Command
                     echo "Connection closed ({$code} - {$reason})\n";
                     $this->info("line 82. connection closed");
                     $this->error("Reconnecting back!");
+                    Log::debug("RatchetPawlSocket.php line 181. Connection lost. Reconnecting back!");
                     sleep(5); // Wait 5 seconds before next connection try will attpemt
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
@@ -195,8 +210,10 @@ class RatchetPawlSocket extends Command
 
                 /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed again */
             }, function(\Exception $e) use ($loop, $chart, $candleMaker) {
-                $errorString = "RatchetPawlSocket.php: Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
+                $errorString = "RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
                 echo $errorString;
+                Log::debug("RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec");
+
                 event(new \App\Events\ConnectionError($errorString));
                 sleep(5); // Wait 5 seconds before next connection try will attpemt
                 $this->handle($chart, $candleMaker); // Call the main method of this class
