@@ -85,6 +85,8 @@ class RatchetPawlSocket extends Command
         {
             app('App\Http\Controllers\initialstart')->index(); // Moved all inital start code to a separate controller
             $this->initStartFlag = false;
+            echo "init strat\n";
+            event(new \App\Events\ConnectionError("Ratchet. Init start line 89"));
         }
 
 

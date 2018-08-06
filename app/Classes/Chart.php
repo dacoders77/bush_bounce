@@ -319,12 +319,16 @@ class Chart
                     ->whereNotNull('trade_direction')
                     ->orderBy('id', 'desc')
                     ->value('accumulated_profit');
+            
+
 
             DB::table('asset_1')
                 ->where('id', $recordId)
                 ->update([
                     'accumulated_profit' => round($lastAccumProfitValue + $this->tradeProfit, 4)
                 ]);
+
+            Log::debug("Chart.php line 323 " . $lastAccumProfitValue . " " . $this->tradeProfit);
 
             //echo "Bar with no trade<br>";
             echo "Chart.php line 340. lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $this->tradeProfit . "<br>\n";
@@ -335,19 +339,20 @@ class Chart
         if ($this->trade_flag != "all" && $this->firstPositionEver == false){
         //if ($tradeDirection != null && $this->firstPositionEver == false) // Means that at this bar trade has occurred
 
-            // INTERESTING VERSION OF PENULTIMANTE RECORD!
+            /*
+            // INTERESTING VERSION OF PENULTIMANTE RECORD. Seems like it does not work
             $nextToLastDirection =
                 DB::table('asset_1')
                     ->whereNotNull('trade_direction')
                     ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
                     ->value('accumulated_profit');
 
-
             DB::table('asset_1')
                 ->where('id', $recordId)
                 ->update([
                     'accumulated_profit' => $nextToLastDirection + $this->tradeProfit
                 ]);
+            */
 
             //echo "Bar with trade. nextToLastDirection: " . $nextToLastDirection;
             //event(new \App\Events\BushBounce('Bar with trade. Direction: ' . $nextToLastDirection));
