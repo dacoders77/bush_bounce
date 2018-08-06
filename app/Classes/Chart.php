@@ -317,10 +317,20 @@ class Chart
             $lastAccumProfitValue =
                 DB::table('asset_1')
                     ->whereNotNull('trade_direction')
-                    ->orderBy('id', 'desc')
+                    ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
                     ->value('accumulated_profit');
-            
 
+            // Temp var. For debug purpused. Delete it
+            /*
+            $temp =
+                DB::table('asset_1')
+                    ->whereNotNull('trade_direction')
+                    ->orderBy('id', 'desc')
+                    //->value('accumulated_profit')
+                    ->get();
+            Log::debug("Chart.php line 323 lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id);
+            */
+            
 
             DB::table('asset_1')
                 ->where('id', $recordId)
@@ -328,7 +338,6 @@ class Chart
                     'accumulated_profit' => round($lastAccumProfitValue + $this->tradeProfit, 4)
                 ]);
 
-            Log::debug("Chart.php line 323 " . $lastAccumProfitValue . " " . $this->tradeProfit);
 
             //echo "Bar with no trade<br>";
             echo "Chart.php line 340. lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $this->tradeProfit . "<br>\n";
