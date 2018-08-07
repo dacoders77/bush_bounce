@@ -330,7 +330,7 @@ class Chart
                     ->get();
             Log::debug("Chart.php line 323 lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id);
             */
-            
+
 
             DB::table('asset_1')
                 ->where('id', $recordId)
@@ -349,7 +349,7 @@ class Chart
         //if ($tradeDirection != null && $this->firstPositionEver == false) // Means that at this bar trade has occurred
 
             /*
-            // INTERESTING VERSION OF PENULTIMANTE RECORD. Seems like it does not work
+            // INTERESTING VERSION OF PENULTIMANTE RECORD.
             $nextToLastDirection =
                 DB::table('asset_1')
                     ->whereNotNull('trade_direction')

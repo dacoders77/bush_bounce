@@ -49954,6 +49954,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
                     chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
                     chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
+                    chart1.series[5].setData(response.data['sma'], true);
                 }
 
                 // This type of message is called from ChartControl.vue. priceChannelUpdate line 84
@@ -49964,6 +49965,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
                     chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
                     chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
+                    chart1.series[5].setData(response.data['sma'], true);
                 }
             }).catch(function (error) {
                 console.log('Chart.vue. line 36 /historybarsload function controller error: ');
@@ -50072,6 +50074,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     radius: 6,
                     symbol: 'triangle-down'
                 }
+            }, {
+                name: 'sma',
+                visible: true,
+                enableMouseTracking: true,
+                color: 'green',
+                lineWidth: 2,
+                //data: response.data['priceChannelLowValues'],
+                dataGrouping: {
+                    enabled: false
+                }
+
             }]
         });
 
@@ -50105,6 +50118,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     chart1.series[2].setData(response.data['priceChannelLowValues'], true); // Low. Price channel low
                     chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
                     chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
+                    chart1.series[5].setData(response.data['sma'], true);
                 }).catch(function (error) {
                     console.log('Chart.vue. line 200 /historybarsload controller error: ');
                     console.log(error.response);

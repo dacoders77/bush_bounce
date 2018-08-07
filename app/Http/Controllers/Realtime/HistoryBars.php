@@ -61,6 +61,13 @@ class HistoryBars extends \App\Http\Controllers\Controller
                     $rowValue->trade_price
                 ];
             }
+
+            // Add SMA
+            $sma[] = [
+                $rowValue->time_stamp,
+                $rowValue->sma
+            ];
+
         }
 
         $seriesData = array(
@@ -68,10 +75,11 @@ class HistoryBars extends \App\Http\Controllers\Controller
             "priceChannelHighValues" => $priceChannelHighValues,
             "priceChannelLowValues" => $priceChannelLowValues,
             "longTradeMarkers" => $longTradeMarkers,
-            "shortTradeMarkers" => $shortTradeMarkers
+            "shortTradeMarkers" => $shortTradeMarkers,
+            "sma" => $sma
         );
-        //              0                   1                       2                   3                   4
-        //$seriesData = [$candles, $priceChannelHighValue, $priceChannelLowValue, $longTradeMarkers, $shortTradeMarkers];
+        //              0                   1                       2                   3                   4              5
+        //$seriesData = [$candles, $priceChannelHighValue, $priceChannelLowValue, $longTradeMarkers, $shortTradeMarkers, $sma];
         return json_encode($seriesData);
     }
 }
