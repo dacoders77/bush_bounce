@@ -47,7 +47,8 @@ class Backtest
              * for the first iteration of foreach this value is always null
              */
             if ($isFirstRecord){
-                $chart->index("backtest", $rowValue->date, $rowValue->time_stamp, $rowValue->close, $rowValue->id);
+                //$chart->index("backtest", $rowValue->date, $rowValue->time_stamp, $rowValue->close, $rowValue->id);
+                $chart->index("backtest", $rowValue->date, $rowValue->time_stamp, $rowValue->sma, $rowValue->id);
             }
             else{
                 $isFirstRecord = true;

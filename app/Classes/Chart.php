@@ -188,6 +188,8 @@ class Chart
         // $this->trade_flag == "all" is used only when the first trade occurs, then it turns to "long" or "short".
         // When the trade is about to happen we don't know yet
         // whether it is gonna be long or short. This condition allows to enter both IF, long and short.
+
+
         if (($barClosePrice > $price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
             echo "####### HIGH TRADE!<br>\n";

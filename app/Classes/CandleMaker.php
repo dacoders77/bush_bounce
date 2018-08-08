@@ -13,7 +13,7 @@ use Mockery\Exception;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Class CandleMakers
+ * Class CandleMaker
  * Receives ticks from RatchetPawlSocket.php
  * Makes Candles and pass them to Chart.php
  * Also pass ticks to the front end and notifies the chart when a new bar is issued (via new bar issued flag)
