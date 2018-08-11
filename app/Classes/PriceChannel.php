@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Class PriceChannel calculates price channel high and low values based on data read from DB loaded from www.bitfinex.com.
+ * Also SMA indicator is calculated which is used as a filter. Trades are open not when bar close value is higher (lower)
+ * the price channel but value of calculated SMA
  * Values are recorded (updated) in DB when calculated.
  * This class is called in 3 cases:
  * 1. On the first start of the application when the DB is empty and contains no historical data.

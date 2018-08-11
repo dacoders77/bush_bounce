@@ -24,7 +24,8 @@ class SettingsRealtime extends Migration
             $table->integer('request_bars');
             $table->integer('skip_ticks_msec');
             $table->integer('price_channel_period');
-            $table->integer('sma_period')->nullable();;
+            $table->integer('sma_period')->nullable();
+            $table->boolean('sma_filter_on')->nullable();
             $table->boolean('allow_trading');
             $table->string('trade_flag'); // Long or short trade flag. Indicates a position state
             $table->float('commission_value')->nullable();
@@ -43,6 +44,7 @@ class SettingsRealtime extends Migration
             'skip_ticks_msec' => 1000,
             'price_channel_period' => 10,
             'sma_period' => 5,
+            'sma_filter_on' => 1,
             'allow_trading' => 0,
             'trade_flag' => 'all',
             'commission_value' => 0.2,

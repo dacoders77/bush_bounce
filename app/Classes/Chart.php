@@ -43,9 +43,10 @@ class Chart
     public $firstEverTradeFlag; // True - when the bot is started and the first trade is executed. Then flag turns to false and trade volume is doubled for closing current position and opening the opposite
     public $tradeProfit;
 
+
     /**
      * Received message in RatchetPawlSocket.php is sent to this method as an argument.
-     * A message is processed, bars and trades are calculated.
+     * A message is processed, bars are added to DB, profit is calculated.
      *
      * @param \Ratchet\RFC6455\Messaging\MessageInterface $socketMessage
      * @param Command Variable type for colored and formatted console messages like alert, warning, error etc.
@@ -53,6 +54,7 @@ class Chart
      * generated on each tick (each websocket message) and then passed as an event to the browser. These messages
      * are transmitted over websocket pusher broadcast service.
      * @see https://pusher.com/
+     * @see Classes and backtest scheme https://drive.google.com/file/d/1IDBxR2dWDDsbFbradNapSo7QYxv36EQM/view?usp=sharing
      */
     private $z = 0;
     public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
@@ -60,32 +62,54 @@ class Chart
         echo "**********************************************Chart.php!<br>\n";
         Log::debug("Entered Chart.php line 61");
 
+        /**
+         * @todo Read the whole settings row and access it with keys.
+         * No need to use 2 requests - bad coding style.
+         */
         $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
         $this->trade_flag = DB::table('settings_realtime')->where('id', 1)->value('trade_flag');
 
 
-        /** @var int $recordId id of the record in DB
-         * In backtest mode id is sent as a parameter. In realtime - pulled from DB
-         */
+
+
         if ($mode == "backtest")
         {
+            /** @var int $recordId id of the record in DB
+             * In backtest mode id is sent as a parameter. In realtime - pulled from DB.
+             * Then this id is used a record ID in order to access records in DB
+             */
             $recordId = $id;
+
+            /**
+             * @var $assetRow array Contains a record from DB with contains bar close, sma value, profit etc.
+             * We need bar close price in two cases: history backtest and realtime.
+             * In this case - backtest, we already have full history in the DB (many records in the DB) and id is
+             * generated from Backtest.php
+             */
+            $assetRow =
+                DB::table('asset_1')
+                    ->where('id', $id)
+                    ->get();
         }
-        else // history
+        else // Realtime
         {
             // Realtime mode. No ID of the record is sent. Get the quantity of all records using request
-            // Get the price of the last trade
             $recordId = // Last trade price
                 DB::table('asset_1')
                     ->whereNotNull('price_channel_high_value')
-                    //->where('time_stamp', '<', $timeStamp)
                     ->orderBy('id', 'desc')
                     ->value('id');
 
-            echo "\\\\\\\\this->position: " . $this->position . " this->trade_flag: " . $this->trade_flag . "\n";
-            Log::debug("Chart.php line 65. Pulled trade_flag out of DB: " . $this->trade_flag);
+            /** In this casw we do the same request, take the last record from the DB */
+            $assetRow =
+                DB::table('asset_1')
+                    ->orderBy('id', 'desc')->take(1)
+                    ->get();
+
             event(new \App\Events\ConnectionError("Chart.php. Line68. this->trade_flag: " . $this->trade_flag));
         }
+
+        Log::debug("jopa: " . json_encode($assetRow) . "FFF: " . $recordId);
 
 
         /** We do this check because sometimes, don't really understand under which circumstances, we get
@@ -104,7 +128,7 @@ class Chart
         else
         {
             echo "Null check. Chart.php line 85";
-            event(new \App\Events\ConnectionError("ERROR! Chart.php line 85. Null check penultimate rec. Terminated"));
+            event(new \App\Events\ConnectionError("Excp catch! Chart.php line 85. Null check penultimate"));
             //die();
         }
 
@@ -305,9 +329,9 @@ class Chart
 
 
         // ****RECALCULATED ACCUMULATED PROFIT****
-        // Get the if of last row where trade direction is not null
+        // Get the last row value where trade direction is not null
 
-        /** @todo Delete this variable. And Remove feild from DB*/
+        /** @todo Delete this variable. And Remove field from DB*/
         $tradeDirection =
             DB::table('asset_1')
                 ->where('id', $recordId)
@@ -322,16 +346,19 @@ class Chart
                     ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
                     ->value('accumulated_profit');
 
-            // Temp var. For debug purpused. Delete it
+            // Temp var. For debug purpuse. Delete it
             /*
+
+             */
             $temp =
                 DB::table('asset_1')
                     ->whereNotNull('trade_direction')
                     ->orderBy('id', 'desc')
                     //->value('accumulated_profit')
                     ->get();
-            Log::debug("Chart.php line 323 lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id);
-            */
+
+            Log::debug("Chart.php line 323 H lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id . " barClosePrice: " . $barClosePrice . " lastTradePrice: " . $lastTradePrice) ;
+
 
 
             DB::table('asset_1')

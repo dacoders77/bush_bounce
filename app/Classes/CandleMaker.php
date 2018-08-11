@@ -84,10 +84,6 @@ class CandleMaker
             $this->isFirstTickInBar = false;
         }
 
-        //echo "current time: " . date("Y-m-d H:i", $tickDate / 1000) . "\n";
-
-
-
         /** Calculate high and low of the bar then pass it to the chart in $messageArray */
         if ($tickPrice > $this->barHigh) // High
         {
@@ -135,7 +131,7 @@ class CandleMaker
 
             $command->info("------------------- NEW BAR ISSUED ----------------------");
 
-            /** Send tick to Chart.php in order to calculate profit and position marks */
+            /** Send tick to Chart.php in order to calculate profit and add bars to DB */
             //($mode, $barDate, $timeStamp, $barClosePrice, $id)
             $chart->index("history", gmdate("Y-m-d G:i:s", ($tickDate / 1000)), $tickDate, $tickPrice, null);
 
@@ -170,10 +166,7 @@ class CandleMaker
                  * not adding new bar and updating the current one
                  */
                 $messageArray['flag'] = true;
-
-
             }
-
 
         /** Prepare message array */
         $messageArray['tradeDate'] = $tickDate;
