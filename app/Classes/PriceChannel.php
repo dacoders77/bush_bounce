@@ -68,8 +68,8 @@ class PriceChannel
 
         /** @var int $quantityOfBars The quantity of bars for which the price channel will be calculated */
         $quantityOfBars = (DB::table('asset_1')
-            ->orderBy('id', 'desc')
-            ->first())->id - $priceChannelPeriod - 1;
+                ->orderBy('id', 'desc')
+                ->first())->id - $priceChannelPeriod - 1;
 
 
 
@@ -94,6 +94,8 @@ class PriceChannel
                 // Go from right to left
                 for ($i = $elementIndex ; $i < $elementIndex + $priceChannelPeriod; $i++)
                 {
+
+
                     /** Find max value in interval */
                     if ($records[$i]->high > $priceChannelHighValue)
                         $priceChannelHighValue = $records[$i]->high;
@@ -104,10 +106,13 @@ class PriceChannel
                 }
 
                 // For SMA
-                for ($j = $elementIndex ; $j < $elementIndex + $smaPeriod; $j++)
+                for ($j = $elementIndex  ; $j < $elementIndex + $smaPeriod; $j++)
                 {
+                    //$x = $records[$j]->close . " " . $j;
+                    //Log::debug($x);
                     /** SMA calculation */
-                    $sma += $records[$j]->close;
+                    $sma += $records[$j]->close; // SMA based on close value
+                    //$sma = 18800; // Not tested
                 }
 
 
@@ -144,6 +149,5 @@ class PriceChannel
             $elementIndex++;
         }
 
-        Log::debug("jopa: " . $sma / $smaPeriod );
     }
 }

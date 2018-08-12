@@ -193,7 +193,7 @@
                 if (e.update["flag"]) { // e.update["flag"] = true
                     console.log('Chart.vue. New bar is added');
 
-                    // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
+                    // Add bar to the chart. We add just a bar (an empty bar) where all OLHC values are the same. Later these values are gonna update via websocket listener
                     chart1.series[0].addPoint([e.update["tradeDate"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"]],true, false); // Works good
 
                     // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165

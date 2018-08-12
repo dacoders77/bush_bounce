@@ -108,11 +108,6 @@ class Chart
         $barClosePrice = $assetRow[0]->sma;
 
 
-        //Log::debug("jopa: " . json_encode($assetRow) . "FFF: " . $recordId . " " . $assetRow[0]->id);
-        //echo "jopa: " . json_encode($assetRow) ;
-        dump($assetRow);
-
-
 
         /** We do this check because sometimes, don't really understand under which circumstances, we get
          * trying to get property of non-object
@@ -129,12 +124,12 @@ class Chart
         }
         else
         {
-            echo "Null check. Chart.php line 85";
-            event(new \App\Events\ConnectionError("Excp catch! Chart.php line 85. Null check penultimate"));
+            echo "Null check. Chart.php line 132";
+            event(new \App\Events\ConnectionError("Excp catch! Chart.php line 132. Null check penultimate"));
             //die();
         }
 
-
+        //dump($penUltimanteRow);
 
 
         // Do not calculate profit if there is no open position. If do not do this check - zeros in table occur
@@ -200,7 +195,19 @@ class Chart
         // When the trade is about to happen we don't know yet
         // whether it is gonna be long or short. This condition allows to enter both IF, long and short.
 
-        echo "barClosePrice: $barClosePrice price_channel_high_value: $penUltimanteRow->price_channel_high_value price_channel_low_value: $penUltimanteRow->price_channel_low_value\n";
+        $ter = (($barClosePrice > $penUltimanteRow->price_channel_high_value) ? 'long' : 'no cross');
+        $ter2 = (($barClosePrice < $penUltimanteRow->price_channel_low_value) ? 'short' : 'no cross');
+
+        echo "barClosePrice (SMA): $barClosePrice
+$ter
+$ter2
+price_channel_high_value: $penUltimanteRow->price_channel_high_value 
+price_channel_low_value: $penUltimanteRow->price_channel_low_value
+this->trade_flag (all, long, short): $this->trade_flag
+penUltimanteRow id: $penUltimanteRow->id
+assetRow: " . $assetRow[0]->id
+. "\n" .
+"current bar date: " . $assetRow[0]->date . "\n";
 
         if (($barClosePrice > $penUltimanteRow->price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
@@ -345,7 +352,7 @@ class Chart
                     //->value('accumulated_profit')
                     ->get();
 
-            Log::debug("Chart.php line 323 H lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id . " assetRow[0]->close: " . $assetRow[0]->close . " lastTradePrice: " . $lastTradePrice) ;
+            //Log::debug("Chart.php line 323 H lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id . " assetRow[0]->close: " . $assetRow[0]->close . " lastTradePrice: " . $lastTradePrice) ;
 
 
 
