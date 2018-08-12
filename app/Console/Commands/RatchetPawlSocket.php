@@ -85,8 +85,8 @@ class RatchetPawlSocket extends Command
         {
             app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
             $this->initStartFlag = false;
-            echo "init strat\n";
-            event(new \App\Events\ConnectionError("Ratchet. Init start line 89"));
+            echo "RatchetPawlSocket.php. Init strat\n";
+            //event(new \App\Events\ConnectionError("Ratchet. Init start line 89"));
         }
 
 
@@ -214,9 +214,10 @@ class RatchetPawlSocket extends Command
             }, function(\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
                 echo $errorString;
-                Log::debug("RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec");
+                Log::debug($errorString);
 
-                event(new \App\Events\ConnectionError($errorString));
+                //event(new \App\Events\ConnectionError($errorString));
+
                 sleep(5); // Wait 5 seconds before next connection try will attpemt
                 $this->handle($chart, $candleMaker); // Call the main method of this class
                 //$loop->stop();

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class HistoryBars
@@ -15,11 +16,13 @@ class HistoryBars extends \App\Http\Controllers\Controller
 {
     public function load(){
 
+
         $candles = array();
         $priceChannelHighValues = array();
         $priceChannelLowValues = array();
         $longTradeMarkers = array();
         $shortTradeMarkers = array();
+        $sma = array();
 
         $allDbValues = DB::table("asset_1")->get(); // Read the whole table from BD to $allDbValues
 
@@ -78,6 +81,7 @@ class HistoryBars extends \App\Http\Controllers\Controller
             "shortTradeMarkers" => $shortTradeMarkers,
             "sma" => $sma
         );
+
         //              0                   1                       2                   3                   4              5
         //$seriesData = [$candles, $priceChannelHighValue, $priceChannelLowValue, $longTradeMarkers, $shortTradeMarkers, $sma];
         return json_encode($seriesData);

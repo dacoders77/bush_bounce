@@ -8,6 +8,8 @@
 
 namespace App\Classes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 /**
  * Class PriceChannel calculates price channel high and low values based on data read from DB loaded from www.bitfinex.com.
@@ -26,6 +28,8 @@ class PriceChannel
 {
     public static function calculate()
     {
+        Log::debug("price channel calc started");
+
         /** @var int $priceChannelPeriod */
         $priceChannelPeriod = DB::table('settings_realtime')
             ->where('id', 1)
@@ -52,6 +56,7 @@ class PriceChannel
         /**
          * desc - from big values to small. asc - from small to big
          * in this case: desc. [0] element is the last record in DB. and it's id - quantity of records
+         *
          * @var json object $records Contains all DB data (records) in json format
          * IT IS NOT A JSON! IT MOST LIKELY A LARAVEL OBJECT. BUTSCH SENT ME THE LINK.
          * @todo FIX WHAT BUTSH SAYS
@@ -118,6 +123,7 @@ class PriceChannel
                 /** Reset high, low price channel values */
                 $priceChannelHighValue = 0;
                 $priceChannelLowValue = 999999;
+
             }
             else
             {
@@ -137,5 +143,7 @@ class PriceChannel
             }
             $elementIndex++;
         }
+
+        Log::debug("jopa: " . $sma / $smaPeriod );
     }
 }

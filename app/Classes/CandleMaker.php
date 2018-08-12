@@ -38,7 +38,6 @@ class CandleMaker
     }
 
     /**
-     * Consumes price ticks and makes candles
      *
      * @return ??
      * where is it? tickTicker Ticker (BTCUSD, EYHUSD etc.)
@@ -125,7 +124,7 @@ class CandleMaker
         /*
          * New bar is issued
          * When the time of the tick is > added time - add this bar to the DB
-         * @todo now volume is not accumulated. We record is the last volume of the trade
+         * @todo now volume is not accumulated. We record it as the last volume of the trade (tick)
          */
         if (floor($tickDate / 1000) >= $this->tt){
 

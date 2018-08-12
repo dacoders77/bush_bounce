@@ -57,7 +57,8 @@ class Chart
      * @see Classes and backtest scheme https://drive.google.com/file/d/1IDBxR2dWDDsbFbradNapSo7QYxv36EQM/view?usp=sharing
      */
     private $z = 0;
-    public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
+    //public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
+    public function index($mode, $barDate, $timeStamp, $bbbbb, $id)
     {
         echo "**********************************************Chart.php!<br>\n";
         Log::debug("Entered Chart.php line 61");
@@ -81,7 +82,7 @@ class Chart
             $recordId = $id;
 
             /**
-             * @var $assetRow array Contains a record from DB with contains bar close, sma value, profit etc.
+             * @var $assetRow array contains a record from DB with contains bar close, sma value, profit etc.
              * We need bar close price in two cases: history backtest and realtime.
              * In this case - backtest, we already have full history in the DB (many records in the DB) and id is
              * generated from Backtest.php
@@ -94,22 +95,23 @@ class Chart
         else // Realtime
         {
             // Realtime mode. No ID of the record is sent. Get the quantity of all records using request
-            $recordId = // Last trade price
-                DB::table('asset_1')
-                    ->whereNotNull('price_channel_high_value')
-                    ->orderBy('id', 'desc')
-                    ->value('id');
-
-            /** In this casw we do the same request, take the last record from the DB */
+            /** In this case we do the same request, take the last record from the DB */
             $assetRow =
                 DB::table('asset_1')
                     ->orderBy('id', 'desc')->take(1)
                     ->get();
 
-            event(new \App\Events\ConnectionError("Chart.php. Line68. this->trade_flag: " . $this->trade_flag));
+            $recordId = $assetRow[0]->id;
+
         }
 
-        Log::debug("jopa: " . json_encode($assetRow) . "FFF: " . $recordId);
+        $barClosePrice = $assetRow[0]->sma;
+
+
+        //Log::debug("jopa: " . json_encode($assetRow) . "FFF: " . $recordId . " " . $assetRow[0]->id);
+        //echo "jopa: " . json_encode($assetRow) ;
+        dump($assetRow);
+
 
 
         /** We do this check because sometimes, don't really understand under which circumstances, we get
@@ -140,16 +142,6 @@ class Chart
         // We do not store position in DB thus we use "all" check to determine a position absence
         // if "all" - no position has been opened yet
         if ($this->position != null && $this->trade_flag != "all"){
-
-            /*
-            $this->tradeProfit =
-                (($this->position != null) ?
-                    (($this->position == "long" ?
-                        ($barClosePrice - $lastTradePrice) * $this->volume :
-                        ($lastTradePrice - $barClosePrice) * $this->volume)
-                    ) : false);
-            */
-
 
             // Get the price of the last trade
             $lastTradePrice = // Last trade price
@@ -182,11 +174,6 @@ class Chart
         $this->dateCompeareFlag = true;
 
         /** TRADES WATCH. Channel value of previous (penultimate bar)*/
-        /** @todo replace aall $price_channel_low_value variables with $penUltimanteRow->price_channel_low_value*/
-
-        $price_channel_high_value = $penUltimanteRow->price_channel_high_value; // THIS CODE THROWS THE ERROR: trying to get property on non object
-        $price_channel_low_value = $penUltimanteRow->price_channel_low_value;
-
 
         /**
          * @todo Read the whole row as a single collection then access it by keys. No need to make several request. Get rid of settings_tester
@@ -202,8 +189,8 @@ class Chart
                 ->value('commission_value');
 
 
-        echo "penultim:" . $penUltimanteRow->date . " price channel  : " . $penUltimanteRow->price_channel_high_value . "\n";
-        echo "bar date:" . $barDate . " bar close price: " .$barClosePrice . "\n";
+        //echo "penultim:" . $penUltimanteRow->date . " price channel  : " . $penUltimanteRow->price_channel_high_value . "\n";
+        //echo "bar date:" . $barDate . " bar close price: " .$barClosePrice . "\n";
 
 
 
@@ -213,8 +200,9 @@ class Chart
         // When the trade is about to happen we don't know yet
         // whether it is gonna be long or short. This condition allows to enter both IF, long and short.
 
+        echo "barClosePrice: $barClosePrice price_channel_high_value: $penUltimanteRow->price_channel_high_value price_channel_low_value: $penUltimanteRow->price_channel_low_value\n";
 
-        if (($barClosePrice > $price_channel_high_value) &&
+        if (($barClosePrice > $penUltimanteRow->price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
             echo "####### HIGH TRADE!<br>\n";
             Log::debug("Chart.php line 193. ####### HIGH TRADE!. Bar closed higher than upper price channel. trade_flag: " . $this->trade_flag);
@@ -256,14 +244,14 @@ class Chart
                 ->where('id', $recordId)
                 ->update([
                     'trade_date' => gmdate("Y-m-d G:i:s", ($timeStamp / 1000)),
-                    'trade_price' => $barClosePrice,
+                    'trade_price' => $assetRow[0]->close,
                     'trade_direction' => "buy",
                     'trade_volume' => $this->volume,
-                    'trade_commission' => round(($barClosePrice * $commisionValue / 100) * $this->volume, 4),
-                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume, 4),
+                    'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
                 ]);
 
-            echo "Trade price: " . $barClosePrice . "<br>\n";
+            echo "Trade price: " . $assetRow[0]->close . "<br>\n";
             $messageArray['flag'] = "buy"; // Send flag to VueJS app.js. On this event VueJS is informed that the trade occurred
 
         } // BUY trade
@@ -271,7 +259,7 @@ class Chart
 
 
         // If < low price channel. SELL
-        if (($barClosePrice < $price_channel_low_value) &&
+        if (($barClosePrice < $penUltimanteRow->price_channel_low_value) &&
             ($this->trade_flag == "all"  || $this->trade_flag == "short")) {
             echo "####### LOW TRADE!<br>\n";
             Log::debug("Chart.php line 193. ####### LOW TRADE!. Bar closed lower than lower channel. trade_flag: " . $this->trade_flag);
@@ -314,11 +302,11 @@ class Chart
                 ->where('id', $recordId)
                 ->update([
                     'trade_date' => gmdate("Y-m-d G:i:s", ($timeStamp / 1000)),
-                    'trade_price' => $barClosePrice,
+                    'trade_price' => $assetRow[0]->close,
                     'trade_direction' => "sell",
                     'trade_volume' => $this->volume,
-                    'trade_commission' => round(($barClosePrice * $commisionValue / 100) * $this->volume, 4),
-                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($barClosePrice * $commisionValue / 100) * $this->volume, 4),
+                    'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
                 ]);
 
             $messageArray['flag'] = "sell"; // Send flag to VueJS app.js
@@ -357,7 +345,7 @@ class Chart
                     //->value('accumulated_profit')
                     ->get();
 
-            Log::debug("Chart.php line 323 H lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id . " barClosePrice: " . $barClosePrice . " lastTradePrice: " . $lastTradePrice) ;
+            Log::debug("Chart.php line 323 H lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id . " assetRow[0]->close: " . $assetRow[0]->close . " lastTradePrice: " . $lastTradePrice) ;
 
 
 
