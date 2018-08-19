@@ -48346,10 +48346,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             appMode: '',
             toggleFlag: true,
 
-            startButtonDisabled: true, // delete it
-            stopButtonDisabled: true, // delete it
+            //startButtonDisabled: true, // delete it
+            //stopButtonDisabled: true, // delete it
 
-            priceChannelFormDisabled: '', // Disable upd button and both price channel fields
+            priceChannelFormDisabled: false, // Disable upd button and both price channel fields
             historyFrom: '',
             historyTo: ''
         };
@@ -48389,7 +48389,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 10:
                                 response3 = _context.sent;
                                 // Show net profit at the from. Is is recalculated each time update buttin is clicked
-                                this.netProfit = parseFloat(response3.data['netProfit']).toFixed(2);
+                                this.netProfit = parseFloat(response3.data['netProfit']).toFixed(4);
 
                                 _context.next = 18;
                                 break;
@@ -48449,7 +48449,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                                 //console.log('ChartControl.vue. ChartInfo controller response: ');
                                 this.symbol = response.data['symbol'];
                                 this.volume = response.data['volume'];
-                                this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                                this.netProfit = parseFloat(response.data['netProfit']).toFixed(4);
                                 this.requestedBars = response.data['request_bars'];
                                 this.timeFrame = response.data['time_frame'];
                                 this.requestBars = response.data['request_bars'];
@@ -48507,12 +48507,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                 //var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                 if (true) {
                     this.toggleFlag = false;
-                    this.startButtonDisabled = true; // delete it
-                    this.stopButtonDisabled = true; // delete it
+                    //this.startButtonDisabled = true; // delete it
+                    //this.stopButtonDisabled = true; // delete it
 
                     // Put all 3 requests over here. Make ir async
                     this.appMode = "history";
-
                     this.enterRealTimeMode();
                 }
             }
@@ -48521,13 +48520,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                     console.log("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
 
                     // Set trading flag to true
-
                     //var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (true) {
                         this.toggleFlag = true;
-                        this.startButtonDisabled = false; // delete it
-                        this.stopButtonDisabled = false; // delete it
-
+                        //this.startButtonDisabled = false; // delete it
+                        //this.stopButtonDisabled = false; // delete it
 
                         this.initialStartRealTime();
                         this.appMode = "realtime";
@@ -48593,7 +48590,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 13:
                                 response4 = _context3.sent;
                                 // Show net profit at the from. Is is recalculated each time update buttin is clicked
-                                this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+                                this.netProfit = parseFloat(response4.data['netProfit']).toFixed(4);
 
                                 _context3.next = 21;
                                 break;
@@ -48647,7 +48644,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
                             case 10:
                                 response4 = _context4.sent;
                                 // Show net profit at the from. Is is recalculated each time update buttin is clicked
-                                this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+                                this.netProfit = parseFloat(response4.data['netProfit']).toFixed(4);
 
                                 _context4.next = 18;
                                 break;
@@ -48766,7 +48763,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
             // Show net profit at the from. Is is recalculated each time update buttin is clicked
             axios.get('/chartinfo').then(function (response) {
-                _this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                _this.netProfit = parseFloat(response.data['netProfit']).toFixed(4);
                 _this.tradingAllowed = response.data['allow_trading'] == '1' ? 'true' : 'false';
             }).catch(function (error) {
                 console.log('ChartControl.vue. line 344. /chartinfo controller error:');
@@ -48775,7 +48772,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         });
 
         // Load chart info values from DB
-        //this.chartInfo(); // Wass called as a function
+        // this.chartInfo(); // Was called as a function
         // THIS CODE IS DOUBLED BECAUSE ASYNC FUNCTION DOES NOT WORK
 
         axios.get('/chartinfo') // The table will be truncated, history loaded
@@ -48783,7 +48780,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             //console.log('ChartControl.vue. ChartInfo controller response: ');
             _this.symbol = response.data['symbol'];
             _this.volume = response.data['volume'];
-            _this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+            _this.netProfit = parseFloat(response.data['netProfit']).toFixed(4);
             _this.requestedBars = response.data['request_bars'];
             _this.timeFrame = response.data['time_frame'];
             _this.requestBars = response.data['request_bars'];
@@ -48792,7 +48789,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
             _this.priceChannelPeriod = response.data['price_channel_period'];
             _this.broadcastAllowed = response.data['app_mode'] == 'history' ? 'off' : 'on';
             _this.appMode = response.data['app_mode'] == 'history' ? 'history' : 'realtime';
-            _this.priceChannelFormDisabled = response.data['app_mode'] == 'history' ? true : false; // Disable price channel period and upd button
+            _this.priceChannelFormDisabled = response.data['app_mode'] == 'history' ? false : true; // Disable price channel period and upd button
             _this.historyFrom = response.data['history_from'];
             _this.historyTo = response.data['history_to'];
         }).catch(function (error) {
@@ -50107,7 +50104,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 // e.update["flag"] = true
                 console.log('Chart.vue. New bar is added');
 
-                // Add bar to the chart. We arr just a bar where all OLHC values are the same. Later these values are gonna update via websocket listener
+                // Add bar to the chart. We add just a bar (an empty bar) where all OLHC values are the same. Later these values are gonna update via websocket listener
                 chart1.series[0].addPoint([e.update["tradeDate"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"], e.update["tradePrice"]], true, false); // Works good
 
                 // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165

@@ -63,10 +63,10 @@
                 appMode: '',
                 toggleFlag: true,
 
-                startButtonDisabled: true, // delete it
-                stopButtonDisabled: true, // delete it
+                //startButtonDisabled: true, // delete it
+                //stopButtonDisabled: true, // delete it
 
-                priceChannelFormDisabled: '', // Disable upd button and both price channel fields
+                priceChannelFormDisabled: false, // Disable upd button and both price channel fields
                 historyFrom: '',
                 historyTo: ''
             }
@@ -88,8 +88,7 @@
                     this.$bus.$emit('my-event', {param : "reload-price-channel"}); // Inform Chart.vue that chart bars must be reloaded
 
                     const response3 = await axios.get('/chartinfo'); // Show net profit at the from. Is is recalculated each time update buttin is clicked
-                    this.netProfit = parseFloat(response3.data['netProfit']).toFixed(2);
-
+                    this.netProfit = parseFloat(response3.data['netProfit']).toFixed(4);
 
                 } catch(error) {
                     console.log('ChartControl.vue. line 88. /chartcontrolupdate controller error');
@@ -118,7 +117,7 @@
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
                     this.volume = response.data['volume'];
-                    this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                    this.netProfit = parseFloat(response.data['netProfit']).toFixed(4);
                     this.requestedBars = response.data['request_bars'];
                     this.timeFrame = response.data['time_frame'];
                     this.requestBars = response.data['request_bars'];
@@ -156,14 +155,12 @@
                     //var conf = confirm("You are entering history testing mode. All previous data will be erased, broadcast will be suspended.");
                     if (true) {
                         this.toggleFlag = false;
-                        this.startButtonDisabled = true; // delete it
-                        this.stopButtonDisabled = true; // delete it
+                        //this.startButtonDisabled = true; // delete it
+                        //this.stopButtonDisabled = true; // delete it
 
                         // Put all 3 requests over here. Make ir async
                         this.appMode = "history";
-
                         this.enterRealTimeMode();
-
                     }
                 }
                 //Entering real-time mode from history
@@ -172,13 +169,11 @@
                     console.log("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
 
                     // Set trading flag to true
-
                     //var conf = confirm("You are entering real-time testing mode. All previous data will be erased, the broadcast will be start automatically. Trading should be enabled via setting the tradinf option to true");
                     if (true) {
                         this.toggleFlag = true;
-                        this.startButtonDisabled = false; // delete it
-                        this.stopButtonDisabled = false; // delete it
-
+                        //this.startButtonDisabled = false; // delete it
+                        //this.stopButtonDisabled = false; // delete it
 
                         this.initialStartRealTime();
                         this.appMode = "realtime";
@@ -231,7 +226,7 @@
                     const response3 = await axios.get('/startbroadcast');
 
                     const response4 = await axios.get('/chartinfo'); // Show net profit at the from. Is is recalculated each time update buttin is clicked
-                    this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+                    this.netProfit = parseFloat(response4.data['netProfit']).toFixed(4);
 
                 } catch (error) {
                     console.log('ChartControl.vue. line 260. Initial realtime start async error: ');
@@ -246,7 +241,7 @@
                     this.$bus.$emit('my-event', {param : "reload-whole-chart"}) // When history is loaded and price channel recalculated, raise the event. Inform Chart.vue that chart must be reloaded
 
                     const response4 = await axios.get('/chartinfo'); // Show net profit at the from. Is is recalculated each time update buttin is clicked
-                    this.netProfit = parseFloat(response4.data['netProfit']).toFixed(2);
+                    this.netProfit = parseFloat(response4.data['netProfit']).toFixed(4);
 
                 } catch (error) {
                     console.log('ChartControl.vue. line 261. Initial history start async error: ');
@@ -340,7 +335,7 @@
                 // Show net profit at the from. Is is recalculated each time update buttin is clicked
                 axios.get('/chartinfo')
                     .then(response => {
-                        this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                        this.netProfit = parseFloat(response.data['netProfit']).toFixed(4);
                         this.tradingAllowed = ((response.data['allow_trading'] == '1') ? 'true' : 'false');
                     })
                     .catch(error => {
@@ -351,7 +346,7 @@
             });
 
             // Load chart info values from DB
-            //this.chartInfo(); // Wass called as a function
+            // this.chartInfo(); // Was called as a function
             // THIS CODE IS DOUBLED BECAUSE ASYNC FUNCTION DOES NOT WORK
 
             axios.get('/chartinfo') // The table will be truncated, history loaded
@@ -359,7 +354,7 @@
                     //console.log('ChartControl.vue. ChartInfo controller response: ');
                     this.symbol = response.data['symbol'];
                     this.volume = response.data['volume'];
-                    this.netProfit = parseFloat(response.data['netProfit']).toFixed(2);
+                    this.netProfit = parseFloat(response.data['netProfit']).toFixed(4);
                     this.requestedBars = response.data['request_bars'];
                     this.timeFrame = response.data['time_frame'];
                     this.requestBars = response.data['request_bars'];
@@ -368,9 +363,10 @@
                     this.priceChannelPeriod = response.data['price_channel_period'];
                     this.broadcastAllowed = ((response.data['app_mode'] == 'history') ? 'off' : 'on');
                     this.appMode = ((response.data['app_mode'] == 'history') ? 'history' : 'realtime');
-                    this.priceChannelFormDisabled = ((response.data['app_mode'] == 'history') ? true : false); // Disable price channel period and upd button
+                    this.priceChannelFormDisabled = ((response.data['app_mode'] == 'history') ? false : true); // Disable price channel period and upd button
                     this.historyFrom = response.data['history_from'];
                     this.historyTo = response.data['history_to'];
+
                 })
                 .catch(error => {
                     console.log('ChartControl.vue. line 344. /chartinfo controller error:');

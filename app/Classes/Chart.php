@@ -61,7 +61,7 @@ class Chart
     public function index($mode, $barDate, $timeStamp, $bbbbb, $id)
     {
         echo "**********************************************Chart.php!<br>\n";
-        Log::debug("Entered Chart.php line 61");
+        //Log::debug("Entered Chart.php line 61");
 
         /**
          * @todo Read the whole settings row and access it with keys.
@@ -149,10 +149,9 @@ class Chart
 
             $this->tradeProfit =
                     (($this->position == "long" ?
-                        ($barClosePrice - $lastTradePrice) * $this->volume :
-                        ($lastTradePrice - $barClosePrice) * $this->volume)
+                        ($assetRow[0]->close - $lastTradePrice) * $this->volume :
+                        ($lastTradePrice - $assetRow[0]->close) * $this->volume)
                     );
-
 
             DB::table('asset_1')
                 ->where('id', $recordId)
@@ -194,20 +193,6 @@ class Chart
         // $this->trade_flag == "all" is used only when the first trade occurs, then it turns to "long" or "short".
         // When the trade is about to happen we don't know yet
         // whether it is gonna be long or short. This condition allows to enter both IF, long and short.
-
-        $ter = (($barClosePrice > $penUltimanteRow->price_channel_high_value) ? 'long' : 'no cross');
-        $ter2 = (($barClosePrice < $penUltimanteRow->price_channel_low_value) ? 'short' : 'no cross');
-
-        echo "barClosePrice (SMA): $barClosePrice
-$ter
-$ter2
-price_channel_high_value: $penUltimanteRow->price_channel_high_value 
-price_channel_low_value: $penUltimanteRow->price_channel_low_value
-this->trade_flag (all, long, short): $this->trade_flag
-penUltimanteRow id: $penUltimanteRow->id
-assetRow: " . $assetRow[0]->id
-. "\n" .
-"current bar date: " . $assetRow[0]->date . "\n";
 
         if (($barClosePrice > $penUltimanteRow->price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
@@ -335,6 +320,7 @@ assetRow: " . $assetRow[0]->id
         if ($this->trade_flag != "all"){
         //if ($tradeDirection == null && $this->position != null){
 
+            /*
             $lastAccumProfitValue =
                 DB::table('asset_1')
                     ->whereNotNull('trade_direction')
@@ -342,29 +328,24 @@ assetRow: " . $assetRow[0]->id
                     ->value('accumulated_profit');
 
             // Temp var. For debug purpuse. Delete it
-            /*
-
              */
-            $temp =
+
+            $lastAccumProfitRow =
                 DB::table('asset_1')
                     ->whereNotNull('trade_direction')
-                    ->orderBy('id', 'desc')
-                    //->value('accumulated_profit')
+                    //->orderBy('id', 'desc')->skip(1)->take(1)
+                    ->orderBy('id', 'desc')->take(1)
                     ->get();
 
-            //Log::debug("Chart.php line 323 H lastAccumProfitValue=" . $lastAccumProfitValue . " this->tradeProfit=" . $this->tradeProfit . " date:" . $temp[0]->date . " id:" . $temp[0]->id . " assetRow[0]->close: " . $assetRow[0]->close . " lastTradePrice: " . $lastTradePrice) ;
-
+            Log::debug("Chart.php line 341: " . (empty($lastAccumProfitRow[0]) ? "empty arr" : $lastAccumProfitRow)); // ->accumulated_profit
 
 
             DB::table('asset_1')
                 ->where('id', $recordId)
                 ->update([
-                    'accumulated_profit' => round($lastAccumProfitValue + $this->tradeProfit, 4)
+                    'accumulated_profit' => round($lastAccumProfitRow[0]->accumulated_profit + $this->tradeProfit, 4)
+
                 ]);
-
-
-            //echo "Bar with no trade<br>";
-            echo "Chart.php line 340. lastAccumProfitValue: " . $lastAccumProfitValue . " tradeProfit: ". $this->tradeProfit . "<br>\n";
 
         }
 
@@ -413,12 +394,7 @@ assetRow: " . $assetRow[0]->id
                 DB::table('asset_1')
                     ->where('id', $recordId)
                     ->value('accumulated_profit');
-            /*
-            $accumulatedCommission =
-                DB::table('asset_1')
-                    ->where('id', $recordId)
-                    ->value('accumulated_commission');
-            */
+
             $accumulatedCommission =
                 DB::table('asset_1')
                     ->whereNotNull('accumulated_commission')
@@ -433,14 +409,5 @@ assetRow: " . $assetRow[0]->id
                 ]);
 
         }
-
-
-
-
-
-
-
-
-
     }
 }
