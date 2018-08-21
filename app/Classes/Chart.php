@@ -197,7 +197,7 @@ class Chart
         if (($barClosePrice > $penUltimanteRow->price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
             echo "####### HIGH TRADE!<br>\n";
-            Log::debug("Chart.php line 193. ####### HIGH TRADE!. Bar closed higher than upper price channel. trade_flag: " . $this->trade_flag);
+            Log::debug("Chart.php line 193. ####### HIGH TRADE!. Bar closed higher than upper price channel. barClosePrice: $barClosePrice");
 
             // Trading allowed? This value is pulled from DB. If false orders are not sent to the exchange
             if ($allow_trading == 1){
@@ -254,7 +254,7 @@ class Chart
         if (($barClosePrice < $penUltimanteRow->price_channel_low_value) &&
             ($this->trade_flag == "all"  || $this->trade_flag == "short")) {
             echo "####### LOW TRADE!<br>\n";
-            Log::debug("Chart.php line 193. ####### LOW TRADE!. Bar closed lower than lower channel. trade_flag: " . $this->trade_flag);
+            Log::debug("Chart.php line 193. ####### LOW TRADE!. Bar closed lower than lower channel. barClosePrice: $barClosePrice");
 
             // trading allowed?
             if ($allow_trading == 1){
@@ -317,35 +317,46 @@ class Chart
                 ->where('id', $recordId)
                 ->value('trade_direction');
 
-        if ($this->trade_flag != "all"){
-        //if ($tradeDirection == null && $this->position != null){
+        if ($this->trade_flag != "all") {
 
-            /*
-            $lastAccumProfitValue =
+
+            $z =
                 DB::table('asset_1')
-                    ->whereNotNull('trade_direction')
-                    ->orderBy('id', 'desc')->skip(1)->take(1) // Second to last (penultimate). ->get()
-                    ->value('accumulated_profit');
+                    ->where('id', $id)
+                    ->get()
+                    ->last();
 
-            // Temp var. For debug purpuse. Delete it
-             */
-
-            $lastAccumProfitRow =
+            $temp =
                 DB::table('asset_1')
+                    //->where('id', $z->id - 1)
                     ->whereNotNull('trade_direction')
-                    //->orderBy('id', 'desc')->skip(1)->take(1)
-                    ->orderBy('id', 'desc')->take(1)
                     ->get();
 
-            Log::debug("Chart.php line 341: " . (empty($lastAccumProfitRow[0]) ? "empty arr" : $lastAccumProfitRow)); // ->accumulated_profit
+            
+            if ($z->trade_direction == "buy" || $z->trade_direction == "sell") {
+
+                Log::debug("Chart.php line 341: " . (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 666) . " last id: " . $z->trade_direction);
+
+                DB::table('asset_1')
+                    ->where('id', $recordId)
+                    ->update([
+                        'accumulated_profit' => (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 0)
+                    ]);
+
+            } else
+            {
+                Log::debug("jopa: " . (count($temp) > 1 ? $temp[count($temp) - 1]->id  : 888) );
+
+                DB::table('asset_1')
+                    ->where('id', $recordId)
+                    ->update([
+                        'accumulated_profit' => (count($temp) > 1 ? $temp[count($temp) - 1]->accumulated_profit + $this->tradeProfit : 0)
+                    ]);
+            }
 
 
-            DB::table('asset_1')
-                ->where('id', $recordId)
-                ->update([
-                    'accumulated_profit' => round($lastAccumProfitRow[0]->accumulated_profit + $this->tradeProfit, 4)
 
-                ]);
+
 
         }
 
