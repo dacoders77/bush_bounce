@@ -322,9 +322,9 @@ class Chart
 
             $z =
                 DB::table('asset_1')
-                    ->where('id', $id)
-                    ->get()
-                    ->last();
+                    ->where('id', $recordId)
+                    //->last()
+                    ->get();
 
             $temp =
                 DB::table('asset_1')
@@ -332,10 +332,12 @@ class Chart
                     ->whereNotNull('trade_direction')
                     ->get();
 
-            
-            if ($z->trade_direction == "buy" || $z->trade_direction == "sell") {
+            echo "huj: " . ($z[0]->id) ? $z[0]->id . "xxx" : $z[0]->id . "zzz";
 
-                Log::debug("Chart.php line 341: " . (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 666) . " last id: " . $z->trade_direction);
+            // Trying to get property of non object
+            if ($z[0]->trade_direction == "buy" || $z[0]->trade_direction == "sell") {
+
+                Log::debug("Chart.php line 341: " . (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 666) . " last id: " . $z[0]->trade_direction);
 
                 DB::table('asset_1')
                     ->where('id', $recordId)

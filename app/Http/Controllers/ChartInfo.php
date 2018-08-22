@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use function GuzzleHttp\Psr7\str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 /**
@@ -39,14 +40,8 @@ class ChartInfo extends Controller
 
         $response = ChartInfo::arrayPush((array)DB::table('settings_realtime')->where('id', 1)->first(), 'netProfit', $netProfit);
 
+        return $response;
 
-        return
-        $response;
-        /*
-            (array)DB::table('settings_realtime')
-                ->where('id', 1)
-                ->first();
-        */
     }
 
     function arrayPush($array, $key, $value){
