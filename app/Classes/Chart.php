@@ -306,38 +306,46 @@ class Chart
         } // Sell trade
 
 
+        /**
+         * Accumulated profit
+         *
+         * The complicated code for getting the accumulated profit dome.
+         * We follow these steps in order to calculate accumulated profit
+         * 1. We get the whole record using id. id is received in two ways:
+         * a) History testing. id is pulled from DB in Backtest.php
+         * b) Real-time trading. id is read from the last row from DB ($assetRow).
+         * 2. Then we filter all records from the DB where trade_direction dield in not null. It means that the trade was executed on that bar.
+         * 3. On each bar we decide whether there is a trade on this bar or it is a bar with no trade (trade was executed before)
+         * 4. If there is a trade (trade_direction = buy or sell) we use two accumulated_profit values back (index-2)
+         * 5. If these no trade (else) we take the previous accumulate_profit value
+         * 6. When a history testing (or real-time trading) has just started we are having bars with trade_direction = null.
+         * in this case we use ternary operator to handle it ( condition ? if true : if false).
+         */
 
-
-        // ****RECALCULATED ACCUMULATED PROFIT****
-        // Get the last row value where trade direction is not null
-
-        /** @todo Delete this variable. And Remove field from DB*/
-        $tradeDirection =
-            DB::table('asset_1')
-                ->where('id', $recordId)
-                ->value('trade_direction');
 
         if ($this->trade_flag != "all") {
 
-
+            /** @var int $z Get the last record from the asset table */
             $z =
                 DB::table('asset_1')
                     ->where('id', $recordId)
-                    //->last()
                     ->get();
-
+            /** @var array $temp The revious record from asset table where trade_direction is not null */
             $temp =
                 DB::table('asset_1')
                     //->where('id', $z->id - 1)
                     ->whereNotNull('trade_direction')
                     ->get();
 
-            echo "huj: " . ($z[0]->id) ? $z[0]->id . "xxx" : $z[0]->id . "zzz";
+            // Need to check whether $assetRow and $z are equal
+            Log::debug("asset_row: " . json_encode($assetRow) );
+            Log::debug("asset_row: " . json_encode($z) );
 
-            // Trying to get property of non object
+
+            /** On this code we get this error: Trying to get property of non object */
             if ($z[0]->trade_direction == "buy" || $z[0]->trade_direction == "sell") {
 
-                Log::debug("Chart.php line 341: " . (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 666) . " last id: " . $z[0]->trade_direction);
+                //Log::debug("Chart.php line 341: " . (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 666) . " last id: " . $z[0]->trade_direction);
 
                 DB::table('asset_1')
                     ->where('id', $recordId)
@@ -347,7 +355,7 @@ class Chart
 
             } else
             {
-                Log::debug("jopa: " . (count($temp) > 1 ? $temp[count($temp) - 1]->id  : 888) );
+                //Log::debug("jo: " . (count($temp) > 1 ? $temp[count($temp) - 1]->id  : 888) );
 
                 DB::table('asset_1')
                     ->where('id', $recordId)

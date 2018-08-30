@@ -193,12 +193,16 @@ class CandleMaker
         $messageArray['tradeDate'] = $tickDate;
         $messageArray['tradePrice'] = $tickPrice; // Tick price = current price and close (when a bar is closed)
 
-        // These values are used for showing at the form
+        /** These values are used for showing at the form */
         $messageArray['tradeVolume'] = $tickVolume;
         $messageArray['tradeBarHigh'] = $this->barHigh; // High value of the bar
         $messageArray['tradeBarLow'] = $this->barLow; // Low value of the bar
 
-        // Get price channel
+        /** Get price channel values. Sometimes we get non object value error. In this case we have to do null check */
+
+        // Get value. Do the null check
+        // If null - add zero to the message array
+
         $messageArray['priceChannelHighValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
         $messageArray['priceChannelLowValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_low_value;
 

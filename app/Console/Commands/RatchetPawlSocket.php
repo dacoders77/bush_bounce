@@ -49,11 +49,11 @@ class RatchetPawlSocket extends Command
      */
     public function __construct()
     {
+        /*
+        DO NOT PLACE CODE IN THE CONSTRUCTOR
+        CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MY CAUSE DIFFERENT PROBLEMS
+        */
         parent::__construct();
-        // DO NOT PLACE CODE IN THE CONSTRUCTOR
-        // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MY CAUSE DIFFERENT PROBLEMS
-        //$chart = new Classes\Chart();
-        //$this->chart = new Classes\Chart(); // New instance of Chart class
     }
 
 
@@ -64,6 +64,7 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
+        $exchangeWebSocketEndPoint = "wss://api.bitfinex.com/ws/2";
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
 
@@ -102,7 +103,7 @@ class RatchetPawlSocket extends Command
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
-        $connector('wss://api.bitfinex.com/ws/2', [], ['Origin' => 'http://localhost'])
+        $connector($exchangeWebSocketEndPoint, [], ['Origin' => 'http://localhost'])
             ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $candleMaker, $loop) {
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop) {
 
@@ -185,7 +186,7 @@ class RatchetPawlSocket extends Command
                     $this->info("line 82. connection closed");
                     $this->error("Reconnecting back!");
                     Log::debug("RatchetPawlSocket.php line 181. Connection lost. Reconnecting back!");
-                    sleep(5); // Wait 5 seconds before next connection try will attpemt
+                    sleep(5); // Wait 5 seconds before next connection try will attempt
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
