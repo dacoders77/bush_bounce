@@ -18,6 +18,7 @@ class SettingsRealtime extends Migration
             $table->string('app_mode');
             $table->boolean('broadcast_stop');
             $table->boolean('initial_start');
+            $table->string('exchange');
             $table->string('symbol');
             $table->double('volume')->nullable();
             $table->integer('time_frame');
@@ -38,6 +39,7 @@ class SettingsRealtime extends Migration
             'app_mode' => 'history',
             'broadcast_stop' => 1,
             'time_frame' => 1,
+            'exchange' => 'hitbtc',
             'symbol' => "BTCUSD",
             'volume' => 0.002,
             'request_bars' => 30,

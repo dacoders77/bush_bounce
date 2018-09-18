@@ -47,7 +47,7 @@ class CandleMaker
      * @param collection    $settings Row of settings from DB
      * @param Command       $command Needed for throwing colored meddages to the console output (->info, ->error etc.)
      */
-    public function index($tickPrice, $tickDate, $tickVolume, $chart, $settings, $command){
+    public function index(float $tickPrice, $tickDate, $tickVolume, $chart, $settings, $command){
 
         echo "**********************************************CandleMaker.php<br>\n";
 
@@ -114,8 +114,9 @@ class CandleMaker
             echo 'DB record update error: ' . $e->getMessage();
         }
 
-        $command->error("current tick   : " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)));
-                   echo "time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
+        $command->error("current tick   : " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)) . " price: $tickPrice");
+
+        echo "time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
         echo "time frame: " . $this->settings->time_frame . "\n";
 
         //echo "************* tick: " . floor($tickDate / 1000) . "\n";
@@ -129,8 +130,6 @@ class CandleMaker
         if (floor($tickDate / 1000) >= $this->tt){
 
             $command->info("------------------- NEW BAR ISSUED ----------------------");
-
-
 
 
             /**
@@ -183,10 +182,6 @@ class CandleMaker
                  */
                 $messageArray['flag'] = true;
 
-
-
-
-
             }
 
         /** Prepare message array */
@@ -209,6 +204,7 @@ class CandleMaker
 
         /** Send the information to the chart. Event is received in Chart.vue */
         event(new \App\Events\BushBounce($messageArray));
+        dump($messageArray);
 
         /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
         if ($this->isFirstTickInBar == true){

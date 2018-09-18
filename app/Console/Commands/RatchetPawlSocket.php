@@ -64,11 +64,16 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
-        $exchangeWebSocketEndPoint = "wss://api.bitfinex.com/ws/2";
+
+        /** @var string $exchange Exchange name, pulled out of the DB*/
+        $exchange = DB::table('settings_realtime')->value('exchange');
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
+        echo "Exchange: " . $exchange . "\n";
+        echo "initial start flag from console = " . $this->option('init');
 
-        event(new \App\Events\ConnectionError("Connection started"));
+        event(new \App\Events\ConnectionError("Connection attempt"));
+        event(new \App\Events\ConnectionError("Exchange: " . $exchange));
 
         Log::useDailyFiles(storage_path().'/logs/debug.log'); // Setup log name and math. Logs are created daily
         Log::debug("*****Ratchet websocket console command(app) started!*****");
@@ -86,7 +91,7 @@ class RatchetPawlSocket extends Command
         {
             app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
             $this->initStartFlag = false;
-            echo "RatchetPawlSocket.php. Init strat\n";
+            echo "INIT START\n";
             //event(new \App\Events\ConnectionError("Ratchet. Init start line 89"));
         }
 
@@ -103,18 +108,31 @@ class RatchetPawlSocket extends Command
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
+        /** Pick up the right websocket endpoint accordingly to the exchange */
+        switch ($exchange){
+            case "bitfinex":
+                $exchangeWebSocketEndPoint = "wss://api.bitfinex.com/ws/2";
+                break;
+
+            case "hitbtc":
+                $exchangeWebSocketEndPoint = "wss://api.hitbtc.com/api/2/ws";
+                break;
+        }
+
         $connector($exchangeWebSocketEndPoint, [], ['Origin' => 'http://localhost'])
-            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $candleMaker, $loop) {
-                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop) {
+            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $candleMaker, $loop, $exchange) {
+                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop, $exchange) {
 
-                    /**
-                     * If the broadcast is on - proceed events, pass it to Chart class
-                     * @todo 05.26.18 This check must be performed once a second otherwise each tick will execute a requse to DB wich will overload the data base
-                     *
-                     */
+                /** Use different parsing algorithms for each exchange  */
+                switch ($exchange){
+                    case "bitfinex":
 
-                    if (true) // DELETE THIS IF
-                    {
+                        /**
+                         * If the broadcast is on - proceed events, pass it to Chart class
+                         * @todo 05.26.18 This check must be performed once a second otherwise each tick will execute a requse to DB wich will overload the data base
+                         *
+                         */
+
                         /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
                         $jsonMessage = json_decode($socketMessage->getPayload(), true);
                         //print_r($jsonMessage);
@@ -171,12 +189,87 @@ class RatchetPawlSocket extends Command
                                      * @param collection    $settings Row of settings from DB
                                      * @param command       $command variable for graphical strings output to the console
                                      */
+
+                                    //echo $nojsonMessage[2][3] . "\n";
+
                                     $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $chart, $this->settings, $this);
                                 }
                             }
                         }
 
-                    }
+
+                        break;
+
+                    case "hitbtc":
+                        $nojsonMessage = json_decode($socketMessage->getPayload(), true);
+
+                        /*
+                        if (array_key_exists('method', $message)){
+
+                            if($message['method'] == 'updateTrades'){
+                                //dump ($message['params']);
+                                $timestamp = strtotime($message['params']['data'][0]['timestamp']) * 1000;
+                                echo $timestamp . " ";
+                                echo $message['params']['data'][0]['side'] . " ";
+                                echo $message['params']['data'][0]['price'] . "\n";
+                            }
+                        }
+                        */
+
+                        if (array_key_exists('method', $nojsonMessage)) {
+
+                            $timestamp = strtotime($nojsonMessage['params']['data'][0]['timestamp']) * 1000;
+
+                            /** Check whether broadcast is allowed only once a second */
+                            if ($this->isFirstTimeBroadcastCheck || $timestamp >= $this->addedTime) {
+                                $this->addedTime = $timestamp + 1000;
+                                $this->isFirstTimeBroadcastCheck = false;
+
+                                /** @var collection $settings The whole row from settings table.
+                                 * Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
+                                 * We already have this functionality here - broadcast allowed check*/
+                                $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
+
+                                if (DB::table('settings_realtime')
+                                        ->where('id', 1)
+                                        ->value('broadcast_stop') == 0) {
+                                    $this->isBroadCastAllowed = true;
+                                } else {
+                                    $this->isBroadCastAllowed = false;
+                                    echo "Broadcast is stopped. The flag in DB is set to false \n";
+                                    event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
+                                }
+                            }
+
+                            /**
+                             * 1st condition $this->isFirstTimeTickCheck - enter here only once when the app starts
+                             * 2nd tick time > computed time and broadcast is allowed
+                             */
+                            if ($this->isFirstTimeTickCheck || ($timestamp >= $this->addedTickTime && $this->isBroadCastAllowed)) {
+
+                                $this->isFirstTimeTickCheck = false;
+                                $this->addedTickTime = $timestamp + $this->settings->skip_ticks_msec; // Allow ticks not frequenter than twice a second
+                                /**
+                                 * @param double $nojsonMessage [2][3] ($tickPrice) Price of the trade
+                                 * @param integer $nojsonMessage [2][1] ($tickDate) Timestamp
+                                 * @param double $nojsonMessage [2][2] ($tickVolume) Volume of the trade
+                                 * @param Classes\Chart $chart Chart class instance
+                                 * @param collection $settings Row of settings from DB
+                                 * @param command $command variable for graphical strings output to the console
+                                 */
+
+                                //echo "huj: " . $timestamp . "\n";
+
+                                $candleMaker->index($nojsonMessage['params']['data'][0]['price'], $timestamp, $nojsonMessage['params']['data'][0]['quantity'], $chart, $this->settings, $this);
+                            }
+
+                        }
+
+                        break;
+                }
+
+
+
 
 
 
@@ -190,16 +283,31 @@ class RatchetPawlSocket extends Command
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
-                //$conn->send(['event' => 'ping']);
-                $z = json_encode([
-                    //'event' => 'ping', // 'event' => 'ping'
-                    'event' => 'subscribe',
-                    'channel' => 'trades',
-                    'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // tBTCUSD tETHUSD tETHBTC
+                /** Use different json request object for each exchange */
+                switch ($exchange){
+                    case "bitfinex":
+                        //$conn->send(['event' => 'ping']); // Only for bitfinex
+                        $requestObject = json_encode([
+                            //'event' => 'ping', // 'event' => 'ping'
+                            'event' => 'subscribe',
+                            'channel' => 'trades',
+                            'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // tBTCUSD tETHUSD tETHBTC
 
-                ]);
+                        ]);
+                        break;
 
-                /* Multiple symbols subscription
+                    case "hitbtc":
+                        $requestObject = json_encode([
+                            'method' => 'subscribeTrades',
+                            'params' => [
+                                'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // ETHBTC BTCUSD
+                            ],
+                            'id' => 123
+                        ]);
+                        break;
+                }
+
+                /* Multiple symbols subscription for bitfinex
                 $x = json_encode([
                     //'event' => 'ping', // 'event' => 'ping'
                     'event' => 'subscribe',
@@ -208,7 +316,7 @@ class RatchetPawlSocket extends Command
                 ]);
                 */
 
-                $conn->send($z);
+                $conn->send($requestObject);
                 //$conn->send($x);
 
                 /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed again */

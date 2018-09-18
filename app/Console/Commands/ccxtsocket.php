@@ -3,24 +3,30 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\DB;
 
 class ccxtsocket extends Command
 {
+
+    protected $description = 'CCXT socket app';
+    public $chart;
+
+    public static $bid = null;
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'ccxtsocket:start'; // php artisan ratchet:start --init
+    protected $signature = 'ccxt:start'; // php artisan ratchet:start --init
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'CCXT socket app';
-    public $chart;
+
 
     /**
      * Create a new command instance.
@@ -32,6 +38,14 @@ class ccxtsocket extends Command
         parent::__construct();
         // DO NOT PLACE CODE IN THE CONSTRUCTOR
         // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MY CAUSE DIFFERENT PROBLEMS
+
+    }
+
+
+    // DELETE
+    public function jpa(){
+
+        return 100;
     }
 
 
@@ -43,7 +57,10 @@ class ccxtsocket extends Command
     public function handle()
     {
 
-
+        //$redis = app()->make('redis');
+        //$redis->set("jo","jo");
+        //dump($redis); // Output the redis object including all variables
+        //echo $redis->get("jo");
 
         echo "***** CCXT websocket app started!*****\n";
 
@@ -55,6 +72,8 @@ class ccxtsocket extends Command
          * $this->option('init') can not be set to false that is why We use additional flag to do
          * the initial start only when started from console
          */
+
+
 
         /**
          * Ratchet/pawl websocket lib
@@ -75,17 +94,30 @@ class ccxtsocket extends Command
                     // Code parse goes here
                     $message = json_decode($socketMessage->getPayload(), true);
 
+
                     if (array_key_exists('method', $message)){
 
+                        // subscribeTrades WORKS GOOD
+                        /*
                         if($message['method'] == 'updateTrades'){
-                            //dump ($message['params']);
                             $timestamp = strtotime($message['params']['data'][0]['timestamp']) * 1000;
                             echo $timestamp . " ";
                             echo $message['params']['data'][0]['side'] . " ";
                             echo $message['params']['data'][0]['price'] . "\n";
                         }
-                    }
+                        */
 
+                        if($message['method'] == 'ticker'){
+                            $timestamp = strtotime($message['params']['timestamp']) * 1000;
+                            echo $timestamp . " ";
+                            echo $message['params']['bid'] . " ";
+                            echo $message['params']['ask'] . "\n";
+
+                            Redis::set('bid', $message['params']['bid']); // Assign redis key-pair value
+                            Redis::set('ask', $message['params']['ask']);
+                        }
+
+                    }
 
 
                 });
@@ -108,6 +140,7 @@ class ccxtsocket extends Command
                 ]);
                 */
 
+                /* WORKS GOOD
                 $z = json_encode([
                     'method' => 'subscribeTrades',
                     'params' => [
@@ -115,8 +148,16 @@ class ccxtsocket extends Command
                     ],
                     'id' => 123
                 ]);
+                */
 
-
+                $z = json_encode([
+                    'method' => 'subscribeTicker',
+                    'params' => [
+                        'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // ETHBTC BTCUSD
+                        //'symbol' => 'ethbtc' // ETHBTC ethbtc
+                    ],
+                    'id' => 123
+                ]);
 
 
 
