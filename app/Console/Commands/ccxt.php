@@ -114,30 +114,24 @@ class ccxt extends Command
         self::placeOrder($this->direction);
         $bid = Redis::get('bid');
 
-        While(true){
-
+        While(true) {
 
 
             // Determine whether the bid has changed
-            if ($bid != Redis::get('bid'))
-            {
+            if ($bid != Redis::get('bid')) {
                 $bid = Redis::get('bid');
                 $isBidChanged = true;
                 //echo "------------------Bid has changed: $bid\n";
-            }
-            else
-            {
+            } else {
                 $isBidChanged = false;
                 //echo "Bid has not changed: $bid\n";
             }
 
 
-
-
             // Is order filled?
 
             $count = 0;
-            while (true){
+            while (true) {
                 $count++;
 
                 // Get order status
@@ -146,65 +140,66 @@ class ccxt extends Command
                 //dump($value);
 
 
+                // Error: array_key_exists() expects parameter 2 to be array, null given
+                if ($value['orders']) {
+                    if (array_key_exists(0, $value['orders'])) {
 
-                if (array_key_exists(0, $value['orders'])){
+                        echo "order status___: " . $count . " " . $value['orders'][0]['orderStatus'] . "\n";
+                        event(new \App\Events\LimitOrderTrace("order status___: " . $count . " " . $value['orders'][0]['orderStatus']));
 
-                    echo "order status___: " . $count . " " . $value['orders'][0]['orderStatus'] . "\n";
+                        if ($value['orders'][0]['orderStatus'] == "filled") {
+                            event(new \App\Events\LimitOrderTrace("order filled. die!**** clerntOrderId:" . $value['orders'][0]['clientOrderId']));
+                            //die("order filled. die!**** clerntOrderId:" . $value['orders'][0]['clientOrderId'] );
 
-                    if ($value['orders'][0]['orderStatus'] == "filled"){
-                        die("order filled. die!**** clerntOrderId:" . $value['orders'][0]['clientOrderId'] );
+                            echo "order filled. die!**** clerntOrderId:" . $value['orders'][0]['clientOrderId'];
+                            return;
+                        }
+                    }
+                }
+
+
+                if ($count == 5) break;
+                usleep(500000); // 500000 - half a second
+
+            }
+
+
+            // Error: array_key_exists() expects parameter 2 to be array, null given
+            if ($value['orders']) {
+
+                // Sometimes you get not defined array index error. Some time is needed in order to get the status of the order
+                if (array_key_exists(0, $value['orders'])) {
+                    echo "order status: " . ($value['orders'][0]['orderStatus']) . " clientOrderId: " . $value['orders'][0]['clientOrderId'] . "\n";
+
+                    //echo "bid changed/order status: " . $isBidChanged . " " . $value['orders'][0]['orderStatus'] . "\n";
+
+                    if ($isBidChanged && $value['orders'][0]['orderStatus'] != "filled") {
+                        echo "************************Cancel anf place new order\n";
+
+                        $response = $this->exchange->cancel_order(array(
+                            'cancelRequestClientOrderId' => self::randomString(rand(8, 30)),
+                            'clientOrderId' => $this->newOrderId,
+                            'symbol' => 'ethbtc',
+                            'side' => 'buy'
+                        ));
+
+                        //dump($response);
+
+                        // Previous order is canceled
+                        // Place new order
+
+                        self::placeOrder($this->direction);
+
                     }
 
-                }
-                if ($count == 5) break;
-                usleep(500000);
-
-            }
-
-
-
-
-
-
-            // Sometimes you get not defined array index error. Some time is needed in order to het the status of the order
-            if (array_key_exists(0, $value['orders'])){
-                echo "order status: " . ($value['orders'][0]['orderStatus']) . " clientOrderId: " . $value['orders'][0]['clientOrderId'] . "\n";
-
-                //echo "bid changed/order status: " . $isBidChanged . " " . $value['orders'][0]['orderStatus'] . "\n";
-
-                if ($isBidChanged && $value['orders'][0]['orderStatus'] != "filled"){
-                    echo "************************Cancel anf place new order\n";
-
-                    $response = $this->exchange->cancel_order(array(
-                        'cancelRequestClientOrderId' => self::randomString(rand(8, 30)),
-                        'clientOrderId' => $this->newOrderId,
-                        'symbol' => 'ethbtc',
-                        'side' => 'buy'
-                    ));
-                    
-                    //dump($response);
-
-                    // Previous order is canceled
-                    // Place new order
-                    
-                    self::placeOrder($this->direction);
-
+                } else {
+                    echo "array key does not exist\n";
                 }
 
+                //usleep(2000000);
+
             }
-            else
-            {
-                echo "array key does not exist\n";
-            }
-
-            //usleep(2000000);
-
-
-
-
         }
-
-
 
 
     }
@@ -235,6 +230,8 @@ class ccxt extends Command
         ));
 
         echo "                      PLACED ORDER: ";
+        event(new \App\Events\LimitOrderTrace($direction ." ORDER PLACED**"));
+
         print_r(json_decode($response, true)['ExecutionReport']['clientOrderId']);
         echo "\n";
     }

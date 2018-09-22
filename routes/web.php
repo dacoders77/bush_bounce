@@ -182,5 +182,22 @@ Route::get('/settradingallowedfalse', function () {
 })->middleware('auth');
 
 
-Auth::routes(); // Created by make:auth. DONT DELETE!
+
+
+// Delete it
+Route::get('/limit', function(){
+    $exitCode = Artisan::call('ccxtd:start', ['direction' => 'sell']);
+    dump($exitCode);
+})->middleware('auth');
+
+// Delete it. Job test
+Route::get('/que', function(){
+    \App\Jobs\PlaceLimitOrder::dispatch("buy")->onQueue('orders');
+})->middleware('auth');
+
+
+
+Auth::routes(); // Created by make:auth. DON'T DELETE!
 Route::get('/home', 'HomeController@index')->name('home');
+
+

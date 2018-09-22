@@ -119,9 +119,6 @@ class CandleMaker
         echo "time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
         echo "time frame: " . $this->settings->time_frame . "\n";
 
-        //echo "************* tick: " . floor($tickDate / 1000) . "\n";
-        //echo "************* tt: " . $this->tt . "\n";
-
         /*
          * New bar is issued
          * When the time of the tick is > added time - add this bar to the DB
@@ -130,7 +127,6 @@ class CandleMaker
         if (floor($tickDate / 1000) >= $this->tt){
 
             $command->info("------------------- NEW BAR ISSUED ----------------------");
-
 
             /**
              * This price channel calculation is used specially for SMA value. Nothing is gonna change visually if to disable this
@@ -204,7 +200,7 @@ class CandleMaker
 
         /** Send the information to the chart. Event is received in Chart.vue */
         event(new \App\Events\BushBounce($messageArray));
-        dump($messageArray);
+
 
         /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
         if ($this->isFirstTickInBar == true){

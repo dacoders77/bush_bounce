@@ -11,12 +11,11 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 /**
- * Class ConnectionError
- * This event is triggered when a connection to www.bitfinex.com can not be established like network error or maintenance
- * A error occurs in RatchetPawlSocket.php then is listened in ChartControl.vue
+ * Class LimitOrderTrace
+ * This event is triggered when status of a limit order is changed in ccxt.php. This event is listened in ChartControl.vue
  * @package App\Events
  */
-class ConnectionError implements ShouldBroadcast
+class LimitOrderTrace implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -39,6 +38,6 @@ class ConnectionError implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new Channel('Bush-channel');
+        return new Channel('Bush-channel'); // Channel name. Do not change it!
     }
 }

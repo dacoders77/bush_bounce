@@ -18,8 +18,7 @@
             }
         },
         methods:{
-            // Load history bars and price channel from DB. This functions is called at each new bar or on update price channel
-
+            // Load history bars and price channel values from DB. This functions is called at each new bar or on update price channel
             HistoryBarsLoad: function(chart1, param) {
 
                 axios.get('/historybarsload') // Load history data from BR

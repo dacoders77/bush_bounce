@@ -44,7 +44,6 @@ class LimitOrder extends Command
         //echo Redis::get('bid') . " " . Redis::get('ask');
         $this->orderId = null;
 
-
         $exchange = new \ccxt\hitbtc(array(
             'apiKey' => $_ENV['HITBTC_PUBLIC_API_KEY'],
             'secret' => $_ENV['HITBTC_PRIVATE_API_KEY'],

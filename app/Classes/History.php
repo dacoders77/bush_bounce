@@ -10,7 +10,7 @@ use Illuminate\Database\Schema\Blueprint;
 /**
  * Class History
  * Gets history data from www.bitfinex.com and records in to the DB
- * Contains two methods: bars load from current time, history period for specified dates.
+ * Contains two methods: bars load from the current time into the past and history period for specified dates.
  * The first is used when a realtime chart is loaded and running. The second one is used for history testing for desired period
  * of time in the past.
  * @package App\Http\Controllers
@@ -26,10 +26,8 @@ class History
      * @return void
      */
 
-    /** Gets specefied number of bars. This method is called when real-time mode is activated */
+    /** Gets specified number of bars. This method is called when real-time mode is activated */
     static public function load(){
-
-
 
         /**
          * If initial start is true
@@ -176,6 +174,7 @@ class History
         // Read start and end dates, timeframe from the DB
         $start = (strtotime(DB::table('settings_realtime')->where('id', 1)->value('history_from')) * 1000); // Timestamp
         $end = (strtotime(DB::table('settings_realtime')->where('id', 1)->value('history_to')) * 1000);
+
         $timeframe = DB::table('settings_realtime')->where('id', 1)->value('time_frame') . "m"; // "m" - minutes
         $symbol = DB::table('settings_realtime')->where('id', 1)->value('symbol');
 
@@ -225,7 +224,7 @@ class History
 
                 $json = json_decode($body, true);
 
-                echo($restEndpoint);
+                echo $restEndpoint . "<br><br>";
                 //dd($json);
 
                 if ($response->getStatusCode() == 200) // Request successful

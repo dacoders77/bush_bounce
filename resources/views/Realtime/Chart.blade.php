@@ -19,10 +19,10 @@
 
 
 
-<div style="border-color: red; border-width: 1px; border-style: solid; display: grid; grid-template-columns: 60% 40%" id="vue-app">
+<div style="border-color: transparent; border-width: 1px; border-style: solid; display: grid; grid-template-columns: 70% 30%" id="vue-app">
 
     <!-- High charts chart -->
-    <div style="border-color: green; border-width: 1px; border-style: solid;" id="container">
+    <div style="border-color: transparent; border-width: 1px; border-style: solid;" id="container">
         <chart></chart>
     </div>
 

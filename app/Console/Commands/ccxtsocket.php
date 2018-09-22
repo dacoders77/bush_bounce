@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\PlaceLimitOrder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
@@ -115,6 +116,10 @@ class ccxtsocket extends Command
 
                             Redis::set('bid', $message['params']['bid']); // Assign redis key-pair value
                             Redis::set('ask', $message['params']['ask']);
+
+                            // Place job onto the que. DELETE
+                            //PlaceLimitOrder::dispatch("kkk");
+
                         }
 
                     }

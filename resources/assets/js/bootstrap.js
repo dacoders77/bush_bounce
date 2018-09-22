@@ -1,4 +1,3 @@
-
 window._ = require('lodash');
 
 /**
@@ -9,7 +8,6 @@ window._ = require('lodash');
 
 try {
     window.$ = window.jQuery = require('jquery');
-
     require('bootstrap-sass');
 } catch (e) {}
 
@@ -56,3 +54,14 @@ window.Echo = new Echo({
 
 axios.defaults.baseURL = window.siteUrl;
 //alert(window.siteUrl);
+
+
+// Import bootstrap-vue
+// https://bootstrap-vue.js.org/docs/
+
+import Vue from 'vue'
+import BootstrapVue from 'bootstrap-vue'
+Vue.use(BootstrapVue);
+//import 'bootstrap/dist/css/bootstrap.css' // This css style-sheet is linked in ChartControl.bue. Otherwise the default laravel
+// style is broken.
+import 'bootstrap-vue/dist/bootstrap-vue.css'

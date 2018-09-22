@@ -22,9 +22,9 @@ class AssetTableCreate extends Migration
             $table->double('high')->nullable();
             $table->double('low')->nullable();
             $table->float('volume')->nullable();
-            $table->float('price_channel_high_value')->nullable();
-            $table->float('price_channel_low_value')->nullable();
-            $table->float('sma')->nullable();
+            $table->double('price_channel_high_value')->nullable();
+            $table->double('price_channel_low_value')->nullable();
+            $table->double('sma')->nullable();
             $table->dateTime('trade_date')->nullable();
             $table->double('trade_price')->nullable();
             $table->double('trade_commission')->nullable();

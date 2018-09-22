@@ -28,6 +28,7 @@ class PriceChannel
 {
     public static function calculate()
     {
+
         Log::debug("price channel calc started");
 
         /** @var int $priceChannelPeriod */
@@ -71,8 +72,6 @@ class PriceChannel
                 ->orderBy('id', 'desc')
                 ->first())->id - $priceChannelPeriod - 1;
 
-
-
         /**
          * Calculate price channel max, min.
          * First element in the array is the oldest. Accordingly to the chart - we start from the right end.
@@ -91,11 +90,9 @@ class PriceChannel
              */
             if ($elementIndex <= $quantityOfBars)
             {
-                // Go from right to left
+                // Go from right to left (from present to last bar). Records in DB are encasing
                 for ($i = $elementIndex ; $i < $elementIndex + $priceChannelPeriod; $i++)
                 {
-
-
                     /** Find max value in interval */
                     if ($records[$i]->high > $priceChannelHighValue)
                         $priceChannelHighValue = $records[$i]->high;
@@ -108,7 +105,6 @@ class PriceChannel
                 // For SMA
                 for ($j = $elementIndex  ; $j < $elementIndex + $smaPeriod; $j++)
                 {
-                    //$x = $records[$j]->close . " " . $j;
                     //Log::debug($x);
                     /** SMA calculation */
                     $sma += $records[$j]->close; // SMA based on close value
@@ -125,6 +121,8 @@ class PriceChannel
                         'sma' => $sma / $smaPeriod,
                     ]);
 
+
+
                 /** Reset high, low price channel values */
                 $priceChannelHighValue = 0;
                 $priceChannelLowValue = 999999;
@@ -138,6 +136,7 @@ class PriceChannel
                  *  remain in DB and spoil the chart. The price channel lines start to contain both values in the same series.
                  *  In order to prevent this, for those bars that were not used for computation, price channel values are set to null
                  */
+
                 DB::table("asset_1")
                     ->where('time_stamp', $records[$elementIndex]->time_stamp)
                     ->update([
@@ -145,9 +144,11 @@ class PriceChannel
                         'price_channel_low_value' => null,
                         'sma' => null
                     ]);
+
             }
             $elementIndex++;
-        }
 
+
+        }
     }
 }

@@ -8,11 +8,13 @@
 
 namespace App\Classes;
 
+use App\Jobs\PlaceLimitOrder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Events\eventTrigger;
 use PhpParser\Node\Expr\Variable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 
 /**
@@ -61,7 +63,6 @@ class Chart
     public function index($mode, $barDate, $timeStamp, $bbbbb, $id)
     {
         echo "**********************************************Chart.php!<br>\n";
-        //Log::debug("Entered Chart.php line 61");
 
         /**
          * @todo Read the whole settings row and access it with keys.
@@ -129,8 +130,6 @@ class Chart
             //die();
         }
 
-        //dump($penUltimanteRow);
-
 
         // Do not calculate profit if there is no open position. If do not do this check - zeros in table occur
         // $this->trade_flag != "all" if it is "all" - it means that it is a first or initial start
@@ -183,11 +182,6 @@ class Chart
                 ->value('commission_value');
 
 
-        //echo "penultim:" . $penUltimanteRow->date . " price channel  : " . $penUltimanteRow->price_channel_high_value . "\n";
-        //echo "bar date:" . $barDate . " bar close price: " .$barClosePrice . "\n";
-
-
-
         // If > high price channel. BUY
         // price > price channel
         // $this->trade_flag == "all" is used only when the first trade occurs, then it turns to "long" or "short".
@@ -204,12 +198,10 @@ class Chart
 
                 // Is the the first trade ever?
                 if ($this->trade_flag == "all"){
-                //if ($this->firstEverTradeFlag){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
-                    event(new \App\Events\ConnectionError("INFO. Chart.php line 226. BUY ORDER. "));
-                    //$this->firstEverTradeFlag = false;
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 211. BUY ORDER. "));
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
@@ -217,12 +209,15 @@ class Chart
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
-                    event(new \App\Events\ConnectionError("INFO. Chart.php line 235 . SELL ORDER. "));
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 222 . BUY ORDER. "));
                 }
             }
             else{ // trading is not allowed
-                //$this->firstEverTradeFlag = true;
                 echo "---------------------- TRADING NOT ALLOWED\n";
+
+                // Start placing limit order
+                //Artisan::call('ccxtd:start', ['direction' => 'buy']);
+                PlaceLimitOrder::dispatch('buy')->onQueue('orders');
             }
 
             // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
@@ -260,14 +255,12 @@ class Chart
             if ($allow_trading == 1){
 
                 // Is the the first trade ever?
-                //if ($this->firstEverTradeFlag){
                 if ($this->trade_flag == "all"){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
-                    event(new \App\Events\ConnectionError("INFO. Chart.php line 280. SELL ORDER. "));
-                    //$this->firstEverTradeFlag = false;
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 274. SELL ORDER. "));
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
@@ -275,12 +268,16 @@ class Chart
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
                     app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
-                    event(new \App\Events\ConnectionError("INFO. Chart.php line 226. SELL ORDER. "));
+                    event(new \App\Events\ConnectionError("INFO. Chart.php line 285. SELL ORDER. "));
+
                 }
             }
             else{ // trading is not allowed
-                //$this->firstEverTradeFlag = true;
                 echo "---------------------- TRADING NOT ALLOWED<br>\n";
+
+                // Start placing limit order
+                //Artisan::call('ccxtd:start', ['direction' => 'sell']);
+                PlaceLimitOrder::dispatch('sell')->onQueue('orders');
             }
 
             DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'long']);

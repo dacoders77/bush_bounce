@@ -53,7 +53,6 @@ const app = new Vue({
 
 
 
-
 /*
 // Chart control component
 Vue.component('chart-control', require('./components/ChartControl.vue'));
