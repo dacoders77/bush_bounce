@@ -16,7 +16,6 @@ class PlaceLimitOrder implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $direction;
-
     private $exchange;
 
     /**
@@ -89,6 +88,7 @@ class PlaceLimitOrder implements ShouldQueue
                             echo "order filled. die!**** clerntOrderId:" . $value['orders'][0]['clientOrderId'] . "\n";
                             return;
                         }
+
                     }
                 }
 

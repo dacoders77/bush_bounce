@@ -7,7 +7,6 @@
     "require": {
         "php": ">=7.0.0",
         "cboden/ratchet": "^0.4.1",
-        "ccxt/ccxt": "^1.17",
         "consoletvs/charts": "5.*",
         "fideloper/proxy": "~3.3",
         "guzzlehttp/guzzle": "~6.0",

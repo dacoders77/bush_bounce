@@ -10,6 +10,7 @@ use App\Classes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use PhpParser\Node\Stmt\While_;
+use Illuminate\Support\Facades\Cache;
 
 class ccxt extends Command
 {
@@ -55,6 +56,12 @@ class ccxt extends Command
      */
     public function handle()
     {
+
+        //echo "dd";
+        $value = Cache::get('orderObject');
+        Cache::put('orderObject', new Classes\Hitbtc\OrderObject("buy", "0.0316",(string)time()), 5);
+        dd($value);
+
 
         //$exchange = new \ccxt\hitbtc2();
         //$exchange->apiKey = '';
