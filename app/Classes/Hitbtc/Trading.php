@@ -24,17 +24,17 @@ class Trading
     {
     }
 
-    public function parseTicker(array $message){
+    public function parseTicker($bid = null, $ask = null){
 
-        // Place order: direction, price, orderId
-        // echo "bid: " . $message['params']['bid'] . "\n";
+
+        ($bid ? $direction = "buy" : $direction = "sell");
 
         if ($this->activeOrder == null){
 
             $this->orderId = floor(round(microtime(true) * 1000));
+            ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
 
-            $this->orderPlacePrice = $message['params']['bid'] - $this->priceStep * $this->priceShift;
-            Cache::put('orderObject', new OrderObject(false,"buy", $this->orderPlacePrice , $this->orderId, ""), 5);
+            Cache::put('orderObject', new OrderObject(false, $direction, $this->orderPlacePrice , $this->orderId, ""), 5);
             $this->activeOrder = "placed";
 
         }
@@ -42,19 +42,14 @@ class Trading
         // When order placed, start to move if needed
         if ($this->activeOrder == "new"){
 
-            // If the price has moved and the order needs to be moved to a new price
-            //$z = $message['params']['bid'] - $this->priceStep * $this->priceShift;
-            //echo $this->orderPlacePrice . " " . $z . "\n";
-
-            $z = $message['params']['bid'] - $this->priceStep * $this->priceShift;
-            echo "order placed price: " . $this->orderPlacePrice . " bid - step: " . $z . "\n";
-
-            if ($this->orderPlacePrice != $message['params']['bid'] - $this->priceStep * $this->priceShift){
+            ($direction == "buy" ? $priceToCheck = $bid - $this->priceStep * $this->priceShift : $priceToCheck = $ask + $this->priceStep * $this->priceShift);
+            if ($this->orderPlacePrice != $priceToCheck){
 
                 if ($this->needToMoveOrder){
                     echo "NEED to move the order! \n";
 
-                    $this->orderPlacePrice = $message['params']['bid'] - $this->priceStep * $this->priceShift;
+                    //$this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift;
+                    ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
 
                     $tempOrderId = (string)microtime();
                     Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
@@ -63,15 +58,11 @@ class Trading
                     $this->needToMoveOrder = false;
 
                 }
-
             }
         }
     }
 
     public function parseActiveOrders(array $message){
-        //echo "Parse active orders! \n";
-
-        //die($message['params']['status']);
         // When order placed
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new"){
 

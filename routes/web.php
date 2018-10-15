@@ -196,10 +196,14 @@ Route::get('/que', function(){
 })->middleware('auth');
 
 // Place limit orders routine
-Route::get('/lmt', function(){
-    $exitCode = Artisan::call('ccxt:start');
+Route::get('/lmt/{z}', function($z){
+    if ($z == "buy")
+        $flag = true;
+    else
+        $flag = false;
+    $exitCode = Artisan::call('ccxt:start', ['--buy' => $flag]);
     echo $exitCode . "<br>";
-});
+})->middleware('auth');;
 
 
 

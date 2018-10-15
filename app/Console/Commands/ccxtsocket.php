@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Classes\Hitbtc\Hitbtc;
+use App\Classes\Hitbtc\Trading;
 use App\Jobs\PlaceLimitOrder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Redis;
@@ -16,18 +18,17 @@ class ccxtsocket extends Command
     public $chart;
     public static $bid = null;
 
-    private $snapshotOrderbook;
-    private $resultOrderBook = array();
+    private $resultOrderBookBid = array();
+    private $resultOrderBookAsk = array();
+
     private $logMessageFlag;
-
-
     protected $connection;
 
     /**
      * The name and signature of the console command.
      * @var string
      */
-    protected $signature = 'ccxt:start'; // php artisan ratchet:start --init
+    protected $signature = 'ccxt:start {--buy}'; // php artisan ratchet:start --init
 
     /**
      * The console command description.
@@ -219,8 +220,6 @@ class ccxtsocket extends Command
                     $this->logMessageFlag = true;
 
 
-
-
                     //$tmp = array('params' => ['bid' => 0.031681]); // Make it this way because previous code was adopted to receive quotes from ticker subscriptions
                     //$trading->parseTicker($tmp);
 
@@ -240,38 +239,24 @@ class ccxtsocket extends Command
 
                         // Bid/Ask parse
                         if($message['method'] == 'updateOrderbook'){
-                            if ($message['params']['bid']) // There can be an empty 0 element
+                            if ($message['params']['bid'] && $this->option('buy')) // There can be an empty 0 element
                             {
-                                foreach ($message['params']['bid'] as $key => $value)
-                                {
-                                    // If price not found - add. If size = 0 - remove this price level from the array
-                                    if (in_array($value['price'], $this->resultOrderBook)){
-                                        // If size = 0, remove this price level. https://api.hitbtc.com/#subscribe-to-orderbook
-                                        if($value['size'] == 0){
-                                            unset($this->resultOrderBook[$key]);
-                                        }
-                                    }
-                                    else{
-                                        array_push($this->resultOrderBook, $value['price']);
-                                    }
-                                }
-                                rsort($this->resultOrderBook);
-                                //dump($this->resultOrderBook[0]); // Works good
-                                $tmp = array('params' => ['bid' => $this->resultOrderBook[0]]); // Make it this way because previous code was adopted to receive quotes from ticker subscriptions
-                                $trading->parseTicker($tmp);
+                                $trading->parseTicker($this->updateOrderBook($message['params']['bid'], "bid"), null);
                             }
+                            // ask
+                            if ($message['params']['ask'] && !$this->option('buy'))
+                            {
+                                $trading->parseTicker(null, $this->updateOrderBook($message['params']['ask'], "ask"));
+                            }
+
                         }
+
+
 
                         // Snapshot
                         if($message['method'] == 'snapshotOrderbook'){
-                            //$trading->parseTicker($message['params']['bid']);
-                            //dump($message['params']['bid']);
-
-                            foreach ($message['params']['bid'] as $key => $value) {
-                                //echo $key . " " . $value['price'] . "\n";
-                                array_push($this->resultOrderBook, $value['price']);
-                            }
-
+                            $this->fillOrderBook($message['params']['bid'], "bid");
+                            $this->fillOrderBook($message['params']['ask'], "ask");
                         }
                     }
 
@@ -391,4 +376,50 @@ class ccxtsocket extends Command
 
     }
 
+    /*
+     * Fill two order book arrays: bid and ask.
+     * Snapshot data is used. Then this snapshot(array) will be updated in each order book update message
+     */
+    private function fillOrderBook(array $array, string $orderBookPart){
+
+        if ($orderBookPart == "bid")
+            $orderBook = $this->resultOrderBookBid;
+        else
+            $orderBook = $this->resultOrderBookAsk;
+        foreach ($array as $key => $value) {
+            array_push($orderBook, $value['price']); // Fill array only with price values
+        }
+    }
+
+    /*
+     * Update arrays: bid and ask.
+     * @return double
+     */
+    private function updateOrderBook(array $array, string $orderBookPart){
+
+        if ($orderBookPart == "bid")
+            $orderBook = $this->resultOrderBookBid;
+        else
+            $orderBook = $this->resultOrderBookAsk;
+
+        foreach ($array as $key => $value)
+        {
+            // If price not found - add. If size = 0 - remove this price level from the array
+            if (in_array($value['price'], $orderBook)){
+                if($value['size'] == 0){
+                    unset($orderBook[$key]); // If size = 0, remove this price level. https://api.hitbtc.com/#subscribe-to-orderbook
+                }
+            }
+            else{
+                array_push($orderBook, $value['price']);
+            }
+        }
+        if ($orderBookPart == "bid")
+            rsort($orderBook);
+        else
+            sort($orderBook);
+
+        return($orderBook[0]);
+        //return(array('params' => ['bid' => $orderBook[0]]));
+    }
 }
