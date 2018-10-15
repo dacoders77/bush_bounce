@@ -195,6 +195,12 @@ Route::get('/que', function(){
     \App\Jobs\PlaceLimitOrder::dispatch("buy")->onQueue('orders');
 })->middleware('auth');
 
+// Place limit orders routine
+Route::get('/lmt', function(){
+    $exitCode = Artisan::call('ccxt:start');
+    echo $exitCode . "<br>";
+});
+
 
 
 Auth::routes(); // Created by make:auth. DON'T DELETE!

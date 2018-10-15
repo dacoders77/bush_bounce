@@ -16,6 +16,10 @@ class ccxtsocket extends Command
     public $chart;
     public static $bid = null;
 
+    private $snapshotOrderbook;
+    private $resultOrderBook = array();
+    private $logMessageFlag;
+
 
     protected $connection;
 
@@ -54,6 +58,53 @@ class ccxtsocket extends Command
         //$redis->set("jo","jo");
         //dump($redis); // Output the redis object including all variables
         //echo $redis->get("jo");
+
+
+
+
+/*
+        // Snapshot
+        $arr = array(
+            ['price' => 10, 'size' => 2],
+            ['price' => 11, 'size' => 17],
+            ['price' => 14, 'size' => 1]
+        );
+
+        // Update
+        $arr2 = array(
+            ['price' => 10, 'size' => 0],
+            ['price' => 18, 'size' => 44]
+        );
+
+        // An ampty array init
+        $resArr = array();
+        // Loop through a snapshot. Extract price and make it a regular, not associative array
+        foreach ($arr as $key => $value) {
+            //echo $key . " " . $value['price'] . "\n";
+            array_push($resArr, $value['price']);
+        }
+
+        // Find price
+        foreach ($arr2 as $key => $value)
+        {
+            // If price not found - add
+            if (in_array($value['price'], $resArr)){
+                if($value['size'] == 0){
+                    unset($resArr[$key]);
+                }
+            }
+            else{
+                array_push($resArr, $value['price']);
+            }
+        }
+        sort($resArr);
+
+
+        dump($resArr);
+        //dump(in_array(10, $resArr));
+        die;
+
+*/
 
         $trading = new \App\Classes\Hitbtc\Trading();
 
@@ -97,7 +148,7 @@ class ccxtsocket extends Command
                         'method' => 'newOrder',
                         'params' => [
                             'clientOrderId' => $value->orderId,
-                            'symbol' => 'ETHBTC',
+                            'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol,
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
@@ -118,7 +169,7 @@ class ccxtsocket extends Command
                             'clientOrderId' => $value->orderId, // Id of the order to be moved
                             'requestClientId' => $value->newOrderId, // New order
                             'price' => $value->price,
-                            'quantity' => '0.002'
+                            'quantity' => '0.001'
                         ],
                         'id' => '123'
                     ]);
@@ -146,21 +197,40 @@ class ccxtsocket extends Command
                     // Code parse goes here
                     $message = json_decode($socketMessage->getPayload(), true);
 
+                    //dump($message);
 
-
+                    $this->logMessageFlag = true;
                     if (array_key_exists('method', $message)){
-                        if($message['method'] != 'ticker'){
+                        if($message['method'] != 'snapshotOrderbook'){
+                            $this->logMessageFlag = false;
                         }
                     }
 
-                    //dump ($message);
+                    if (array_key_exists('method', $message)){
+                        if($message['method'] != 'updateOrderbook'){
+                            $this->logMessageFlag = false;
+                        }
+                    }
+
+                    if($this->logMessageFlag){
+                        dump($message);
+                    }
+
+                    $this->logMessageFlag = true;
+
+
+
+
+                    //$tmp = array('params' => ['bid' => 0.031681]); // Make it this way because previous code was adopted to receive quotes from ticker subscriptions
+                    //$trading->parseTicker($tmp);
+
 
 
                     if (array_key_exists('method', $message)){
 
                         // Bid/Ask parse
                         if($message['method'] == 'ticker'){
-                            $trading->parseTicker($message);
+                            //$trading->parseTicker($message);
                         }
 
                         // Order condition parse
@@ -170,21 +240,38 @@ class ccxtsocket extends Command
 
                         // Bid/Ask parse
                         if($message['method'] == 'updateOrderbook'){
-                            //$trading->parseTicker($message['params']['bid']);
-                            dump($message);
                             if ($message['params']['bid']) // There can be an empty 0 element
                             {
-                                //dump($message['params']['bid'][0]['price']);
-                                //$arr = ['params' => ['bid' => $message['params']['bid'][0]['price']   ]];
-                                //$trading->parseTicker($arr);
+                                foreach ($message['params']['bid'] as $key => $value)
+                                {
+                                    // If price not found - add. If size = 0 - remove this price level from the array
+                                    if (in_array($value['price'], $this->resultOrderBook)){
+                                        // If size = 0, remove this price level. https://api.hitbtc.com/#subscribe-to-orderbook
+                                        if($value['size'] == 0){
+                                            unset($this->resultOrderBook[$key]);
+                                        }
+                                    }
+                                    else{
+                                        array_push($this->resultOrderBook, $value['price']);
+                                    }
+                                }
+                                rsort($this->resultOrderBook);
+                                //dump($this->resultOrderBook[0]); // Works good
+                                $tmp = array('params' => ['bid' => $this->resultOrderBook[0]]); // Make it this way because previous code was adopted to receive quotes from ticker subscriptions
+                                $trading->parseTicker($tmp);
                             }
                         }
 
-                        // Bid/Ask parse
+                        // Snapshot
                         if($message['method'] == 'snapshotOrderbook'){
                             //$trading->parseTicker($message['params']['bid']);
-                            dump($message['params']['ask'][0]);
-                            die();
+                            //dump($message['params']['bid']);
+
+                            foreach ($message['params']['bid'] as $key => $value) {
+                                //echo $key . " " . $value['price'] . "\n";
+                                array_push($this->resultOrderBook, $value['price']);
+                            }
+
                         }
                     }
 
@@ -278,8 +365,6 @@ class ccxtsocket extends Command
                     ],
                     'id' => 123
                 ]);
-
-
 
                 $subscribeReports = json_encode([
                     'method' => 'subscribeReports',
