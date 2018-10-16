@@ -158,7 +158,7 @@ class ccxtsocket extends Command
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
-                            'quantity' => '0.001'
+                            'quantity' => '0.1'
                         ],
                         'id' => '123'
                     ]);
@@ -271,34 +271,12 @@ class ccxtsocket extends Command
                             $trading->parseOrderMove($message);
                     }
 
-
-                    if (array_key_exists('method', $message)){
-
-                        // subscribeTrades WORKS GOOD
-                        /*
-                        if($message['method'] == 'updateTrades'){
-                            $timestamp = strtotime($message['params']['data'][0]['timestamp']) * 1000;
-                            echo $timestamp . " ";
-                            echo $message['params']['data'][0]['side'] . " ";
-                            echo $message['params']['data'][0]['price'] . "\n";
-                        }
-                        */
-
-
-                        if($message['method'] == 'ticker'){
-                            $timestamp = strtotime($message['params']['timestamp']) * 1000;
-                            //echo $timestamp . " ";
-                            //echo $message['params']['bid'] . " ";
-                            //echo $message['params']['ask'] . "\n";
-
-                            Redis::set('bid', $message['params']['bid']); // Assign redis key-pair value
-                            Redis::set('ask', $message['params']['ask']);
-
-                            // Place job onto the que. DELETE
-                            //PlaceLimitOrder::dispatch("kkk");
-                        }
-
+                    // Error message
+                    if (array_key_exists('error', $message)){
+                        echo "ERROR MESSAGE HANDLED. ccxtsocket.php 276";
+                        $loop->stop();
                     }
+
 
 
                 });
