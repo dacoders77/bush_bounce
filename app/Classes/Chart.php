@@ -219,8 +219,8 @@ class Chart
                 //Artisan::call('ccxtd:start', ['direction' => 'buy']);
                 //PlaceLimitOrder::dispatch('buy')->onQueue('orders');
 
-                $exitCode = Artisan::call('ccxt:start', ['--buy' => true]);
-                echo $exitCode . "<br>\n";
+                Artisan::queue('ccxt:start', ['--buy' => true]);
+
             }
 
             // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
@@ -281,8 +281,7 @@ class Chart
                 //Artisan::call('ccxtd:start', ['direction' => 'sell']);
                 //PlaceLimitOrder::dispatch('sell')->onQueue('orders');
 
-                $exitCode = Artisan::call('ccxt:start', ['--buy' => false]);
-                echo $exitCode . "<br>\n";
+                Artisan::queue('ccxt:start', ['--buy' => false]);
             }
 
             DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'long']);

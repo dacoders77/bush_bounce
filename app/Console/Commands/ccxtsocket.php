@@ -158,7 +158,7 @@ class ccxtsocket extends Command
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
-                            'quantity' => '0.1'
+                            'quantity' => '0.001'
                         ],
                         'id' => '123'
                     ]);
