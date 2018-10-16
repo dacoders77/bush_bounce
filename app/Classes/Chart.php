@@ -196,11 +196,11 @@ class Chart
             // Trading allowed? This value is pulled from DB. If false orders are not sent to the exchange
             if ($allow_trading == 1){
 
-                // Is the the first trade ever?
+                // Is it the first trade ever?
                 if ($this->trade_flag == "all"){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy"); // Works good
                     event(new \App\Events\ConnectionError("INFO. Chart.php line 211. BUY ORDER. "));
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
@@ -217,7 +217,10 @@ class Chart
 
                 // Start placing limit order
                 //Artisan::call('ccxtd:start', ['direction' => 'buy']);
-                PlaceLimitOrder::dispatch('buy')->onQueue('orders');
+                //PlaceLimitOrder::dispatch('buy')->onQueue('orders');
+
+                $exitCode = Artisan::call('ccxt:start', ['--buy' => true]);
+                echo $exitCode . "<br>\n";
             }
 
             // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
@@ -274,10 +277,12 @@ class Chart
             }
             else{ // trading is not allowed
                 echo "---------------------- TRADING NOT ALLOWED<br>\n";
-
                 // Start placing limit order
                 //Artisan::call('ccxtd:start', ['direction' => 'sell']);
-                PlaceLimitOrder::dispatch('sell')->onQueue('orders');
+                //PlaceLimitOrder::dispatch('sell')->onQueue('orders');
+
+                $exitCode = Artisan::call('ccxt:start', ['--buy' => false]);
+                echo $exitCode . "<br>\n";
             }
 
             DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'long']);

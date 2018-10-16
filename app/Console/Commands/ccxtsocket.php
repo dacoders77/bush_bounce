@@ -6,10 +6,12 @@ use App\Classes\Hitbtc\Hitbtc;
 use App\Classes\Hitbtc\Trading;
 use App\Jobs\PlaceLimitOrder;
 use Illuminate\Console\Command;
+use Illuminate\Foundation\Console\Presets\React;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
 use Ratchet\App;
 use Illuminate\Support\Facades\Cache;
+use React\EventLoop\Timer\Timer;
 
 class ccxtsocket extends Command
 {
@@ -54,14 +56,11 @@ class ccxtsocket extends Command
     public function handle()
     {
 
-        // Redis set up
+        //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
         //dump($redis); // Output the redis object including all variables
         //echo $redis->get("jo");
-
-
-
 
 /*
         // Snapshot
@@ -134,14 +133,20 @@ class ccxtsocket extends Command
 
         /* React loop cycle */
         $counter = 0;
-        $loop->addPeriodicTimer(0.5, function() use(&$counter) { // addPeriodicTimer($interval, callable $callback)
+        $loop->addPeriodicTimer(0.5, function() use(&$counter, $loop) { // addPeriodicTimer($interval, callable $callback)
             $counter++; // Seems like we dont need it!
+
+            // Finish end exit from the current command
+            if (Cache::get('commandExit')){
+                Cache::put('commandExit', false, 5);
+                echo "Exit!";
+                $loop->stop();
+            }
 
             // Cache setup
             if (Cache::get('orderObject') != null)
             {
                 $value = Cache::get('orderObject');
-
                 if (!$value->moveOrder){
 
                     // Place order with the price from cache
@@ -177,10 +182,12 @@ class ccxtsocket extends Command
                     //die("die at order move");
                 }
 
-                if ($this->connection)
+                if ($this->connection){
                     $this->connection->send($orderObject);
+                }
 
                 Cache::put('orderObject', null, now()->addMinute(5)); // Expires in 5 minutes
+
             }
 
 
@@ -220,16 +227,17 @@ class ccxtsocket extends Command
                     $this->logMessageFlag = true;
 
 
-                    //$tmp = array('params' => ['bid' => 0.031681]); // Make it this way because previous code was adopted to receive quotes from ticker subscriptions
-                    //$trading->parseTicker($tmp);
-
-
-
                     if (array_key_exists('method', $message)){
 
                         // Bid/Ask parse
                         if($message['method'] == 'ticker'){
-                            //$trading->parseTicker($message);
+                            if ($message['params']['bid'] && $this->option('buy'))
+                                if(array_key_exists('bid',$message['params']))
+                                    $trading->parseTicker($message['params']['bid'], null);
+
+                            if ($message['params']['bid'] && !$this->option('buy'))
+                                if(array_key_exists('ask',$message['params']))
+                                    $trading->parseTicker(null, $message['params']['ask']);
                         }
 
                         // Order condition parse
@@ -237,7 +245,7 @@ class ccxtsocket extends Command
                             $trading->parseActiveOrders($message);
                         }
 
-                        // Bid/Ask parse
+                        // Bid/Ask orderbook parse
                         if($message['method'] == 'updateOrderbook'){
                             if ($message['params']['bid'] && $this->option('buy')) // There can be an empty 0 element
                             {
@@ -251,9 +259,7 @@ class ccxtsocket extends Command
 
                         }
 
-
-
-                        // Snapshot
+                        // Orderbook snapshot
                         if($message['method'] == 'snapshotOrderbook'){
                             $this->fillOrderBook($message['params']['bid'], "bid");
                             $this->fillOrderBook($message['params']['ask'], "ask");
@@ -262,7 +268,7 @@ class ccxtsocket extends Command
 
                     // Order moved parse
                     if (array_key_exists('result', $message) && $message['result']['reportType'] == 'replaced'){
-                        $trading->parseOrderMove($message);
+                            $trading->parseOrderMove($message);
                     }
 
 
@@ -357,8 +363,8 @@ class ccxtsocket extends Command
                 ]);
 
                 $conn->send($authObject);
-                //$conn->send($subscribeTicker); // First subscription object
-                $conn->send($subscribeOrderBook);
+                $conn->send($subscribeTicker); // First subscription object
+                //$conn->send($subscribeOrderBook);
                 $conn->send($subscribeReports);
 
 

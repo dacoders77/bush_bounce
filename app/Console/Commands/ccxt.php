@@ -44,8 +44,6 @@ class ccxt extends Command
     {
         parent::__construct();
 
-        // Create an instance of exchange class
-        $this->exchange = new Classes\Hitbtc\HitBtcPhp($_ENV['HITBTC_PUBLIC_API_KEY'], $_ENV['HITBTC_PRIVATE_API_KEY']);
 
     }
 
@@ -56,6 +54,9 @@ class ccxt extends Command
      */
     public function handle()
     {
+        // Create an instance of exchange class
+        $this->exchange = new Classes\Hitbtc\HitBtcPhp($_ENV['HITBTC_PUBLIC_API_KEY'], $_ENV['HITBTC_PRIVATE_API_KEY']);
+
 
         //echo "dd";
         $value = Cache::get('orderObject');

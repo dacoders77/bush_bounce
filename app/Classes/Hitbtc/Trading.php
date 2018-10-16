@@ -19,6 +19,8 @@ class Trading
     private $orderPlacePrice;
     private $activeOrder = null; // When there is an order present
     private $needToMoveOrder = true;
+    private $rateLimitTime = 0; // Replace an order once a second
+    private $rateLimitFlag = true; // Enter to the rate limit condition once
 
     public function __construct()
     {
@@ -48,15 +50,19 @@ class Trading
                 if ($this->needToMoveOrder){
                     echo "NEED to move the order! \n";
 
-                    //$this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift;
-                    ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
+                    if (time() > $this->rateLimitTime || $this->rateLimitFlag){
+                        ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
+                        $tempOrderId = (string)microtime();
+                        Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
+                        $this->orderId = $tempOrderId;
+                        $this->needToMoveOrder = false;
 
-                    $tempOrderId = (string)microtime();
-                    Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
-                    $this->orderId = $tempOrderId;
-
-                    $this->needToMoveOrder = false;
-
+                        $this->rateLimitFlag = false;
+                        $this->rateLimitTime = time() + 2;
+                    }
+                    else{
+                        dump('rate limit');
+                    }
                 }
             }
         }
@@ -65,7 +71,6 @@ class Trading
     public function parseActiveOrders(array $message){
         // When order placed
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new"){
-
             //die('placed');
             $this->activeOrder = "new";
         }
@@ -73,13 +78,14 @@ class Trading
         // When order filled
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "filled"){
             $this->activeOrder = "filled"; // Then we can open a new order
-            die('filled');
+            //die('filled');
+            dump('filled');
+            Cache::put('commandExit', true, 5);
         }
     }
 
     public function parseOrderMove(array $message){
-        //die('moved');
-        echo "Order moved CONFIRM! \n";
+        dump ("---Order moved CONFIRM!");
         $this->needToMoveOrder = true;
     }
 }

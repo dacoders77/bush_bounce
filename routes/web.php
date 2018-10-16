@@ -205,6 +205,17 @@ Route::get('/lmt/{z}', function($z){
     echo $exitCode . "<br>";
 })->middleware('auth');;
 
+// Trying to que a command
+Route::get('/red/{z}', function ($z) {
+    if ($z == "buy")
+        $flag = true;
+    else
+        $flag = false;
+    $exitCode = Artisan::queue('ccxt:start', ['--buy' => $flag]); // Works good
+    dump($exitCode);
+    //
+});
+
 
 
 Auth::routes(); // Created by make:auth. DON'T DELETE!
