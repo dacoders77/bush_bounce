@@ -146,15 +146,17 @@ class ccxtsocket extends Command
             // Cache setup
             if (Cache::get('orderObject') != null)
             {
+                //dd($this->settings = DB::table('settings_realtime')->first()->symbol);
+
                 $value = Cache::get('orderObject');
                 if (!$value->moveOrder){
-
                     // Place order with the price from cache
                     $orderObject = json_encode([
                         'method' => 'newOrder',
                         'params' => [
                             'clientOrderId' => $value->orderId,
-                            'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol,
+                            //'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol,
+                            'symbol' => 'ETHUSD',
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
@@ -162,13 +164,11 @@ class ccxtsocket extends Command
                         ],
                         'id' => '123'
                     ]);
-                    //die('on placed order');
                 }
 
                 if ($value->moveOrder)
                 {
                     // Move order
-                    //echo "Need to move the order";
                     $orderObject = json_encode([
                         'method' => 'cancelReplaceOrder',
                         'params' => [
@@ -179,18 +179,17 @@ class ccxtsocket extends Command
                         ],
                         'id' => '123'
                     ]);
-                    //die("die at order move");
                 }
+
 
                 if ($this->connection){
-                    $this->connection->send($orderObject);
+                    $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123']));
+                    $this->connection->send($orderObject); // Send object to websocket stream
                 }
 
-                Cache::put('orderObject', null, now()->addMinute(5)); // Expires in 5 minutes
+                Cache::put('orderObject', null, now()->addMinute(5)); // CLear the cache. Assigned value Expires in 5 minutes
 
             }
-
-
 
         });
 
@@ -205,7 +204,7 @@ class ccxtsocket extends Command
                     // Code parse goes here
                     $message = json_decode($socketMessage->getPayload(), true);
 
-                    //dump($message);
+                    //dump($message); // Output all messages. No filters
 
                     $this->logMessageFlag = true;
                     if (array_key_exists('method', $message)){
@@ -220,10 +219,12 @@ class ccxtsocket extends Command
                         }
                     }
 
+
+                    /* Main log output */
                     if($this->logMessageFlag){
+                        dump("ccxtsocket.php 226. MAIN LOG:");
                         dump($message);
                     }
-
                     $this->logMessageFlag = true;
 
 
@@ -266,14 +267,40 @@ class ccxtsocket extends Command
                         }
                     }
 
-                    // Order moved parse
-                    if (array_key_exists('result', $message) && $message['result']['reportType'] == 'replaced'){
-                            $trading->parseOrderMove($message);
+                    if(array_key_exists('result', $message)) {
+                        if (gettype($message['result']) != "boolean") {
+                            /* If there is 'id' key - means that this is an array of values. Place order response
+                             * Here we get two type of messages:
+                             * 1. When it is array of values: New and Replaced orders (moved)
+                             * 2. Array of arrays: when there is more than one order at the exchange
+                             */
+                            if (array_key_exists('id', $message['result'])) {
+                                if ($message['result']['reportType'] == "replaced"){
+                                    //dump("array of values");
+                                    $trading->parseOrderMove($message['result']);
+                                }
+                            } /* Get stauses response */
+                            else{
+
+                                foreach ($message['result'] as $order)
+                                {
+                                    //dump("array of arrays");
+                                    if ($order['reportType'] == "replaced"){
+                                        $trading->parseOrderMove($order);
+                                    }
+                                }
+                            }
+
+
+                        }
+
                     }
+
 
                     // Error message
                     if (array_key_exists('error', $message)){
-                        echo "ERROR MESSAGE HANDLED. ccxtsocket.php 276";
+                        echo "ERROR MESSAGE HANDLED. remove this!. Exit. ccxtsocket.php 276";
+                        dump($message);
                         $loop->stop();
                     }
 

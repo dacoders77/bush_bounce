@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Cache;
 
 class Trading
 {
-    private $priceStep = 0.000001; // ETHBTC price step
-    private $priceShift = 0; // How far the limit order will be placed away from the market price
+    private $priceStep = 0.01; // ETHBTC price step 0.000001
+    private $priceShift = 20; // How far the limit order will be placed away from the market price. steps
     private $orderId;
     private $orderPlacePrice;
     private $activeOrder = null; // When there is an order present
@@ -28,7 +28,6 @@ class Trading
 
     public function parseTicker($bid = null, $ask = null){
 
-
         ($bid ? $direction = "buy" : $direction = "sell");
 
         if ($this->activeOrder == null){
@@ -38,7 +37,6 @@ class Trading
 
             Cache::put('orderObject', new OrderObject(false, $direction, $this->orderPlacePrice , $this->orderId, ""), 5);
             $this->activeOrder = "placed";
-
         }
 
         // When order placed, start to move if needed
@@ -48,11 +46,13 @@ class Trading
             if ($this->orderPlacePrice != $priceToCheck){
 
                 if ($this->needToMoveOrder){
-                    echo "NEED to move the order! \n";
+                    echo "TIME to move the order! \n";
 
                     if (time() > $this->rateLimitTime || $this->rateLimitFlag){
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
-                        $tempOrderId = (string)microtime();
+                        //$tempOrderId = (string)microtime();
+                        $tempOrderId = round(microtime(true) * 1000);
+
                         Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
                         $this->orderId = $tempOrderId;
                         $this->needToMoveOrder = false;
@@ -61,7 +61,7 @@ class Trading
                         $this->rateLimitTime = time() + 2;
                     }
                     else{
-                        dump('rate limit');
+                        dump('Trading.php rate limit');
                     }
                 }
             }
@@ -71,22 +71,35 @@ class Trading
     public function parseActiveOrders(array $message){
         // When order placed
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new"){
-            //die('placed');
             $this->activeOrder = "new";
         }
 
         // When order filled
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "filled"){
             $this->activeOrder = "filled"; // Then we can open a new order
-            //die('filled');
             dump('filled');
             Cache::put('commandExit', true, 5);
         }
     }
 
     public function parseOrderMove(array $message){
-        dump ("---Order moved CONFIRM!");
-        $this->needToMoveOrder = true;
+       echo "Trading.php ---Order move. this-orderId: " . $this->orderId . " message['clientOrderId']: " . $message['clientOrderId'] . "\n";
+        //dump($message);
+
+
+        if($this->orderId == $message['clientOrderId']){
+            //dump($message[id]);
+            echo "need to move this ID!\n";
+            $this->needToMoveOrder = true;
+        }
+        else{
+            //dump('as a single valuse: ' . $message['id']);
+            echo "dont need to move this id\n";
+        }
+
+
+        //$this->needToMoveOrder = true;
+
     }
 }
 
