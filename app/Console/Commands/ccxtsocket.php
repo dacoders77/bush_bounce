@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Classes\Hitbtc\DataBase;
 use App\Classes\Hitbtc\Hitbtc;
 use App\Classes\Hitbtc\Trading;
 use App\Jobs\PlaceLimitOrder;
@@ -11,7 +12,10 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
 use Ratchet\App;
 use Illuminate\Support\Facades\Cache;
+use React\EventLoop\ExtEventLoop;
+use React\EventLoop\Factory;
 use React\EventLoop\Timer\Timer;
+use Symfony\Component\VarDumper\Cloner\Data;
 
 class ccxtsocket extends Command
 {
@@ -55,6 +59,20 @@ class ccxtsocket extends Command
      */
     public function handle()
     {
+
+        /*
+        DataBase::addOrderRecord("ETHUSD", "12356");
+
+        DataBase::addOrderInPrice(date("Y-m-d G:i:s"),"555666");
+        DataBase::addOrderOutPrice(date("Y-m-d G:i:s"),"555666");
+
+        DataBase::addOrderInExecPrice(date("Y-m-d G:i:s"),"555666");
+        DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s"),"555666");
+
+        DataBase::calculateProfit();
+
+        die("interrupt 89");
+        */
 
         //Redis set up
         //$redis = app()->make('redis');
@@ -155,12 +173,12 @@ class ccxtsocket extends Command
                         'method' => 'newOrder',
                         'params' => [
                             'clientOrderId' => $value->orderId,
-                            //'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol,
-                            'symbol' => 'ETHUSD',
+                            'symbol' => DB::table('settings_realtime')->first()->symbol,
+                            //'symbol' => 'ETHUSD',
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
-                            'quantity' => '0.001'
+                            'quantity' => DB::table('settings_realtime')->first()->volume
                         ],
                         'id' => '123'
                     ]);
@@ -175,7 +193,7 @@ class ccxtsocket extends Command
                             'clientOrderId' => $value->orderId, // Id of the order to be moved
                             'requestClientId' => $value->newOrderId, // New order
                             'price' => $value->price,
-                            'quantity' => '0.001'
+                            'quantity' => DB::table('settings_realtime')->first()->volume
                         ],
                         'id' => '123'
                     ]);
@@ -201,110 +219,9 @@ class ccxtsocket extends Command
                 $this->connection = $conn; // For accessing conn outside of the this unanimous func
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $loop, $trading) {
 
-                    // Code parse goes here
                     $message = json_decode($socketMessage->getPayload(), true);
-
-                    //dump($message); // Output all messages. No filters
-
-                    $this->logMessageFlag = true;
-                    if (array_key_exists('method', $message)){
-                        if($message['method'] != 'snapshotOrderbook'){
-                            $this->logMessageFlag = false;
-                        }
-                    }
-
-                    if (array_key_exists('method', $message)){
-                        if($message['method'] != 'updateOrderbook'){
-                            $this->logMessageFlag = false;
-                        }
-                    }
-
-
-                    /* Main log output */
-                    if($this->logMessageFlag){
-                        dump("ccxtsocket.php 226. MAIN LOG:");
-                        dump($message);
-                    }
-                    $this->logMessageFlag = true;
-
-
-                    if (array_key_exists('method', $message)){
-
-                        // Bid/Ask parse
-                        if($message['method'] == 'ticker'){
-                            if ($message['params']['bid'] && $this->option('buy'))
-                                if(array_key_exists('bid',$message['params']))
-                                    $trading->parseTicker($message['params']['bid'], null);
-
-                            if ($message['params']['bid'] && !$this->option('buy'))
-                                if(array_key_exists('ask',$message['params']))
-                                    $trading->parseTicker(null, $message['params']['ask']);
-                        }
-
-                        // Order condition parse
-                        if($message['method'] == 'report'){
-                            $trading->parseActiveOrders($message);
-                        }
-
-                        // Bid/Ask orderbook parse
-                        if($message['method'] == 'updateOrderbook'){
-                            if ($message['params']['bid'] && $this->option('buy')) // There can be an empty 0 element
-                            {
-                                $trading->parseTicker($this->updateOrderBook($message['params']['bid'], "bid"), null);
-                            }
-                            // ask
-                            if ($message['params']['ask'] && !$this->option('buy'))
-                            {
-                                $trading->parseTicker(null, $this->updateOrderBook($message['params']['ask'], "ask"));
-                            }
-
-                        }
-
-                        // Orderbook snapshot
-                        if($message['method'] == 'snapshotOrderbook'){
-                            $this->fillOrderBook($message['params']['bid'], "bid");
-                            $this->fillOrderBook($message['params']['ask'], "ask");
-                        }
-                    }
-
-                    if(array_key_exists('result', $message)) {
-                        if (gettype($message['result']) != "boolean") {
-                            /* If there is 'id' key - means that this is an array of values. Place order response
-                             * Here we get two type of messages:
-                             * 1. When it is array of values: New and Replaced orders (moved)
-                             * 2. Array of arrays: when there is more than one order at the exchange
-                             */
-                            if (array_key_exists('id', $message['result'])) {
-                                if ($message['result']['reportType'] == "replaced"){
-                                    //dump("array of values");
-                                    $trading->parseOrderMove($message['result']);
-                                }
-                            } /* Get stauses response */
-                            else{
-
-                                foreach ($message['result'] as $order)
-                                {
-                                    //dump("array of arrays");
-                                    if ($order['reportType'] == "replaced"){
-                                        $trading->parseOrderMove($order);
-                                    }
-                                }
-                            }
-
-
-                        }
-
-                    }
-
-
-                    // Error message
-                    if (array_key_exists('error', $message)){
-                        echo "ERROR MESSAGE HANDLED. remove this!. Exit. ccxtsocket.php 276";
-                        dump($message);
-                        $loop->stop();
-                    }
-
-
+                    /* Parsing */
+                    $this->webSocketMessageParse($loop, $trading, $message);
 
                 });
                 $conn->on('close', function($code = null, $reason = null) {
@@ -432,5 +349,112 @@ class ccxtsocket extends Command
 
         return($orderBook[0]);
         //return(array('params' => ['bid' => $orderBook[0]]));
+    }
+
+    /*
+     * Websocket message parse.
+     * Output trace messages to console and filtering.
+     * @param   ReactEventLoop $loop Used to stop the loop.
+     * @param   Trading $trading Trading class instance where an order is placed and moved.
+     * @param   array $message Json decoded websocket stream message.
+     * @return void
+     */
+    private function webSocketMessageParse($loop, Trading $trading, array $message){
+
+        /* Output all messages. No filters. Heavy output! */
+        //dump($message);
+
+        /* Set messages not to be outputed */
+        $this->logMessageFlag = true;
+        if (array_key_exists('method', $message)){
+            if($message['method'] != 'snapshotOrderbook'){
+                $this->logMessageFlag = false;
+            }
+        }
+
+        if (array_key_exists('method', $message)){
+            if($message['method'] != 'updateOrderbook'){
+                $this->logMessageFlag = false;
+            }
+        }
+
+        /* Main log output */
+        if($this->logMessageFlag){
+            //dump("ccxtsocket.php 226. MAIN LOG:");
+            //dump($message);
+        }
+        $this->logMessageFlag = true;
+
+        if (array_key_exists('method', $message)){
+            /* Bid/Ask parse */
+            if($message['method'] == 'ticker'){
+                if ($message['params']['bid'] && $this->option('buy'))
+                    if(array_key_exists('bid', $message['params']))
+                        $trading->parseTicker($message['params']['bid'], null);
+
+                if ($message['params']['bid'] && !$this->option('buy'))
+                    if(array_key_exists('ask', $message['params']))
+                        $trading->parseTicker(null, $message['params']['ask']);
+            }
+
+            /* Order condition parse.
+               Order placed aand order filled statuses.
+             */
+            if($message['method'] == 'report'){
+                $trading->parseActiveOrders($message);
+            }
+
+            // Bid/Ask orderbook parse
+            if($message['method'] == 'updateOrderbook'){
+                if ($message['params']['bid'] && $this->option('buy')) // There can be an empty 0 element
+                {
+                    $trading->parseTicker($this->updateOrderBook($message['params']['bid'], "bid"), null);
+                }
+                // ask
+                if ($message['params']['ask'] && !$this->option('buy'))
+                {
+                    $trading->parseTicker(null, $this->updateOrderBook($message['params']['ask'], "ask"));
+                }
+            }
+
+            /* Orderbook snapshot */
+            if($message['method'] == 'snapshotOrderbook'){
+                $this->fillOrderBook($message['params']['bid'], "bid");
+                $this->fillOrderBook($message['params']['ask'], "ask");
+            }
+        }
+
+        if(array_key_exists('result', $message)) {
+            if (gettype($message['result']) != "boolean") {
+                /**
+                 * If there is 'id' key - means that this is an array of values. Place order response
+                 * Here we get two type of messages:
+                 * 1. When it is array of values: New and Replaced orders (moved)
+                 * 2. Array of arrays: when there is more than one order at the exchange
+                 */
+                if (array_key_exists('id', $message['result'])) {
+                    if ($message['result']['reportType'] == "replaced"){
+                        //dump("array of values");
+                        $trading->parseOrderMove($message['result']);
+                    }
+                } /* Get statuses response */
+                else{
+                    foreach ($message['result'] as $order)
+                    {
+                        //dump("array of arrays");
+                        if ($order['reportType'] == "replaced"){
+                            $trading->parseOrderMove($order);
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Error message handle */
+        if (array_key_exists('error', $message)){
+            echo "ERROR MESSAGE HANDLED. remove this!. Exit. ccxtsocket.php 454";
+            dump($message);
+            $loop->stop();
+        }
     }
 }

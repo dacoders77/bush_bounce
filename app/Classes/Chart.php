@@ -310,14 +310,15 @@ class Chart
         /**
          * Accumulated profit
          *
-         * The complicated code for getting the accumulated profit dome.
+         * Complicated code for getting the accumulated profit done.
          * We follow these steps in order to calculate accumulated profit
          * 1. We get the whole record using id. id is received in two ways:
          * a) History testing. id is pulled from DB in Backtest.php
          * b) Real-time trading. id is read from the last row from DB ($assetRow).
-         * 2. Then we filter all records from the DB where trade_direction dield in not null. It means that the trade was executed on that bar.
-         * 3. On each bar we decide whether there is a trade on this bar or it is a bar with no trade (trade was executed before)
-         * 4. If there is a trade (trade_direction = buy or sell) we use two accumulated_profit values back (index-2)
+         * 2. Then we filter all records from the DB where trade_direction field in not null. It means that the trade was executed on that bar.
+         * 3. On each bar we decide whether there is a trade on that bar or it is a bar with no trade (trade was executed before)
+         * 4. If there is a trade (trade_direction = buy or sell) we use two accumulated_profit values back (index - 2)
+         * 4. If there is a trade (trade_direction = buy or sell) we use two accumulated_profit values back (index - 2)
          * 5. If these no trade (else) we take the previous accumulate_profit value
          * 6. When a history testing (or real-time trading) has just started we are having bars with trade_direction = null.
          * in this case we use ternary operator to handle it ( condition ? if true : if false).

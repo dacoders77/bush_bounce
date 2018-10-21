@@ -268,11 +268,6 @@ class RatchetPawlSocket extends Command
                         break;
                 }
 
-
-
-
-
-
                 });
                 $conn->on('close', function($code = null, $reason = null) use ($chart, $candleMaker) {
                     echo "Connection closed ({$code} - {$reason})\n";
@@ -306,15 +301,6 @@ class RatchetPawlSocket extends Command
                         ]);
                         break;
                 }
-
-                /* Multiple symbols subscription for bitfinex
-                $x = json_encode([
-                    //'event' => 'ping', // 'event' => 'ping'
-                    'event' => 'subscribe',
-                    'channel' => 'trades',
-                    'symbol' => 'tETHUSD'  // tBTCUSD tETHUSD tETHBTC $this->symbol $this->symbol
-                ]);
-                */
 
                 $conn->send($requestObject);
                 //$conn->send($x);
