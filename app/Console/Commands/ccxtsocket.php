@@ -60,20 +60,6 @@ class ccxtsocket extends Command
     public function handle()
     {
 
-        /*
-        DataBase::addOrderRecord("ETHUSD", "12356");
-
-        DataBase::addOrderInPrice(date("Y-m-d G:i:s"),"555666");
-        DataBase::addOrderOutPrice(date("Y-m-d G:i:s"),"555666");
-
-        DataBase::addOrderInExecPrice(date("Y-m-d G:i:s"),"555666");
-        DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s"),"555666");
-
-        DataBase::calculateProfit();
-
-        die("interrupt 89");
-        */
-
         //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
@@ -150,9 +136,7 @@ class ccxtsocket extends Command
         ]);
 
         /* React loop cycle */
-        $counter = 0;
-        $loop->addPeriodicTimer(0.5, function() use(&$counter, $loop) { // addPeriodicTimer($interval, callable $callback)
-            $counter++; // Seems like we dont need it!
+        $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
             // Finish end exit from the current command
             if (Cache::get('commandExit')){
@@ -164,8 +148,6 @@ class ccxtsocket extends Command
             // Cache setup
             if (Cache::get('orderObject') != null)
             {
-                //dd($this->settings = DB::table('settings_realtime')->first()->symbol);
-
                 $value = Cache::get('orderObject');
                 if (!$value->moveOrder){
                     // Place order with the price from cache
@@ -453,9 +435,9 @@ class ccxtsocket extends Command
 
         /* Error message handle */
         if (array_key_exists('error', $message)){
-            echo "ERROR MESSAGE HANDLED. remove this!. Exit. ccxtsocket.php 454";
+            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454";
             dump($message);
-            $loop->stop();
+            //$loop->stop();
         }
     }
 }

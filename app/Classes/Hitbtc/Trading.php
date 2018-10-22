@@ -79,7 +79,6 @@ class Trading
 
                     if (time() > $this->rateLimitTime || $this->rateLimitFlag){
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
-                        //$tempOrderId = (string)microtime();
                         $tempOrderId = round(microtime(true) * 1000);
 
                         Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
@@ -87,7 +86,7 @@ class Trading
                         $this->needToMoveOrder = false;
 
                         $this->rateLimitFlag = false;
-                        $this->rateLimitTime = time() + 2;
+                        $this->rateLimitTime = time() + 2; // Move order once two seconds
                     }
                     else{
                         echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
@@ -110,7 +109,6 @@ class Trading
         /* Order placed
          * As discovered this method is called on each order move! This is incorrect.
          */
-
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new" && $this->runOnceFlag){
 
             // Flag. True by default. Reseted when order filled
@@ -124,7 +122,8 @@ class Trading
             $this->activeOrder = "filled"; // Then we can open a new order
             $this->needToMoveOrder = false; // When order is has been filled - don't move it
             echo "Order FILLED! filled price: ";
-            echo $message['params']['tradePrice'] . "\n";
+            echo $message['params']['tradePrice'] . " ";
+            echo $message['params']['side'] . "\n";
             Cache::put('commandExit', true, 5); // Stop executing this thread
 
             if($message['params']['side'] == "buy"){
@@ -134,10 +133,6 @@ class Trading
                 DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
                 DataBase::calculateProfit();
             }
-
-            // rebate: trade fee
-            // side - long/short
-            // 2018-10-21T15:29:07.523Z
         }
     }
 
@@ -153,9 +148,7 @@ class Trading
      *
      */
     public function parseOrderMove(array $message){
-       echo "Trading.php ---Order move. this-orderId: " . $this->orderId . " message['clientOrderId']: " . $message['clientOrderId'] . "\n";
-        //dump($message);
-
+        echo "Trading.php ---Order move. this-orderId: " . $this->orderId . " message['clientOrderId']: " . $message['clientOrderId'] . "\n";
         if($this->orderId == $message['clientOrderId']){
             //dump($message[id]);
             echo "need to move this ID!\n";
