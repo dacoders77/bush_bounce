@@ -25,17 +25,19 @@ use Illuminate\Support\Facades\DB;
  */
 class Trading
 {
-    private $priceStep = 0.01; // ETHBTC price step 0.000001
-    private $priceShift = 0; // How far the limit order will be placed away from the market price. steps
+    private $priceStep ; // ETHBTC price step 0.000001. ETHUSD 0.01
+    private $priceShift = 0; // How far (steps) the limit order will be placed away from the market price. steps
     private $orderId;
     private $orderPlacePrice;
     private $activeOrder = null; // When there is an order present
     private $needToMoveOrder = true;
     private $rateLimitTime = 0; // Replace an order once a second
     private $rateLimitFlag = true; // Enter to the rate limit condition once
+    private $runOnceFlag = true; // Enter to the order placed IF only once
 
     public function __construct()
     {
+        $this->priceStep = DB::table('settings_realtime')->first()->price_step;
     }
 
     /**
@@ -73,7 +75,7 @@ class Trading
             if ($this->orderPlacePrice != $priceToCheck){
 
                 if ($this->needToMoveOrder){
-                    echo "TIME to move the order! \n";
+                    echo "TIME to move the order! " . date("Y-m-d G:i:s") . "\n";
 
                     if (time() > $this->rateLimitTime || $this->rateLimitFlag){
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
@@ -88,7 +90,7 @@ class Trading
                         $this->rateLimitTime = time() + 2;
                     }
                     else{
-                        dump('Trading.php rate limit');
+                        echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
                     }
                 }
             }
@@ -108,8 +110,13 @@ class Trading
         /* Order placed
          * As discovered this method is called on each order move! This is incorrect.
          */
-        if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new"){
+
+        if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new" && $this->runOnceFlag){
+
+            // Flag. True by default. Reseted when order filled
             $this->activeOrder = "new";
+            $this->runOnceFlag = false; // Enter this IF only once
+            echo "***parseActiveOrders call! \n";
         }
 
         /* Order filled */
@@ -118,7 +125,7 @@ class Trading
             $this->needToMoveOrder = false; // When order is has been filled - don't move it
             echo "Order FILLED! filled price: ";
             echo $message['params']['tradePrice'] . "\n";
-            Cache::put('commandExit', true, 5);
+            Cache::put('commandExit', true, 5); // Stop executing this thread
 
             if($message['params']['side'] == "buy"){
                 DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);

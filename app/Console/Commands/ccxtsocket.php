@@ -398,9 +398,10 @@ class ccxtsocket extends Command
             }
 
             /* Order condition parse.
-               Order placed aand order filled statuses.
+               Order placed and order filled statuses.
              */
             if($message['method'] == 'report'){
+                $trading->parseActiveOrders($message);
                 $trading->parseActiveOrders($message);
             }
 

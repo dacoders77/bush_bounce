@@ -20,6 +20,7 @@ class SettingsRealtime extends Migration
             $table->boolean('initial_start');
             $table->string('exchange');
             $table->string('symbol');
+            $table->string('price_step');
             $table->double('volume')->nullable();
             $table->integer('time_frame');
             $table->integer('request_bars');
@@ -36,16 +37,17 @@ class SettingsRealtime extends Migration
 
         DB::table('settings_realtime')->insert(array(
             'initial_start' => 1,
-            'app_mode' => 'history',
-            'broadcast_stop' => 1,
+            'app_mode' => 'realtime',
+            'broadcast_stop' => 0,
             'time_frame' => 1,
             'exchange' => 'hitbtc',
-            'symbol' => "BTCUSD",
-            'volume' => 0.002,
+            'symbol' => "ETHUSD",
+            'price_step' => 0.01,
+            'volume' => 0.1,
             'request_bars' => 30,
             'skip_ticks_msec' => 1000,
-            'price_channel_period' => 10,
-            'sma_period' => 5,
+            'price_channel_period' => 5,
+            'sma_period' => 2,
             'sma_filter_on' => 1,
             'allow_trading' => 0,
             'trade_flag' => 'all',

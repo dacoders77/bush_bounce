@@ -91,8 +91,8 @@ class RatchetPawlSocket extends Command
         {
             app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
             $this->initStartFlag = false;
-            echo "INIT START\n";
-            //event(new \App\Events\ConnectionError("Ratchet. Init start line 89"));
+            echo "command started with --init FLAG\n";
+            event(new \App\Events\ConnectionError("Ratchet. Init start"));
         }
 
 
@@ -168,7 +168,7 @@ class RatchetPawlSocket extends Command
                                     else
                                     {
                                         $this->isBroadCastAllowed = false;
-                                        echo "Broadcast is stopped. The flag in DB is set to false \n";
+                                        echo "RatchetPawlSocket.php Broadcast flag is set to FALSE. Line 171 \n";
                                         event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
                                     }
                                 }
@@ -203,19 +203,6 @@ class RatchetPawlSocket extends Command
                     case "hitbtc":
                         $nojsonMessage = json_decode($socketMessage->getPayload(), true);
 
-                        /*
-                        if (array_key_exists('method', $message)){
-
-                            if($message['method'] == 'updateTrades'){
-                                //dump ($message['params']);
-                                $timestamp = strtotime($message['params']['data'][0]['timestamp']) * 1000;
-                                echo $timestamp . " ";
-                                echo $message['params']['data'][0]['side'] . " ";
-                                echo $message['params']['data'][0]['price'] . "\n";
-                            }
-                        }
-                        */
-
                         if (array_key_exists('method', $nojsonMessage)) {
 
                             $timestamp = strtotime($nojsonMessage['params']['data'][0]['timestamp']) * 1000;
@@ -230,13 +217,14 @@ class RatchetPawlSocket extends Command
                                  * We already have this functionality here - broadcast allowed check*/
                                 $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
 
+
                                 if (DB::table('settings_realtime')
                                         ->where('id', 1)
                                         ->value('broadcast_stop') == 0) {
                                     $this->isBroadCastAllowed = true;
                                 } else {
                                     $this->isBroadCastAllowed = false;
-                                    echo "Broadcast is stopped. The flag in DB is set to false \n";
+                                    echo "RatchetPawlSocket.php Broadcast flag is set to FALSE. line 226  \n";
                                     event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
                                 }
                             }
