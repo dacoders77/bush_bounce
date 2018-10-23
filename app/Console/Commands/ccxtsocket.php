@@ -163,8 +163,7 @@ class ccxtsocket extends Command
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
-                            //'quantity' => DB::table('settings_realtime')->first()->volume
-                            'quantity' => 10
+                            'quantity' => DB::table('settings_realtime')->first()->volume
                         ],
                         'id' => '123'
                     ]);
