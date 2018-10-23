@@ -81,7 +81,8 @@ class Trading
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
                         $tempOrderId = round(microtime(true) * 1000);
 
-                        Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
+                        //Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
+                        Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, 555, $tempOrderId), 5);
                         $this->orderId = $tempOrderId;
                         $this->needToMoveOrder = false;
 

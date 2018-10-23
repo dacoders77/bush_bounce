@@ -6,6 +6,8 @@ use App\Classes\Hitbtc\DataBase;
 use App\Classes\Hitbtc\Hitbtc;
 use App\Classes\Hitbtc\Trading;
 use App\Jobs\PlaceLimitOrder;
+use App\Mail\EmptyEmail;
+use App\Mail\EmptyEmail2;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Console\Presets\React;
 use Illuminate\Support\Facades\Redis;
@@ -16,6 +18,7 @@ use React\EventLoop\ExtEventLoop;
 use React\EventLoop\Factory;
 use React\EventLoop\Timer\Timer;
 use Symfony\Component\VarDumper\Cloner\Data;
+use Illuminate\Support\Facades\Mail;
 
 class ccxtsocket extends Command
 {
@@ -160,7 +163,8 @@ class ccxtsocket extends Command
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
-                            'quantity' => DB::table('settings_realtime')->first()->volume
+                            //'quantity' => DB::table('settings_realtime')->first()->volume
+                            'quantity' => 10
                         ],
                         'id' => '123'
                     ]);
@@ -187,7 +191,7 @@ class ccxtsocket extends Command
                     $this->connection->send($orderObject); // Send object to websocket stream
                 }
 
-                Cache::put('orderObject', null, now()->addMinute(5)); // CLear the cache. Assigned value Expires in 5 minutes
+                Cache::put('orderObject', null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
 
             }
 
@@ -202,14 +206,13 @@ class ccxtsocket extends Command
                 $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $loop, $trading) {
 
                     $message = json_decode($socketMessage->getPayload(), true);
-                    /* Parsing */
                     $this->webSocketMessageParse($loop, $trading, $message);
-
                 });
+
                 $conn->on('close', function($code = null, $reason = null) {
                     echo "Connection closed ({$code} - {$reason})\n";
-                    $this->info("line 82. connection closed");
-                    $this->error("Reconnecting back!");
+                    $this->info("line 212. connection closed");
+                    $this->error("Reconnecting back in 5 seconds!");
 
                     sleep(5); // Wait 5 seconds before next connection try will attpemt
                     $this->handle(); // Call the main method of this class
@@ -435,9 +438,15 @@ class ccxtsocket extends Command
 
         /* Error message handle */
         if (array_key_exists('error', $message)){
-            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454";
+            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454\n";
             dump($message);
-            //$loop->stop();
+            /* Email notification */
+            $objDemo = new \stdClass();
+            $objDemo->subject = 'BUSH error';
+            $objDemo->body = "Error code: " . $message['error']['code'] . " Message: " . $message['error']['message'] . " Description: " . $message['error']['description'];
+            $emails = ['nextbb@yandex.ru', 'aleksey.kirushin2015@yandex.ru', 'Ikorepov@gmail.com', 'busch.art@yandex.ru'];
+            Mail::to($emails)->send(new EmptyEmail($objDemo));
+            $loop->stop();
         }
     }
 }
