@@ -54,7 +54,7 @@ class Trading
 
             $this->orderId = floor(round(microtime(true) * 1000));
             ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
-            Cache::put('orderObject', new OrderObject(false, $direction, $this->orderPlacePrice , $this->orderId, ""), 5);
+            Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject(false, $direction, $this->orderPlacePrice , $this->orderId, ""), 5);
             $this->activeOrder = "placed";
 
             // BD actions
@@ -81,8 +81,7 @@ class Trading
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
                         $tempOrderId = round(microtime(true) * 1000);
 
-                        //Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
-                        Cache::put('orderObject', new OrderObject(true,"", $this->orderPlacePrice, 555, $tempOrderId), 5);
+                        Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
                         $this->orderId = $tempOrderId;
                         $this->needToMoveOrder = false;
 
@@ -107,11 +106,8 @@ class Trading
      * @return  void
      */
     public function parseActiveOrders(array $message){
-        /* Order placed
-         * As discovered this method is called on each order move! This is incorrect.
-         */
+        /* Order placed */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new" && $this->runOnceFlag){
-
             // Flag. True by default. Reseted when order filled
             $this->activeOrder = "new";
             $this->runOnceFlag = false; // Enter this IF only once
@@ -125,7 +121,7 @@ class Trading
             echo "Order FILLED! filled price: ";
             echo $message['params']['tradePrice'] . " ";
             echo $message['params']['side'] . "\n";
-            Cache::put('commandExit', true, 5); // Stop executing this thread
+            Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
 
             if($message['params']['side'] == "buy"){
                 DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);

@@ -73,6 +73,13 @@ class DataBase
     public static function calculateProfit(){
 
         $lastRecord = DB::table(env("PROFIT_TABLE"))->orderBy('id', 'desc')->first(); // ->id
+
+        // rebate
+        // order_out_execprice
+        // order_in_execprice
+
+
+
         DB::table(env("PROFIT_TABLE"))
             ->where('id', $lastRecord->id)
             ->update([
@@ -82,17 +89,23 @@ class DataBase
                 'order_out_duration' => strtotime($lastRecord->order_out_placetime) - strtotime($lastRecord->order_out_exectime),
                 'profit' => ($lastRecord->order_out_execprice - $lastRecord->order_in_execprice) * $lastRecord->volume,
                 'net_profit' => (($lastRecord->order_out_execprice - $lastRecord->order_in_execprice) * $lastRecord->volume) + $lastRecord->rebate,
-
-
-                // net_profit
-                // accumulated_profit
-
             ]);
 
-        DB::table(env("PROFIT_TABLE"))
-            ->where('id', $lastRecord->id)
-            ->update([
-                'accumulated_profit' => DB::table(env("PROFIT_TABLE"))->sum('net_profit')
-            ]);
+        /**
+         * @todo 24.10.18
+         * Serious case. Very frequently order execution response does not come.
+         * It means that we do not get information that the order has been filled.
+         * It leads to incorrect profit calculation.
+         * We make sure that we have successfully received in and out execution price and the calculate the profit.
+         */
+        if($lastRecord->order_out_execprice && $lastRecord->order_in_execprice){
+            DB::table(env("PROFIT_TABLE"))
+                ->where('id', $lastRecord->id)
+                ->update([
+                    'accumulated_profit' => DB::table(env("PROFIT_TABLE"))->sum('net_profit')
+                ]);
+        }
+
+
     }
 }

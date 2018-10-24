@@ -69,53 +69,9 @@ class ccxtsocket extends Command
         //dump($redis); // Output the redis object including all variables
         //echo $redis->get("jo");
 
-/*
-        // Snapshot
-        $arr = array(
-            ['price' => 10, 'size' => 2],
-            ['price' => 11, 'size' => 17],
-            ['price' => 14, 'size' => 1]
-        );
-
-        // Update
-        $arr2 = array(
-            ['price' => 10, 'size' => 0],
-            ['price' => 18, 'size' => 44]
-        );
-
-        // An ampty array init
-        $resArr = array();
-        // Loop through a snapshot. Extract price and make it a regular, not associative array
-        foreach ($arr as $key => $value) {
-            //echo $key . " " . $value['price'] . "\n";
-            array_push($resArr, $value['price']);
-        }
-
-        // Find price
-        foreach ($arr2 as $key => $value)
-        {
-            // If price not found - add
-            if (in_array($value['price'], $resArr)){
-                if($value['size'] == 0){
-                    unset($resArr[$key]);
-                }
-            }
-            else{
-                array_push($resArr, $value['price']);
-            }
-        }
-        sort($resArr);
-
-
-        dump($resArr);
-        //dump(in_array(10, $resArr));
-        die;
-
-*/
-
         $trading = new \App\Classes\Hitbtc\Trading();
 
-        echo "***** CCXT websocket app started!*****\n";
+        echo "***** CCXT websocket app started! *****\n";
 
         /**
          * Reset trade flag. If it is not reseted, it will contain previous position state.
@@ -125,7 +81,6 @@ class ccxtsocket extends Command
          * $this->option('init') can not be set to false that is why We use additional flag to do
          * the initial start only when started from console
          */
-
 
 
         /**
@@ -142,16 +97,16 @@ class ccxtsocket extends Command
         $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
             // Finish end exit from the current command
-            if (Cache::get('commandExit')){
-                Cache::put('commandExit', false, 5);
+            if (Cache::get('commandExit' . env("ASSET_TABLE"))){
+                Cache::put('commandExit' . env("ASSET_TABLE"), false, 5);
                 echo "Exit!";
                 $loop->stop();
             }
 
             // Cache setup
-            if (Cache::get('orderObject') != null)
+            if (Cache::get('orderObject' . env("ASSET_TABLE")) != null)
             {
-                $value = Cache::get('orderObject');
+                $value = Cache::get('orderObject' . env("ASSET_TABLE"));
                 if (!$value->moveOrder){
                     // Place order with the price from cache
                     $orderObject = json_encode([
@@ -190,7 +145,7 @@ class ccxtsocket extends Command
                     $this->connection->send($orderObject); // Send object to websocket stream
                 }
 
-                Cache::put('orderObject', null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
+                Cache::put('orderObject' . env("ASSET_TABLE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
 
             }
 
@@ -441,8 +396,8 @@ class ccxtsocket extends Command
             dump($message);
             /* Email notification */
             $objDemo = new \stdClass();
-            $objDemo->subject = 'BUSH error';
-            $objDemo->body = "Error code: " . $message['error']['code'] . " Message: " . $message['error']['message'] . " Description: " . $message['error']['description'];
+            $objDemo->subject = 'BUSH error: ' . env("ASSET_TABLE") . " " . DB::table('settings_realtime')->first()->symbol;
+            $objDemo->body = "Error code: " . $message['error']['code'] . " Message: " . $message['error']['message'] . " Description: " . $message['error']['description'] . " Time: " . date("Y-m-d G:i:s");
             $emails = ['nextbb@yandex.ru', 'aleksey.kirushin2015@yandex.ru', 'Ikorepov@gmail.com', 'busch.art@yandex.ru'];
             Mail::to($emails)->send(new EmptyEmail($objDemo));
             $loop->stop();
