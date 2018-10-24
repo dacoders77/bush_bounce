@@ -74,23 +74,6 @@ class DataBase
 
         $lastRecord = DB::table(env("PROFIT_TABLE"))->orderBy('id', 'desc')->first(); // ->id
 
-        // rebate
-        // order_out_execprice
-        // order_in_execprice
-
-
-
-        DB::table(env("PROFIT_TABLE"))
-            ->where('id', $lastRecord->id)
-            ->update([
-                'order_in_pricediff' => $lastRecord->order_in_placedprice - $lastRecord->order_in_execprice,
-                'order_in_duration' => strtotime($lastRecord->order_in_placetime) - strtotime($lastRecord->order_in_exectime),
-                'order_out_pricediff' => $lastRecord->order_out_placedprice - $lastRecord->order_out_execprice,
-                'order_out_duration' => strtotime($lastRecord->order_out_placetime) - strtotime($lastRecord->order_out_exectime),
-                'profit' => ($lastRecord->order_out_execprice - $lastRecord->order_in_execprice) * $lastRecord->volume,
-                'net_profit' => (($lastRecord->order_out_execprice - $lastRecord->order_in_execprice) * $lastRecord->volume) + $lastRecord->rebate,
-            ]);
-
         /**
          * @todo 24.10.18
          * Serious case. Very frequently order execution response does not come.
@@ -99,6 +82,18 @@ class DataBase
          * We make sure that we have successfully received in and out execution price and the calculate the profit.
          */
         if($lastRecord->order_out_execprice && $lastRecord->order_in_execprice){
+            
+            DB::table(env("PROFIT_TABLE"))
+                ->where('id', $lastRecord->id)
+                ->update([
+                    'order_in_pricediff' => $lastRecord->order_in_placedprice - $lastRecord->order_in_execprice,
+                    'order_in_duration' => strtotime($lastRecord->order_in_placetime) - strtotime($lastRecord->order_in_exectime),
+                    'order_out_pricediff' => $lastRecord->order_out_placedprice - $lastRecord->order_out_execprice,
+                    'order_out_duration' => strtotime($lastRecord->order_out_placetime) - strtotime($lastRecord->order_out_exectime),
+                    'profit' => ($lastRecord->order_out_execprice - $lastRecord->order_in_execprice) * $lastRecord->volume,
+                    'net_profit' => (($lastRecord->order_out_execprice - $lastRecord->order_in_execprice) * $lastRecord->volume) + $lastRecord->rebate,
+                ]);
+
             DB::table(env("PROFIT_TABLE"))
                 ->where('id', $lastRecord->id)
                 ->update([
