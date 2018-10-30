@@ -31,6 +31,7 @@ class ProfitTable extends Migration
             $table->integer('order_out_duration')->nullable();
             $table->double('order_out_placedprice')->nullable();
             $table->double('order_out_execprice')->nullable();
+            $table->double('order_out_execprice2')->nullable(); // Temp column. Each order move price stored here
             $table->double('order_out_pricediff')->nullable();
 
             $table->double('profit')->nullable();

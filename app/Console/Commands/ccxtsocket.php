@@ -114,7 +114,6 @@ class ccxtsocket extends Command
                         'params' => [
                             'clientOrderId' => $value->orderId,
                             'symbol' => DB::table('settings_realtime')->first()->symbol,
-                            //'symbol' => 'ETHUSD',
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
@@ -327,11 +326,11 @@ class ccxtsocket extends Command
         if (array_key_exists('method', $message)){
             /* Bid/Ask parse */
             if($message['method'] == 'ticker'){
-                if ($message['params']['bid'] && $this->option('buy'))
+                if ($message['params']['bid'] && $this->option('buy')) // ccxt:start --buy
                     if(array_key_exists('bid', $message['params']))
                         $trading->parseTicker($message['params']['bid'], null);
 
-                if ($message['params']['bid'] && !$this->option('buy'))
+                if ($message['params']['bid'] && !$this->option('buy')) // // ccxt:start --NO PARAM
                     if(array_key_exists('ask', $message['params']))
                         $trading->parseTicker(null, $message['params']['ask']);
             }

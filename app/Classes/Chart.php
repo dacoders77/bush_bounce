@@ -281,7 +281,7 @@ class Chart
                 //Artisan::call('ccxtd:start', ['direction' => 'sell']);
                 //PlaceLimitOrder::dispatch('sell')->onQueue('orders');
 
-                Artisan::queue('ccxt:start', ['--buy' => false]);
+                Artisan::queue('ccxt:start', ['--buy' => false])->onQueue('orders');
             }
 
             DB::table("settings_realtime")->where('id', 1)->update(['trade_flag' => 'long']);

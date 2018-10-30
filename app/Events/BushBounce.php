@@ -14,6 +14,12 @@ class BushBounce implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * @see https://laravel.com/docs/5.7/events#queued-event-listeners
+     * Que connection. Event can be dispatched to a separate connection.
+     * Even not to a que at all.
+     */
+    public $connection = 'sync';
     public $update; // The public variable which can be read in the event listener as e._variable_name. e.update in js
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Console\Commands;
+use App\Jobs\PlaceLimitOrder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Classes;
@@ -64,6 +65,9 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
+
+        //dispatch(new PlaceLimitOrder());
+        //die();
 
         /** @var string $exchange Exchange name, pulled out of the DB*/
         $exchange = DB::table('settings_realtime')->value('exchange');

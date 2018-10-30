@@ -49,6 +49,7 @@ class Trading
      */
     public function parseTicker($bid = null, $ask = null){
 
+        /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
         if ($this->activeOrder == null){
 
@@ -68,7 +69,7 @@ class Trading
 
         }
 
-        // When order placed, start to move if needed
+        /* When order placed, start to move if needed */
         if ($this->activeOrder == "new"){
 
             ($direction == "buy" ? $priceToCheck = $bid - $this->priceStep * $this->priceShift : $priceToCheck = $ask + $this->priceStep * $this->priceShift);
@@ -87,6 +88,10 @@ class Trading
 
                         $this->rateLimitFlag = false;
                         $this->rateLimitTime = time() + 2; // Move order once two seconds
+
+                        // On each move - store to price in DB
+                        DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
+                        echo "Order place price: " . $this->orderPlacePrice . "\n";
                     }
                     else{
                         echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
@@ -117,7 +122,7 @@ class Trading
         /* Order filled */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "filled"){
             $this->activeOrder = "filled"; // Then we can open a new order
-            $this->needToMoveOrder = false; // When order is has been filled - don't move it
+            $this->needToMoveOrder = false; // When order has been filled - don't move it
             echo "Order FILLED! filled price: ";
             echo $message['params']['tradePrice'] . " ";
             echo $message['params']['side'] . "\n";

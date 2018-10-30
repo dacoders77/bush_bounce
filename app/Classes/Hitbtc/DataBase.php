@@ -70,6 +70,17 @@ class DataBase
             ]);
     }
 
+    /* Temp method. Remove it */
+    public static function addOrderOutExecPrice2($orderOutExecPrice){
+
+        $lastRecord = DB::table(env("PROFIT_TABLE"))->orderBy('id', 'desc')->first(); // ->id
+        DB::table(env("PROFIT_TABLE"))
+            ->where('id', $lastRecord->id)
+            ->update([
+                'order_out_execprice2' => $orderOutExecPrice,
+            ]);
+    }
+
     public static function calculateProfit(){
 
         $lastRecord = DB::table(env("PROFIT_TABLE"))->orderBy('id', 'desc')->first(); // ->id
@@ -82,7 +93,7 @@ class DataBase
          * We make sure that we have successfully received in and out execution price and the calculate the profit.
          */
         if($lastRecord->order_out_execprice && $lastRecord->order_in_execprice){
-            
+
             DB::table(env("PROFIT_TABLE"))
                 ->where('id', $lastRecord->id)
                 ->update([
@@ -100,7 +111,5 @@ class DataBase
                     'accumulated_profit' => DB::table(env("PROFIT_TABLE"))->sum('net_profit')
                 ]);
         }
-
-
     }
 }
