@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Classes\Hitbtc\DataBase;
 use App\Classes\Hitbtc\Hitbtc;
 use App\Classes\Hitbtc\Trading;
+use App\Classes\LogToFile;
 use App\Jobs\PlaceLimitOrder;
 use App\Mail\EmptyEmail;
 use App\Mail\EmptyEmail2;
@@ -19,6 +20,7 @@ use React\EventLoop\Factory;
 use React\EventLoop\Timer\Timer;
 use Symfony\Component\VarDumper\Cloner\Data;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ccxtsocket extends Command
 {
@@ -62,7 +64,6 @@ class ccxtsocket extends Command
      */
     public function handle()
     {
-
         //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
@@ -140,16 +141,14 @@ class ccxtsocket extends Command
 
 
                 if ($this->connection){
-                    $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123']));
+                    $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123'])); // Get order staues
                     $this->connection->send($orderObject); // Send object to websocket stream
+                    $this->connection->send(json_encode(['method' => 'getTradingBalance', 'params' => [], 'id' => 123])); // Get trading balance
                 }
 
                 Cache::put('orderObject' . env("ASSET_TABLE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
-
             }
-
         });
-
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
@@ -220,12 +219,15 @@ class ccxtsocket extends Command
                 $subscribeReports = json_encode([
                     'method' => 'subscribeReports',
                     'params' => [],
+                    'id' => 123
                 ]);
 
+                /* Websocket subscription */
                 $conn->send($authObject);
                 $conn->send($subscribeTicker); // First subscription object
                 //$conn->send($subscribeOrderBook);
-                $conn->send($subscribeReports);
+                $conn->send($subscribeReports); // Order statuses. Filled, new etc.
+
 
 
                 /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed again */
@@ -340,7 +342,6 @@ class ccxtsocket extends Command
              */
             if($message['method'] == 'report'){
                 $trading->parseActiveOrders($message);
-                $trading->parseActiveOrders($message);
             }
 
             // Bid/Ask orderbook parse
@@ -363,7 +364,7 @@ class ccxtsocket extends Command
             }
         }
 
-        if(array_key_exists('result', $message)) {
+        if(array_key_exists('result', $message) && $message['result'] != []) {
             if (gettype($message['result']) != "boolean") {
                 /**
                  * If there is 'id' key - means that this is an array of values. Place order response
@@ -373,18 +374,33 @@ class ccxtsocket extends Command
                  */
                 if (array_key_exists('id', $message['result'])) {
                     if ($message['result']['reportType'] == "replaced"){
-                        //dump("array of values");
                         $trading->parseOrderMove($message['result']);
                     }
-                } /* Get statuses response */
+                }
                 else{
-                    foreach ($message['result'] as $order)
-                    {
-                        //dump("array of arrays");
-                        if ($order['reportType'] == "replaced"){
-                            $trading->parseOrderMove($order);
+                    if(array_key_exists('id', $message['result'][0])){ // Orders
+                        /* Get statuses response */
+                        foreach ($message['result'] as $order)
+                        {
+                            //dump($message);
+                            if ($order['reportType'] == "replaced"){
+                                $trading->parseOrderMove($order);
+                            }
                         }
                     }
+
+                    if (array_key_exists('currency', $message['result'][0])){ // Trading balances
+                        dump('^^^^^^^^^^^^BALANCE!');
+                        foreach ($message['result'] as $balanceRecord){
+                            //dump($balanceRecord['currency']);
+                            // DB::table('settings_realtime')->first()->symbol
+                            if($balanceRecord['currency'] == "ETH"){
+                                dump($balanceRecord['currency'] . " " . $balanceRecord['available']);
+                            }
+                        }
+                    }
+                    //die();
+
                 }
             }
         }

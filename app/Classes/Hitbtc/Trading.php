@@ -8,6 +8,7 @@
 
 namespace App\Classes\Hitbtc;
 
+use App\Classes\LogToFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -87,11 +88,11 @@ class Trading
                         $this->needToMoveOrder = false;
 
                         $this->rateLimitFlag = false;
-                        $this->rateLimitTime = time() + 2; // Move order once two seconds
+                        $this->rateLimitTime = time() + 2; // Move order once in two seconds
 
                         // On each move - store to price in DB
-                        DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
-                        echo "Order place price: " . $this->orderPlacePrice . "\n";
+                        //DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
+                        //echo "Order place price: " . $this->orderPlacePrice . "\n";
                     }
                     else{
                         echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
@@ -127,6 +128,7 @@ class Trading
             echo $message['params']['tradePrice'] . " ";
             echo $message['params']['side'] . "\n";
             Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
+            LogToFile::add("Trading.php line 130.", $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
 
             if($message['params']['side'] == "buy"){
                 DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
