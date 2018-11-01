@@ -65,10 +65,6 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
-
-        //dispatch(new PlaceLimitOrder());
-        //die();
-
         /** @var string $exchange Exchange name, pulled out of the DB*/
         $exchange = DB::table('settings_realtime')->value('exchange');
 
@@ -97,6 +93,7 @@ class RatchetPawlSocket extends Command
             $this->initStartFlag = false;
             echo "command started with --init FLAG\n";
             event(new \App\Events\ConnectionError("Ratchet. Init start"));
+            Classes\LogToFile::createTextLogFile();
         }
 
 

@@ -8,16 +8,15 @@
 
 namespace App\Classes;
 
-
 class LogToFile
 {
     static public function add (string $source, string $message){
-        //$myfile = fopen("storage/logs/debug.txt", "w") or die("Unable to open file!");
         $txt = date("Y-m-d G:i:s") . " $source " . $message . "\n";
-        //fwrite($myfile, $txt);
-        //fclose($myfile);
-
         file_put_contents("storage/logs/debug.txt", $txt, FILE_APPEND);
+    }
+
+    static public function createTextLogFile (){
+        $handle = fopen("storage/logs/debug.txt", "w") or die("Unable to open storage/logs/debug.txt!");
     }
 }
 

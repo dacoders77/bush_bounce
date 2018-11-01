@@ -21,6 +21,7 @@ use React\EventLoop\Timer\Timer;
 use Symfony\Component\VarDumper\Cloner\Data;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class ccxtsocket extends Command
 {
@@ -64,6 +65,7 @@ class ccxtsocket extends Command
      */
     public function handle()
     {
+
         //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
@@ -138,7 +140,6 @@ class ccxtsocket extends Command
                         'id' => '123'
                     ]);
                 }
-
 
                 if ($this->connection){
                     $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123'])); // Get order staues
@@ -241,7 +242,6 @@ class ccxtsocket extends Command
             });
 
         $loop->run();
-
     }
 
     /*
@@ -325,6 +325,7 @@ class ccxtsocket extends Command
         }
         $this->logMessageFlag = true;
 
+        /* Place order */
         if (array_key_exists('method', $message)){
             /* Bid/Ask parse */
             if($message['method'] == 'ticker'){
@@ -399,8 +400,6 @@ class ccxtsocket extends Command
                             }
                         }
                     }
-                    //die();
-
                 }
             }
         }
