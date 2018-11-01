@@ -122,6 +122,8 @@ class Trading
 
         /* Order filled */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "filled"){
+            dump('Dump from Trading.php 125');
+            dump( $message);
             $this->activeOrder = "filled"; // Then we can open a new order
             $this->needToMoveOrder = false; // When order has been filled - don't move it
             echo "Order FILLED! filled price: ";

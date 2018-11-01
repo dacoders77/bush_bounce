@@ -304,11 +304,11 @@ class ccxtsocket extends Command
         /* Output all messages. No filters. Heavy output! */
         //dump($message);
 
-        /* Set messages not to be outputed */
+        /* Set messages that should not outputed */
         $this->logMessageFlag = true;
         if (array_key_exists('method', $message)){
             if($message['method'] != 'snapshotOrderbook'){
-                $this->logMessageFlag = false;
+                $this->logMessageFlag = false; // If flag is set - dont output this type of message
             }
         }
 
@@ -318,10 +318,21 @@ class ccxtsocket extends Command
             }
         }
 
+        if (array_key_exists('result', $message)){ //
+            if(gettype($message['result']) == 'array'){
+               /* When there is 'id' in the array - this is the array of values. This is an order status message.
+                * In other cases this this is the array of arrays - balances message.
+                */
+                if (!array_key_exists('status', $message['result'])){
+                    $this->logMessageFlag = false;
+                }
+            }
+        }
+
         /* Main log output */
         if($this->logMessageFlag){
             //dump("ccxtsocket.php 226. MAIN LOG:");
-            //dump($message);
+            dump($message);
         }
         $this->logMessageFlag = true;
 
@@ -391,11 +402,11 @@ class ccxtsocket extends Command
                     }
 
                     if (array_key_exists('currency', $message['result'][0])){ // Trading balances
-                        dump('^^^^^^^^^^^^BALANCE!');
                         foreach ($message['result'] as $balanceRecord){
                             //dump($balanceRecord['currency']);
                             // DB::table('settings_realtime')->first()->symbol
                             if($balanceRecord['currency'] == "ETH"){
+                                echo "ccxtsocket.php 409. Balance: ";
                                 dump($balanceRecord['currency'] . " " . $balanceRecord['available']);
                             }
                         }
