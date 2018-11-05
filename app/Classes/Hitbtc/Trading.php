@@ -135,7 +135,7 @@ class Trading
          * 1. Full volume execution
          * 2. Partial fill
          */
-        if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "filled"){
+        if ($message['params']['clientOrderId'] == $this->orderId && ($message['params']['status'] == "filled" || $message['params']['status'] == "partiallyFilled" )){
             dump('Dump from Trading.php 139');
             dump($message);
             Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("getActiveOrders"), 5);
@@ -185,8 +185,6 @@ class Trading
 
             orderQuantity = orderQantity - $message['params']['status']
             */
-
-
 
             $this->addOrderExecPriceToDB($message);
         }
