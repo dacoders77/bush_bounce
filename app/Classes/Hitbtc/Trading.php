@@ -135,7 +135,10 @@ class Trading
          * 1. Full volume execution
          * 2. Partial fill
          */
-        if ($message['params']['clientOrderId'] == $this->orderId && ($message['params']['status'] == "filled" || $message['params']['status'] == "partiallyFilled" )){
+        //if ($message['params']['clientOrderId'] == $this->orderId && ($message['params']['status'] == "filled" || $message['params']['status'] == "partiallyFilled" )){
+        // "reportType" => "trade"
+        if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['reportType'] == "trade"){
+
             dump('Dump from Trading.php 139');
             dump($message);
             Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("getActiveOrders"), 5);
