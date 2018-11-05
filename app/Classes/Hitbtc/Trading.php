@@ -38,6 +38,11 @@ class Trading
     private $rateLimitFlag = true; // Enter to the rate limit condition once
     private $runOnceFlag = true; // Enter to the order placed IF only once
 
+
+    private $averageOrderFillPrice;
+    private $accumulatedOrderVolume;
+
+
     public function __construct()
     {
         $this->priceStep = DB::table('settings_realtime')->first()->price_step;
@@ -151,14 +156,18 @@ class Trading
             foreach ($this->tradesArray as $trade){
                 echo "Trading.php 147:\n";
                 dump($trade);
-                $averageOrderFillPrice = $averageOrderFillPrice + $trade->price;
-                $accumulatedOrderVolume = $accumulatedOrderVolume + $trade->quantity;
+                $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;
+                $this->accumulatedOrderVolume = $this->accumulatedOrderVolume + $trade->quantity;
             }
-            $averageOrderFillPrice = $averageOrderFillPrice / count($this->tradesArray);
+            $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
 
-            if ($accumulatedOrderVolume == $this->orderQuantity){
+
+
+            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume;
+
+            if ($this->accumulatedOrderVolume == $this->orderQuantity){
                 dump("Trading.php 156. FULL EXEC. Stop thread");
-                echo "AVG FILL PRICE/VOLUME: $averageOrderFillPrice / $accumulatedOrderVolume\n";
+                echo "AVG FILL PRICE/VOLUME: $this->averageOrderFillPrice / $this->accumulatedOrderVolume\n";
 
                 $this->activeOrder = "filled"; // Then we can open a new order
                 $this->needToMoveOrder = false; // When order has been filled - don't move it
