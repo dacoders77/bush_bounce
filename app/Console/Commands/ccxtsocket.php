@@ -96,6 +96,7 @@ class ccxtsocket extends Command
             'timeout' => 10
         ]);
 
+        // MOVE TO SEPARATE METHOD!
         /* React loop cycle */
         $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
@@ -110,8 +111,8 @@ class ccxtsocket extends Command
             if (Cache::get('orderObject' . env("ASSET_TABLE")) != null)
             {
                 $value = Cache::get('orderObject' . env("ASSET_TABLE"));
-                if (!$value->moveOrder){
-                    // Place order with the price from cache
+                if ($value->action == "placeOrder"){
+                    // Place order with the price and volume from cache
                     $orderObject = json_encode([
                         'method' => 'newOrder',
                         'params' => [
@@ -120,13 +121,13 @@ class ccxtsocket extends Command
                             'side' => $value->direction,
                             'type' => 'limit',
                             'price' => $value->price,
-                            'quantity' => DB::table('settings_realtime')->first()->volume
+                            'quantity' => $value->quantity
                         ],
                         'id' => '123'
                     ]);
                 }
 
-                if ($value->moveOrder)
+                if ($value->action == "moveOrder")
                 {
                     // Move order
                     $orderObject = json_encode([
@@ -135,16 +136,20 @@ class ccxtsocket extends Command
                             'clientOrderId' => $value->orderId, // Id of the order to be moved
                             'requestClientId' => $value->newOrderId, // New order
                             'price' => $value->price,
-                            'quantity' => DB::table('settings_realtime')->first()->volume
+                            'quantity' => $value->quantity
                         ],
                         'id' => '123'
                     ]);
                 }
 
+                if($value->action == "getActiveOrders"){
+                    $orderObject = [];
+                }
+
                 if ($this->connection){
-                    $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123'])); // Get order staues
-                    $this->connection->send($orderObject); // Send object to websocket stream
-                    $this->connection->send(json_encode(['method' => 'getTradingBalance', 'params' => [], 'id' => 123])); // Get trading balance
+                    $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123'])); // Get order statuses
+                    if ($orderObject) $this->connection->send($orderObject); // Send object to websocket stream;
+                    //$this->connection->send(json_encode(['method' => 'getTradingBalance', 'params' => [], 'id' => '123'])); // Get trading balances
                 }
 
                 Cache::put('orderObject' . env("ASSET_TABLE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
@@ -302,7 +307,7 @@ class ccxtsocket extends Command
     private function webSocketMessageParse($loop, Trading $trading, array $message){
 
         /* Output all messages. No filters. Heavy output! */
-        //dump($message);
+        dump($message);
 
         /* Set messages that should not outputed */
         $this->logMessageFlag = true;
@@ -332,7 +337,7 @@ class ccxtsocket extends Command
         /* Main log output */
         if($this->logMessageFlag){
             //dump("ccxtsocket.php 226. MAIN LOG:");
-            dump($message);
+           // dump($message);
         }
         $this->logMessageFlag = true;
 
@@ -403,8 +408,6 @@ class ccxtsocket extends Command
 
                     if (array_key_exists('currency', $message['result'][0])){ // Trading balances
                         foreach ($message['result'] as $balanceRecord){
-                            //dump($balanceRecord['currency']);
-                            // DB::table('settings_realtime')->first()->symbol
                             if($balanceRecord['currency'] == "ETH"){
                                 echo "ccxtsocket.php 409. Balance: ";
                                 dump($balanceRecord['currency'] . " " . $balanceRecord['available']);

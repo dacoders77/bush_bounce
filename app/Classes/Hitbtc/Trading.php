@@ -27,9 +27,11 @@ use Illuminate\Support\Facades\DB;
 class Trading
 {
     private $priceStep ; // ETHBTC price step 0.000001. ETHUSD 0.01
-    private $priceShift = 0; // How far (steps) the limit order will be placed away from the market price. steps
+    private $priceShift = 0; // How far (steps) the limit order will be placed away from the market price.
     private $orderId;
     private $orderPlacePrice;
+    private $orderQuantity;
+    private $tradesArray = array(); // Trades array. Used for accumulated volume and order average fill price
     private $activeOrder = null; // When there is an order present
     private $needToMoveOrder = true;
     private $rateLimitTime = 0; // Replace an order once a second
@@ -39,6 +41,7 @@ class Trading
     public function __construct()
     {
         $this->priceStep = DB::table('settings_realtime')->first()->price_step;
+        $this->orderQuantity = DB::table('settings_realtime')->first()->volume;
     }
 
     /**
@@ -56,7 +59,8 @@ class Trading
 
             $this->orderId = floor(round(microtime(true) * 1000));
             ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
-            Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject(false, $direction, $this->orderPlacePrice , $this->orderId, ""), 5);
+
+            Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
             $this->activeOrder = "placed";
 
             // BD actions
@@ -70,20 +74,25 @@ class Trading
 
         }
 
-        /* When order placed, start to move if needed */
+        /* When order placed, start to move if needed.
+         * For each move volume is calculated accordingly to the volume filled in previous trade.
+         */
         if ($this->activeOrder == "new"){
 
             ($direction == "buy" ? $priceToCheck = $bid - $this->priceStep * $this->priceShift : $priceToCheck = $ask + $this->priceStep * $this->priceShift);
             if ($this->orderPlacePrice != $priceToCheck){
 
                 if ($this->needToMoveOrder){
-                    echo "TIME to move the order! " . date("Y-m-d G:i:s") . "\n";
+                    echo "TIME to move the order! " . date("Y-m-d G:i:s") . "Order ID to move: $this->orderId \n";
 
                     if (time() > $this->rateLimitTime || $this->rateLimitFlag){
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
                         $tempOrderId = round(microtime(true) * 1000);
 
-                        Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject(true,"", $this->orderPlacePrice, $this->orderId, $tempOrderId), 5);
+                        // Move order
+                        // Pass calculated volume
+                        Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("moveOrder","", $this->orderPlacePrice, $this->orderQuantity, $this->orderId, $tempOrderId), 5);
+
                         $this->orderId = $tempOrderId;
                         $this->needToMoveOrder = false;
 
@@ -120,25 +129,66 @@ class Trading
             echo "***parseActiveOrders call! \n";
         }
 
-        /* Order filled */
+        /*
+         * Order filled.
+         * Cases:
+         * 1. Full volume execution
+         * 2. Partial fill
+         */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "filled"){
-            dump('Dump from Trading.php 125');
-            dump( $message);
-            $this->activeOrder = "filled"; // Then we can open a new order
-            $this->needToMoveOrder = false; // When order has been filled - don't move it
-            echo "Order FILLED! filled price: ";
-            echo $message['params']['tradePrice'] . " ";
-            echo $message['params']['side'] . "\n";
-            Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
-            LogToFile::add("Trading.php line 130.", $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
+            dump('Dump from Trading.php 139');
+            dump($message);
+            Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("getActiveOrders"), 5);
 
-            if($message['params']['side'] == "buy"){
-                DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+
+            // ** VOL
+            array_push($this->tradesArray, new OrderObject("", "", $message['params']['tradePrice'], $message['params']['tradeQuantity']));
+            $averageOrderFillPrice = 0;
+            $accumulatedOrderVolume = 0;
+            foreach ($this->tradesArray as $trade){
+                echo "Trading.php 147:\n";
+                dump($trade);
+                $averageOrderFillPrice = $averageOrderFillPrice + $trade->price;
+                $accumulatedOrderVolume = $accumulatedOrderVolume + $trade->quantity;
             }
-            else{
-                DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
-                DataBase::calculateProfit();
+            $averageOrderFillPrice = $averageOrderFillPrice / count($this->tradesArray);
+
+            if ($accumulatedOrderVolume == $this->orderQuantity){
+                dump("Trading.php 156. FULL EXEC. Stop thread");
+                echo "AVG FILL PRICE/VOLUME: $averageOrderFillPrice / $accumulatedOrderVolume\n";
+
+                $this->activeOrder = "filled"; // Then we can open a new order
+                $this->needToMoveOrder = false; // When order has been filled - don't move it
+                echo "Order FILLED! filled price: ";
+                echo $message['params']['tradePrice'] . " ";
+                echo $message['params']['side'] . "\n";
+
+                //Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
+                LogToFile::add("Trading.php line 130.", $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
+
             }
+
+            $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
+
+            /*
+            // Array push
+                - accumulatedVolume
+                - orderFillAveragePrice
+
+            - foreach tradesArray
+                - trade price (average price)
+                - trade volume (accumulated volume)
+
+            if plannedVolume = accumulatedVolume
+                - full close
+                - cache. stop thread
+
+            orderQuantity = orderQantity - $message['params']['status']
+            */
+
+
+
+            $this->addOrderExecPriceToDB($message);
         }
     }
 
@@ -163,6 +213,17 @@ class Trading
         else{
             //dump('as a single valuse: ' . $message['id']);
             echo "dont need to move this id\n";
+        }
+    }
+
+    public function addOrderExecPriceToDB (array $message){
+        // MOVE TO SEPARATE METHOD
+        if($message['params']['side'] == "buy"){
+            DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+        }
+        else{
+            DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+            DataBase::calculateProfit();
         }
     }
 }
