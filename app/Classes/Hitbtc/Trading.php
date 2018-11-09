@@ -151,52 +151,54 @@ class Trading
 
             // ** VOL
             array_push($this->tradesArray, new OrderObject("", "", $message['params']['tradePrice'], $message['params']['tradeQuantity']));
-            $averageOrderFillPrice = 0;
-            $accumulatedOrderVolume = 0;
+
+            $this->accumulatedOrderVolume = 0;
             foreach ($this->tradesArray as $trade){
                 echo "Trading.php 147:\n";
                 dump($trade);
                 $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;
-                $this->accumulatedOrderVolume = $this->accumulatedOrderVolume + $trade->quantity;
+                $this->accumulatedOrderVolume += $trade->quantity; // THIS IS WRONG
+
             }
             $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
 
 
 
-            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume;
+            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
 
-            if ($this->accumulatedOrderVolume == $this->orderQuantity){
+            $kostylVolume = 90 * $this->orderQuantity / 100;
+            echo "KOSTYL VOLUME: " . $kostylVolume . "\n";
+
+            if ($this->accumulatedOrderVolume > $kostylVolume ){
                 dump("Trading.php 156. FULL EXEC. Stop thread");
                 echo "AVG FILL PRICE/VOLUME: $this->averageOrderFillPrice / $this->accumulatedOrderVolume\n";
 
                 $this->activeOrder = "filled"; // Then we can open a new order
                 $this->needToMoveOrder = false; // When order has been filled - don't move it
-                echo "Order FILLED! filled price: ";
+                echo "THREAD STOP. Order FILLED! filled price: ";
                 echo $message['params']['tradePrice'] . " ";
                 echo $message['params']['side'] . "\n";
 
-                //Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
-                LogToFile::add("Trading.php line 130.", $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
+                LogToFile::add(__FILE__ . __LINE__, $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
 
+
+                // DB SCHEME
+                // date              order_direction order_volume trade_volume order_volume_remain trade_direction in_price out_price profit_per_contract profit_per_volume rebate_per_volume net_profit accum_profit
+                // 10.01.18 22:21    long             3                        3                                   231.00
+                // 10.01.18 22:35                                  1           2                   sell                     231.20    0.20                0.2               0.0001            0.4001
+                // 10.01.18 22:36                                  2           0                   sell                     231.30    0.30                0.6               0.0002            0.4002      0.4003
+
+                // Create model: order
+                // Migration: orders
+                // When order placed - add record
+                // When trade occurs - add record Type 2
+                // Calculate profit
+
+                $this->activeOrder = null; // Test var reset
+                Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
             }
 
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
-
-            /*
-            // Array push
-                - accumulatedVolume
-                - orderFillAveragePrice
-
-            - foreach tradesArray
-                - trade price (average price)
-                - trade volume (accumulated volume)
-
-            if plannedVolume = accumulatedVolume
-                - full close
-                - cache. stop thread
-
-            orderQuantity = orderQantity - $message['params']['status']
-            */
 
             $this->addOrderExecPriceToDB($message);
         }
