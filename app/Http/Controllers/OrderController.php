@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use \App\Order; // Model link
 
 class OrderController extends Controller
 {
@@ -85,22 +86,55 @@ class OrderController extends Controller
     /**
      * Add a record to DB with order data.
      */
-    public function addOpenOrder(){
-
+    public static function addOpenOrder(string $orderDirection, float $orderVolume, $inPrice){
+        $recordId = Order::create([
+            'order_direction' => $orderDirection,
+            'order_volume' => $orderVolume,
+            'in_price' => $inPrice
+        ])->id;
+        return $recordId;
     }
 
     /**
      * Add trade record.
      */
-    public function addTrade(){
-
+    public static function addTrade(string $tradeDirection, float $tradeVolume, float $outPrice, float $rebatePerVolume){
+        $recordId = Order::create([
+            'trade_direction' => $tradeDirection,
+            'trade_volume' => $tradeVolume,
+            'out_price' => $outPrice,
+            'rebate_per_volume' => $rebatePerVolume
+        ])->id;
+        return $recordId;
     }
 
     /**
      * When a trade is added. Profit can be calculated.
      * Accordingly to the given volume (trade volume).
+     * @param int   $id id of the record for which profit will be calculated.
+     * @void mixed
      */
-    public function calculateProfit(){
+    public static function calculateProfit(int $id){
+        // id in price
+        $inPriceRecord = Order::where('in_price', '!=', null)->orderBy('id', 'desc');
+        $profitPerVolume = (Order::where('id', $id)->value('out_price') - $inPriceRecord->value('in_price')) * Order::where('id', $id)->value('trade_volume');
+        $netProfit = $profitPerVolume + Order::where('id', $id)->value('rebate_per_volume');
+        Order::where('id', $id)
+            ->update([
+                'profit_per_contract' => Order::where('id', $id)->value('out_price') - $inPriceRecord->value('in_price'),
+                'order_volume' => Order::where('id', $id - 1)->value('order_volume') - Order::where('id', $id)->value('trade_volume'),
+                'profit_per_volume' => $profitPerVolume,
+                'net_profit' => $netProfit,
+                'accum_profit' => Order::where('id', $id - 1)->value('accum_profit') + $netProfit,
+                ]);
+
+        // if sell: open order price - current trade price
+
+        //Execution::where('signal_id', $request['id'])
+        //    ->where('client_id', $execution->client_id)
+        //    ->update(['client_funds' => $response, 'open_response' => 'Got balance ok']);
+
+
 
     }
 }

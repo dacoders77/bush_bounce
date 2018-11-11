@@ -20,12 +20,11 @@ class CreateOrdersTable extends Migration
             $table->string('trade_direction')->nullable();
             $table->decimal('order_volume', 6, 3)->nullable();
             $table->decimal('trade_volume', 6, 3)->nullable();
-            $table->decimal('trade_volume_remain', 6, 3)->nullable();
             $table->decimal('in_price', 8, 3)->nullable();
             $table->decimal('out_price', 8, 3)->nullable();
             $table->decimal('profit_per_contract', 6, 3)->nullable();
             $table->decimal('profit_per_volume', 6, 3)->nullable();
-            $table->decimal('profit_per_volume', 8, 5)->nullable();
+            $table->decimal('rebate_per_volume', 8, 5)->nullable();
             $table->decimal('net_profit', 8, 5)->nullable();
             $table->decimal('accum_profit', 8, 5)->nullable();
         });

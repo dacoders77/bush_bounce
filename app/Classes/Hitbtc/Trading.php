@@ -9,6 +9,7 @@
 namespace App\Classes\Hitbtc;
 
 use App\Classes\LogToFile;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -37,7 +38,6 @@ class Trading
     private $rateLimitTime = 0; // Replace an order once a second
     private $rateLimitFlag = true; // Enter to the rate limit condition once
     private $runOnceFlag = true; // Enter to the order placed IF only once
-
 
     private $averageOrderFillPrice;
     private $accumulatedOrderVolume;
@@ -129,9 +129,13 @@ class Trading
         /* Order placed */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new" && $this->runOnceFlag){
             // Flag. True by default. Reseted when order filled
+            echo __FILE__  . " " . __LINE__ . " Order placed***\n";
             $this->activeOrder = "new";
             $this->runOnceFlag = false; // Enter this IF only once
-            echo "***parseActiveOrders call! \n";
+            //dd($message);
+            if ($message['params']['side'] == 'buy')
+                OrderController::addOpenOrder("long", $message['params']['quantity'], $message['params']['price']);
+
         }
 
         /*
@@ -163,7 +167,6 @@ class Trading
             $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
 
 
-
             echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
 
             $kostylVolume = 90 * $this->orderQuantity / 100;
@@ -180,19 +183,6 @@ class Trading
                 echo $message['params']['side'] . "\n";
 
                 LogToFile::add(__FILE__ . __LINE__, $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
-
-
-                // DB SCHEME
-                // date              order_direction order_volume trade_volume order_volume_remain trade_direction in_price out_price profit_per_contract profit_per_volume rebate_per_volume net_profit accum_profit
-                // 10.01.18 22:21    long             3                        3                                   231.00
-                // 10.01.18 22:35                                  1           2                   sell                     231.20    0.20                0.2               0.0001            0.4001
-                // 10.01.18 22:36                                  2           0                   sell                     231.30    0.30                0.6               0.0002            0.4002      0.4003
-
-                // Create model: order
-                // Migration: orders
-                // When order placed - add record
-                // When trade occurs - add record Type 2
-                // Calculate profit
 
                 $this->activeOrder = null; // Test var reset
                 Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
@@ -231,11 +221,14 @@ class Trading
     public function addOrderExecPriceToDB (array $message){
         // MOVE TO SEPARATE METHOD
         if($message['params']['side'] == "buy"){
-            DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+            //DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
         }
         else{
-            DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
-            DataBase::calculateProfit();
+            //DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+            //DataBase::calculateProfit();
+
+            $recodId = OrderController::addTrade("short", $message['params']['tradeQuantity'], $message['params']['price'], abs($message['params']['tradeFee']));
+            OrderController::calculateProfit($recodId);
         }
     }
 }

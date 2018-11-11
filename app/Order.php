@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
@@ -17,7 +18,6 @@ class Order extends Model
         'order_direction',
         'order_volume',
         'trade_volume',
-        'order_volume_remain',
         'trade_direction',
         'in_price',
         'out_price',
