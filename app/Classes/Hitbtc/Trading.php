@@ -9,6 +9,7 @@
 namespace App\Classes\Hitbtc;
 
 use App\Classes\LogToFile;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -37,7 +38,6 @@ class Trading
     private $rateLimitTime = 0; // Replace an order once a second
     private $rateLimitFlag = true; // Enter to the rate limit condition once
     private $runOnceFlag = true; // Enter to the order placed IF only once
-
 
     private $averageOrderFillPrice;
     private $accumulatedOrderVolume;
@@ -129,9 +129,13 @@ class Trading
         /* Order placed */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new" && $this->runOnceFlag){
             // Flag. True by default. Reseted when order filled
+            echo __FILE__  . " " . __LINE__ . " Order placed***\n";
             $this->activeOrder = "new";
             $this->runOnceFlag = false; // Enter this IF only once
-            echo "***parseActiveOrders call! \n";
+            //dd($message);
+            if ($message['params']['side'] == 'buy')
+                OrderController::addOpenOrder("long", $message['params']['quantity'], $message['params']['price']);
+
         }
 
         /*
@@ -151,52 +155,40 @@ class Trading
 
             // ** VOL
             array_push($this->tradesArray, new OrderObject("", "", $message['params']['tradePrice'], $message['params']['tradeQuantity']));
-            $averageOrderFillPrice = 0;
-            $accumulatedOrderVolume = 0;
+
+            $this->accumulatedOrderVolume = 0;
             foreach ($this->tradesArray as $trade){
                 echo "Trading.php 147:\n";
                 dump($trade);
                 $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;
-                $this->accumulatedOrderVolume = $this->accumulatedOrderVolume + $trade->quantity;
+                $this->accumulatedOrderVolume += $trade->quantity; // THIS IS WRONG
+
             }
             $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
 
 
+            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
 
-            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume;
+            $kostylVolume = 90 * $this->orderQuantity / 100;
+            echo "KOSTYL VOLUME: " . $kostylVolume . "\n";
 
-            if ($this->accumulatedOrderVolume == $this->orderQuantity){
+            if ($this->accumulatedOrderVolume > $kostylVolume ){
                 dump("Trading.php 156. FULL EXEC. Stop thread");
                 echo "AVG FILL PRICE/VOLUME: $this->averageOrderFillPrice / $this->accumulatedOrderVolume\n";
 
                 $this->activeOrder = "filled"; // Then we can open a new order
                 $this->needToMoveOrder = false; // When order has been filled - don't move it
-                echo "Order FILLED! filled price: ";
+                echo "THREAD STOP. Order FILLED! filled price: ";
                 echo $message['params']['tradePrice'] . " ";
                 echo $message['params']['side'] . "\n";
 
-                //Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
-                LogToFile::add("Trading.php line 130.", $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
+                LogToFile::add(__FILE__ . __LINE__, $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
 
+                $this->activeOrder = null; // Test var reset
+                Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
             }
 
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
-
-            /*
-            // Array push
-                - accumulatedVolume
-                - orderFillAveragePrice
-
-            - foreach tradesArray
-                - trade price (average price)
-                - trade volume (accumulated volume)
-
-            if plannedVolume = accumulatedVolume
-                - full close
-                - cache. stop thread
-
-            orderQuantity = orderQantity - $message['params']['status']
-            */
 
             $this->addOrderExecPriceToDB($message);
         }
@@ -229,11 +221,14 @@ class Trading
     public function addOrderExecPriceToDB (array $message){
         // MOVE TO SEPARATE METHOD
         if($message['params']['side'] == "buy"){
-            DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+            //DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
         }
         else{
-            DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
-            DataBase::calculateProfit();
+            //DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
+            //DataBase::calculateProfit();
+
+            $recodId = OrderController::addTrade("short", $message['params']['tradeQuantity'], $message['params']['price'], abs($message['params']['tradeFee']));
+            OrderController::calculateProfit($recodId);
         }
     }
 }

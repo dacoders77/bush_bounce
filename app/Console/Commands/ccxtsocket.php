@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Classes\Hitbtc\DataBase;
 use App\Classes\Hitbtc\Hitbtc;
+use App\Classes\Hitbtc\OrderObject;
 use App\Classes\Hitbtc\Trading;
 use App\Classes\LogToFile;
 use App\Jobs\PlaceLimitOrder;
@@ -59,12 +60,34 @@ class ccxtsocket extends Command
         // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MAY CAUSE DIFFERENT PROBLEMS
     }
 
+    public $tradesArray = array();
+    public $accumulatedOrderVolume;
+    public $averageOrderFillPrice;
     /**
      * Execute the console command.
      * @return mixed
      */
     public function handle()
     {
+
+        /*
+        array_push($this->tradesArray,   new OrderObject("", "", 120, 10));
+        array_push($this->tradesArray, new OrderObject("", "", 130, 10));
+
+        foreach ($this->tradesArray as $trade){
+            echo "Trading.php 147:\n";
+            dump($trade);
+            $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;
+            $this->accumulatedOrderVolume += $trade->quantity; // THIS IS WRONG
+        }
+        $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
+
+        echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
+        echo "AVG PRICE: " . $this->averageOrderFillPrice;
+
+        die();
+        */
+
 
         //Redis set up
         //$redis = app()->make('redis');
@@ -307,7 +330,8 @@ class ccxtsocket extends Command
     private function webSocketMessageParse($loop, Trading $trading, array $message){
 
         /* Output all messages. No filters. Heavy output! */
-        dump($message); 
+        //dump($message); 
+
 
         /* Set messages that should not outputed */
         $this->logMessageFlag = true;
@@ -420,15 +444,19 @@ class ccxtsocket extends Command
 
         /* Error message handle */
         if (array_key_exists('error', $message)){
-            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454\n";
+            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454. THREAD NOT STOPED!\n";
             dump($message);
             /* Email notification */
-            $objDemo = new \stdClass();
-            $objDemo->subject = 'BUSH error: ' . env("ASSET_TABLE") . " " . DB::table('settings_realtime')->first()->symbol;
-            $objDemo->body = "Error code: " . $message['error']['code'] . " Message: " . $message['error']['message'] . " Description: " . $message['error']['description'] . " Time: " . date("Y-m-d G:i:s");
-            $emails = ['nextbb@yandex.ru', 'aleksey.kirushin2015@yandex.ru', 'Ikorepov@gmail.com', 'busch.art@yandex.ru'];
-            Mail::to($emails)->send(new EmptyEmail($objDemo));
-            $loop->stop();
+            //$objDemo = new \stdClass();
+            //$objDemo->subject = 'BUSH error: ' . env("ASSET_TABLE") . " " . DB::table('settings_realtime')->first()->symbol;
+            //$objDemo->body = "Error code: " . $message['error']['code'] . " Message: " . $message['error']['message'] . " Description: " . $message['error']['description'] . " Time: " . date("Y-m-d G:i:s");
+            //$emails = ['nextbb@yandex.ru', 'aleksey.kirushin2015@yandex.ru', 'Ikorepov@gmail.com', 'busch.art@yandex.ru'];
+            //Mail::to($emails)->send(new EmptyEmail($objDemo));
+
+            //$loop->stop();
+            $loop->run();
+
+
         }
     }
 }
