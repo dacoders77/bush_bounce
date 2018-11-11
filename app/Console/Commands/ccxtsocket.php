@@ -307,7 +307,7 @@ class ccxtsocket extends Command
     private function webSocketMessageParse($loop, Trading $trading, array $message){
 
         /* Output all messages. No filters. Heavy output! */
-        dump($message);
+        dump($message); 
 
         /* Set messages that should not outputed */
         $this->logMessageFlag = true;
