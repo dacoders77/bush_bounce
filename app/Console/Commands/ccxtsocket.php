@@ -454,7 +454,7 @@ class ccxtsocket extends Command
             //Mail::to($emails)->send(new EmptyEmail($objDemo));
 
             //$loop->stop();
-            $loop->run();
+            //$loop->run();
 
 
         }
