@@ -12,7 +12,7 @@ use \App\Order;
 
 class OrdersTest extends TestCase
 {
-    //use RefreshDatabase;
+    use RefreshDatabase;
 
     /* @see https://www.youtube.com/watch?v=WlrakUbyaHI */
     //use DatabaseMigrations;

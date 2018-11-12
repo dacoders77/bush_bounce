@@ -105,7 +105,7 @@ Route::get('/realtime', function ()
 Route::get('/chartinfo', 'ChartInfo@load')->name('ChartInfo')->middleware('auth');
 
 // Load history bars from local DB (not www.bitfinex.com)
-route::get('/historybarsload', 'realtime\HistoryBars@load')->middleware('auth');
+route::get('/historybarsload', 'Realtime\HistoryBars@load')->middleware('auth');
 
 // Truncate history data table
 //route::get('/tabletruncate', 'Table@truncate');
@@ -139,7 +139,7 @@ Route::get('/pricechannelcalc', function(){
 });
 
 // Chart control form fields update
-Route::post('/chartcontrolupdate', 'realtime\ChartControl@update')->middleware('auth');
+Route::post('/chartcontrolupdate', 'Realtime\ChartControl@update')->middleware('auth');
 
 // Initial start button click in ChartControl.vue. Button clicked in real-time mode
 Route::get('/initialstart', 'initialstart@index')->middleware('auth');
