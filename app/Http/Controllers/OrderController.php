@@ -87,11 +87,28 @@ class OrderController extends Controller
      * Add a record to DB with order data.
      */
     public static function addOpenOrder(string $orderDirection, float $orderVolume, $inPrice){
+
+        // If order table is empty - add 0 to accum_profit
+        //echo "cnt: " . Order::count();
+        //die();
+
         $recordId = Order::create([
             'order_direction' => $orderDirection,
             'order_volume' => $orderVolume,
             'in_price' => $inPrice
         ])->id;
+
+        if (Order::count() == 1){
+            Order::where('id', $recordId)->update([
+                'accum_profit' => 0
+            ]);
+        }
+        else{
+            Order::where('id', $recordId)->update([
+                'accum_profit' => Order::where('id', $recordId - 1)->value('accum_profit')
+            ]);
+        }
+
         return $recordId;
     }
 
@@ -103,7 +120,7 @@ class OrderController extends Controller
             'trade_direction' => $tradeDirection,
             'trade_volume' => $tradeVolume,
             'out_price' => $outPrice,
-            'rebate_per_volume' => $rebatePerVolume
+            'rebate_per_volume' => $rebatePerVolume * 2
         ])->id;
         return $recordId;
     }
@@ -127,14 +144,5 @@ class OrderController extends Controller
                 'net_profit' => $netProfit,
                 'accum_profit' => Order::where('id', $id - 1)->value('accum_profit') + $netProfit,
                 ]);
-
-        // if sell: open order price - current trade price
-
-        //Execution::where('signal_id', $request['id'])
-        //    ->where('client_id', $execution->client_id)
-        //    ->update(['client_funds' => $response, 'open_response' => 'Got balance ok']);
-
-
-
     }
 }

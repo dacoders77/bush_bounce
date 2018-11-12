@@ -26,7 +26,7 @@ class CreateOrdersTable extends Migration
             $table->decimal('profit_per_volume', 6, 3)->nullable();
             $table->decimal('rebate_per_volume', 8, 5)->nullable();
             $table->decimal('net_profit', 8, 5)->nullable();
-            $table->decimal('accum_profit', 8, 5)->nullable();
+            $table->decimal('accum_profit', 10, 5)->nullable();
         });
     }
 

@@ -453,8 +453,8 @@ class ccxtsocket extends Command
             //$emails = ['nextbb@yandex.ru', 'aleksey.kirushin2015@yandex.ru', 'Ikorepov@gmail.com', 'busch.art@yandex.ru'];
             //Mail::to($emails)->send(new EmptyEmail($objDemo));
 
-            //$loop->stop();
-            //$loop->run();
+            $loop->stop(); // Exit from this thread. If not to - app freezes after error Order not found pops up
+            //$loop->run(); // Don't use it
 
 
         }

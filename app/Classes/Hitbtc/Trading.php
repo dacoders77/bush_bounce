@@ -132,10 +132,8 @@ class Trading
             echo __FILE__  . " " . __LINE__ . " Order placed***\n";
             $this->activeOrder = "new";
             $this->runOnceFlag = false; // Enter this IF only once
-            //dd($message);
             if ($message['params']['side'] == 'buy')
                 OrderController::addOpenOrder("long", $message['params']['quantity'], $message['params']['price']);
-
         }
 
         /*
@@ -190,6 +188,7 @@ class Trading
 
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
 
+            // Orders table
             $this->addOrderExecPriceToDB($message);
         }
     }
@@ -219,14 +218,10 @@ class Trading
     }
 
     public function addOrderExecPriceToDB (array $message){
-        // MOVE TO SEPARATE METHOD
         if($message['params']['side'] == "buy"){
             //DataBase::addOrderInExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
         }
         else{
-            //DataBase::addOrderOutExecPrice(date("Y-m-d G:i:s", strtotime($message['params']['updatedAt'])), $message['params']['price'], $message['params']['tradeFee']);
-            //DataBase::calculateProfit();
-
             $recodId = OrderController::addTrade("short", $message['params']['tradeQuantity'], $message['params']['price'], abs($message['params']['tradeFee']));
             OrderController::calculateProfit($recodId);
         }
