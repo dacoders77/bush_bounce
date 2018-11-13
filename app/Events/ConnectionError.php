@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -15,8 +16,15 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
  * This event is triggered when a connection to www.bitfinex.com can not be established like network error or maintenance
  * A error occurs in RatchetPawlSocket.php then is listened in ChartControl.vue
  * @package App\Events
+ *
+ * In order not to place event to a que:
+ * implements ShouldBroadcast
+ * change to
+ * implements ShouldBroadcastNow
+ * @see https://laravel.com/docs/5.7/broadcasting#broadcast-queue
  */
-class ConnectionError implements ShouldBroadcast
+class ConnectionError implements ShouldBroadcastNow
+//class ConnectionError
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

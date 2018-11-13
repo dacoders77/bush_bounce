@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -15,7 +16,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
  * This event is triggered when status of a limit order is changed in ccxt.php. This event is listened in ChartControl.vue
  * @package App\Events
  */
-class LimitOrderTrace implements ShouldBroadcast
+class LimitOrderTrace implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
