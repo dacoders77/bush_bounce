@@ -83,8 +83,7 @@ class Trading
         else{
             $command->question('Accoute balance = 0. No need to correct');
         }
-        die('');
-
+        
 
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
