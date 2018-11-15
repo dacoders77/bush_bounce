@@ -60,34 +60,13 @@ class Trading
      */
     public function parseTicker($bid = null, $ask = null, Command $command){
 
-        /* Balance checker */
-        // Get balance
-        // If not null -> close it with market order
-        // add record to file
-        $exchange = new hitbtc;
-        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
-        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
-        //dump(array_keys($exchange->load_markets()));
-        //$command->info('Account balance');
-        $balance = ($exchange->fetchBalance()['ETH']);
-        //dump($balance);
-        if ($balance['total'] != 0)
-        {
-            $command->error('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
-            // DB::table('settings_realtime')->first()->symbol
-            /* @todo wrong spell of SYMBOL! */
-            $buyMarketOrderResponse = $exchange->createMarketSellOrder('ETH/USDT', $balance['total'], []);
-            //dump($buyMarketOrderResponse['amount']);
-            LogToFile::add(__FILE__ . " Account volume corrected: ", json_encode($buyMarketOrderResponse));
-        }
-        else{
-            //$command->question('Accoute balance = 0. No need to correct');
-        }
-
 
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
         if ($this->activeOrder == null){
+
+            //$this->balanceChecker($command); // Check balance. Correct if needed.
+
             $this->orderId = floor(round(microtime(true) * 1000));
             ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
 
@@ -242,6 +221,32 @@ class Trading
         else{
             $recodId = OrderController::addTrade("short", $message['params']['tradeQuantity'], $message['params']['price'], abs($message['params']['tradeFee']));
             OrderController::calculateProfit($recodId);
+        }
+    }
+
+    private function balanceChecker(Command $command){
+        /* Balance checker */
+        // Get balance
+        // If not null -> close it with market order
+        // add record to file
+        $exchange = new hitbtc;
+        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
+        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+        //dump(array_keys($exchange->load_markets()));
+        //$command->info('Account balance');
+        $balance = ($exchange->fetchBalance()['ETH']);
+        //dump($balance);
+        if ($balance['total'] != 0)
+        {
+            $command->error('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
+            // DB::table('settings_realtime')->first()->symbol
+            /* @todo wrong spell of SYMBOL! */
+            $buyMarketOrderResponse = $exchange->createMarketSellOrder('ETH/USDT', $balance['total'], []);
+            //dump($buyMarketOrderResponse['amount']);
+            LogToFile::add(__FILE__ . " Account volume corrected: ", json_encode($buyMarketOrderResponse));
+        }
+        else{
+            //$command->question('Accoute balance = 0. No need to correct');
         }
     }
 }
