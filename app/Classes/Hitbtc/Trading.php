@@ -121,7 +121,7 @@ class Trading
                         $this->rateLimitTime = time() + 2; // Move order once in two seconds
 
                         // On each move - store to price in DB
-                        DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
+                        //DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
                         echo "Order place price: " . $this->orderPlacePrice . "\n";
 
                     }
