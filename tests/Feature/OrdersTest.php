@@ -104,7 +104,7 @@ class OrdersTest extends TestCase
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('net_profit'), (Order::where('id', $addedOrderRecordID)->value('out_price') - $inPrice) * $tradeVolumeArray[$j] + $rebatePerVolume * 2);
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('accum_profit'), Order::where('id', $addedOrderRecordID - 1)->value('accum_profit') + Order::where('id', $addedOrderRecordID)->value('net_profit'));
 
-                
+
             }
         }
     }

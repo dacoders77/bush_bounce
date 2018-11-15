@@ -371,11 +371,11 @@ class ccxtsocket extends Command
             if($message['method'] == 'ticker'){
                 if ($message['params']['bid'] && $this->option('buy')) // ccxt:start --buy
                     if(array_key_exists('bid', $message['params']))
-                        $trading->parseTicker($message['params']['bid'], null);
+                        $trading->parseTicker($message['params']['bid'], null, $this);
 
                 if ($message['params']['bid'] && !$this->option('buy')) // // ccxt:start --NO PARAM
                     if(array_key_exists('ask', $message['params']))
-                        $trading->parseTicker(null, $message['params']['ask']);
+                        $trading->parseTicker(null, $message['params']['ask'], $this);
             }
 
             /* Order condition parse.

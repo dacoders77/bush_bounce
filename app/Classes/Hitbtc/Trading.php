@@ -12,6 +12,8 @@ use App\Classes\LogToFile;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use ccxt\hitbtc;
+use Symfony\Component\Console\Command\Command;
 
 /*
  * Basic trading class.
@@ -56,30 +58,45 @@ class Trading
      * @param   double @ask
      * @return  void
      */
-    public function parseTicker($bid = null, $ask = null){
+    public function parseTicker($bid = null, $ask = null, Command $command){
+
+        /* Balance checker */
+        // Get balance
+        // If not null -> close it with market order
+        // add record to file
+        $exchange = new hitbtc;
+        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
+        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+        //dump(array_keys($exchange->load_markets()));
+        //$command->info('Account balance');
+        $balance = ($exchange->fetchBalance()['ETH']);
+        //dump($balance);
+        if ($balance['total'] != 0)
+        {
+            $command->error('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
+            // DB::table('settings_realtime')->first()->symbol
+            /* @todo wrong spell of SYMBOL! */
+            $buyMarketOrderResponse = $exchange->createMarketSellOrder('ETH/USDT', $balance['total'], []);
+            //dump($buyMarketOrderResponse['amount']);
+            LogToFile::add(__FILE__ . " Account volume corrected: ", json_encode($buyMarketOrderResponse));
+        }
+        else{
+            $command->question('Accoute balance = 0. No need to correct');
+        }
+        die('');
+
 
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
         if ($this->activeOrder == null){
-
             $this->orderId = floor(round(microtime(true) * 1000));
             ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
 
             Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
             $this->activeOrder = "placed";
-
-            // BD actions
-            if($direction == "buy" ){
-                DataBase::addOrderRecord($this->orderId);
-                DataBase::addOrderInPrice(date("Y-m-d G:i:s"), $this->orderPlacePrice);
-            }
-            else{
-                DataBase::addOrderOutPrice(date("Y-m-d G:i:s"), $this->orderPlacePrice);
-            }
-
         }
 
-        /* When order placed, start to move if needed.
+        /* When order is placed, start to move if needed.
          * For each move volume is calculated accordingly to the volume filled in previous trade.
          */
         if ($this->activeOrder == "new"){
@@ -152,7 +169,7 @@ class Trading
         // "reportType" => "trade"
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['reportType'] == "trade"){
 
-            dump('Dump from Trading.php 139');
+            dump('Dump from Trading.php 155');
             dump($message);
             Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("getActiveOrders"), 5);
 
@@ -190,7 +207,7 @@ class Trading
             }
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
 
-            // Orders table
+            // Orders table. Accounting
             $this->addOrderExecPriceToDB($message);
         }
     }
