@@ -97,7 +97,7 @@ class ccxtsocket extends Command
 
         $trading = new \App\Classes\Hitbtc\Trading();
 
-        echo "***** CCXT websocket app started! *****\n";
+        echo "***** CCXT websocket app started! ccxtsocket.php line 100 *****\n";
 
         /**
          * Reset trade flag. If it is not reseted, it will contain previous position state.

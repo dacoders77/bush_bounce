@@ -88,10 +88,8 @@ class OrderController extends Controller
      */
     public static function addOpenOrder(string $orderDirection, float $orderVolume, $inPrice){
 
-        // If order table is empty - add 0 to accum_profit
-        //echo "cnt: " . Order::count();
-        //die();
-
+        // If order table is empty - add 0 to accum_profit.
+        // If not - dublicate accum value from the previous record.
         $recordId = Order::create([
             'order_direction' => $orderDirection,
             'order_volume' => $orderVolume,
@@ -109,20 +107,69 @@ class OrderController extends Controller
             ]);
         }
 
+        // Add an empty trade record. This record is used when close response is not received.
+        // If close response is not received - we will have this record.
+        // Needed for Order not found error handle
+
         return $recordId;
     }
+
+    /**
+     * Add empty trade right adther order is created.
+     * This empty trade record will be the one rest of No order found error occurs.
+     * In this case we don't have exit response thus we will use out price from placed exit order.
+     * @todo Case when we use this empty order is OK but the case when such record is placed but placed limit order is not executed, may be the problem.
+     * @param string $tradeDirection
+     * @param float $tradeVolume
+     * @param float $outPrice
+     */
+    public static function addEmptyTrade(string $tradeDirection, float $tradeVolume, float $outPrice){
+        $id = Order::create([
+            'order_direction' => '**',
+            'trade_direction' => $tradeDirection,
+            'trade_volume' => $tradeVolume,
+            'out_price' => $outPrice,
+            'rebate_per_volume' => 0
+        ])->id;
+        return $id;
+    }
+
 
     /**
      * Add trade record.
      */
     public static function addTrade(string $tradeDirection, float $tradeVolume, float $outPrice, float $rebatePerVolume){
-        $recordId = Order::create([
-            'trade_direction' => $tradeDirection,
-            'trade_volume' => $tradeVolume,
-            'out_price' => $outPrice,
-            'rebate_per_volume' => $rebatePerVolume * 2
-        ])->id;
-        return $recordId;
+
+
+        /* If previous record is an empty record - update it
+         * Else - create a new one
+         * */
+        $lastRecord = Order::orderBy('id', 'desc'); // Get the last record
+
+        if ($lastRecord->value('order_direction') == '**'){
+            // update
+            Order::where('id', $lastRecord->value('id'))
+                ->update([
+                    'order_direction' => ' ', // Get rid of ** symbols which represent an empty trade record
+                    'trade_direction' => $tradeDirection,
+                    'trade_volume' => $tradeVolume,
+                    'out_price' => $outPrice,
+                    'rebate_per_volume' => $rebatePerVolume * 2
+                ]);
+            return $lastRecord->value('id');
+        }
+        else{
+            $recordId = Order::create([
+                'trade_direction' => $tradeDirection,
+                'trade_volume' => $tradeVolume,
+                'out_price' => $outPrice,
+                'rebate_per_volume' => $rebatePerVolume * 2
+            ])->id;
+            return $recordId;
+        }
+
+        // if ($lastRecord->where('id', $lastRecord->value('id') - 1)->value('order_direction') == '**'){
+
     }
 
     /**
@@ -132,7 +179,7 @@ class OrderController extends Controller
      * @void mixed
      */
     public static function calculateProfit(int $id){
-        // id in price
+        // id IN price
         $inPriceRecord = Order::where('in_price', '!=', null)->orderBy('id', 'desc');
         $profitPerVolume = (Order::where('id', $id)->value('out_price') - $inPriceRecord->value('in_price')) * Order::where('id', $id)->value('trade_volume');
         $netProfit = $profitPerVolume + Order::where('id', $id)->value('rebate_per_volume');

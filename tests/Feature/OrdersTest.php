@@ -9,10 +9,11 @@ use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use \App\Order;
+use Illuminate\Support\Facades\DB;
 
 class OrdersTest extends TestCase
 {
-    use RefreshDatabase;
+    //use RefreshDatabase;
 
     /* @see https://www.youtube.com/watch?v=WlrakUbyaHI */
     //use DatabaseMigrations;
@@ -29,6 +30,21 @@ class OrdersTest extends TestCase
         //$this->assertTrue();
     //}
     private $orderVolume;
+
+
+    public function test_add_order_and_emprt_trade(){
+
+        // Clear DB on each run. TESTING ONLY!
+        DB::table("orders")->truncate();
+
+        OrderController::addOpenOrder("long", 55, 212);
+
+        // Add empty trade record
+        $addEpmtyRecordID = OrderController::addEmptyTrade("short", 2, 231);
+        $this->assertEquals(Order::where('id', $addEpmtyRecordID)->value('trade_direction'), 'short');
+        $this->assertEquals(Order::where('id', $addEpmtyRecordID)->value('trade_volume'), 2);
+        $this->assertEquals(Order::where('id', $addEpmtyRecordID)->value('out_price'), 231);
+    }
 
     public function test_add_open_order_adds_record(){
 
@@ -47,28 +63,38 @@ class OrdersTest extends TestCase
             $this->orderVolume += $tradeVolumeArray[$i];
         }
 
-        //echo "array len: " . $arraylength . "\n";
-        //echo "len: " . $this->orderVolume . "\n";
-        //dump($tradeVolumeArray);
-
-        for ($i = 0; $i < 1; $i++ ){
-            $result = OrderController::addOpenOrder("long", $this->orderVolume, $inPrice); // Place order IN
+        for ($i = 0; $i < 3; $i++ ){
+            // Place IN order
+            $result = OrderController::addOpenOrder("long", $this->orderVolume, $inPrice);
             $this->assertEquals(Order::where('id', $result)->value('order_direction'), "long");
             $this->assertEquals(Order::where('id', $result)->value('order_volume'), $this->orderVolume);
             $this->assertEquals(Order::where('id', $result)->value('in_price'), $inPrice);
 
+            // Add empty trade record
+            $addEpmtyRecordID = OrderController::addEmptyTrade("short", 1, 231);
+            $this->assertEquals(Order::where('id', $addEpmtyRecordID)->value('trade_volume'), 1);
+
             for ($j = 0; $j < $arraylength; $j++){
-                $outPrice = rand(180, 250);
+
+                $outPrice = rand(180, 250); // Generate random price
                 $rebatePerVolume = 0.01; // Fixed value. It comes from the exchange
-                $addedOrderRecordID = OrderController::addTrade("short", $tradeVolumeArray[$j], $outPrice, $rebatePerVolume); // Trade out
+                $lastRecord = Order::orderBy('id', 'desc'); // Get the last record
+
+                $addedOrderRecordID = OrderController::addTrade("sell", $tradeVolumeArray[$j], $outPrice, $rebatePerVolume); // Trade out
+
+
                 // Add to the table values
-                $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('trade_direction'), 'short');
+                $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('trade_direction'), 'sell');
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('trade_volume'), $tradeVolumeArray[$j]);
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('out_price'), $outPrice);
-                $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('rebate_per_volume'), $rebatePerVolume * 2);
+                $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('rebate_per_volume'), $rebatePerVolume * 2); // 0 - empty record volume
+
+
 
                 // Calculate profit and other values in the row
                 OrderController::calculateProfit($addedOrderRecordID);
+
+
 
                 // Calculated values
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('order_volume'), Order::where('id', $addedOrderRecordID - 1)->value('order_volume') - $tradeVolumeArray[$j]);
@@ -77,8 +103,11 @@ class OrdersTest extends TestCase
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('rebate_per_volume'), $rebatePerVolume * 2);
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('net_profit'), (Order::where('id', $addedOrderRecordID)->value('out_price') - $inPrice) * $tradeVolumeArray[$j] + $rebatePerVolume * 2);
                 $this->assertEquals(Order::where('id', $addedOrderRecordID)->value('accum_profit'), Order::where('id', $addedOrderRecordID - 1)->value('accum_profit') + Order::where('id', $addedOrderRecordID)->value('net_profit'));
+
+                
             }
         }
     }
+
 
 }

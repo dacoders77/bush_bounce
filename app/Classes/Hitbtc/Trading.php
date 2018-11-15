@@ -107,6 +107,7 @@ class Trading
                         // On each move - store to price in DB
                         DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
                         echo "Order place price: " . $this->orderPlacePrice . "\n";
+
                     }
                     else{
                         echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
@@ -134,6 +135,11 @@ class Trading
             $this->runOnceFlag = false; // Enter this IF only once
             if ($message['params']['side'] == 'buy')
                 OrderController::addOpenOrder("long", $message['params']['quantity'], $message['params']['price']);
+            if ($message['params']['side'] == 'sell'){
+                $recodId = OrderController::addEmptyTrade('sell', $message['params']['quantity'], $message['params']['price']);
+                OrderController::calculateProfit($recodId);
+            }
+
         }
 
         /*
@@ -179,13 +185,9 @@ class Trading
                 echo "THREAD STOP. Order FILLED! filled price: ";
                 echo $message['params']['tradePrice'] . " ";
                 echo $message['params']['side'] . "\n";
-
-                LogToFile::add(__FILE__ . __LINE__, $message['params']['side'] ." " . $message['params']['symbol']  . " Order filled. price: " . $message['params']['price'] . " Status: " . $message['params']['status'] . " Quantity: " . $message['params']['quantity'] . " cumQuantity: " . $message['params']['cumQuantity'] . " Trade quantity: " . $message['params']['tradeQuantity']); // Debug log
-
                 $this->activeOrder = null; // Test var reset
                 Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
             }
-
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
 
             // Orders table
