@@ -81,9 +81,9 @@ class Trading
             LogToFile::add(__FILE__ . " Account volume corrected: ", json_encode($buyMarketOrderResponse));
         }
         else{
-            $command->question('Accoute balance = 0. No need to correct');
+            //$command->question('Accoute balance = 0. No need to correct');
         }
-        
+
 
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
