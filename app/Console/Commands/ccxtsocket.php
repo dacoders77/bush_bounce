@@ -80,7 +80,7 @@ class ccxtsocket extends Command
         $trading = new \App\Classes\Hitbtc\Trading();
 
         echo "***** CCXT websocket app started! ccxtsocket.php line 82 *****\n";
-        echo "symbol: " . DB::table('settings_realtime')->first()->symbol;
+        echo "symbol: " . DB::table('settings_realtime')->first()->symbol . "\n";
 
         /**
          * Reset trade flag. If it is not reseted, it will contain previous position state.

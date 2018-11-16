@@ -108,7 +108,7 @@ class RatchetPawlSocket extends Command
         {
             echo "\n";
             $this->error('Ratchet. Test trade will be placed!');
-            Artisan::queue('ccxt:start', ['--buy' => true]);
+            Artisan::queue('ccxt:start', ['--buy' => true])->onQueue(env("DB_DATABASE"));
             $this->initStartFlag = false;
             die('ratchet 112');
         }
