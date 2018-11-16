@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use ccxt\hitbtc;
 use Symfony\Component\Console\Command\Command;
 
-/*
+/**
  * Basic trading class.
  * Places and moves orders.
  * All events like: order place confirmation, order move, confirmation etc. Are received in ccxtsocket.php
@@ -58,17 +58,23 @@ class Trading
      * @param   double @ask
      * @return  void
      */
-    public function parseTicker($bid = null, $ask = null, Command $command){
+    public function parseTicker($bid = null, $ask = null){
 
 
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
         if ($this->activeOrder == null){
 
-            //$this->balanceChecker($command); // Check balance. Correct if needed.
-
             $this->orderId = floor(round(microtime(true) * 1000));
-            ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);
+            if ($direction == "buy") {
+                $this->balanceChecker(); // Run balance check
+                $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift;
+            }
+            else
+            {
+                $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift;
+            }
+
 
             Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
             $this->activeOrder = "placed";
@@ -121,7 +127,7 @@ class Trading
      * @param   array @mesage
      * @return  void
      */
-    public function parseActiveOrders(array $message){
+    public function parseActiveOrders(array $message, $loop){
         /* Order placed */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['status'] == "new" && $this->runOnceFlag){
             // Flag. True by default. Reseted when order filled
@@ -180,7 +186,9 @@ class Trading
                 echo "THREAD STOP. Order FILLED! filled price: ";
                 echo $message['params']['tradePrice'] . " ";
                 echo $message['params']['side'] . "\n";
-                $this->activeOrder = null; // Test var reset
+                //$this->activeOrder = null; // Test var reset
+
+                //$loop->stop();
                 Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
             }
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
@@ -224,7 +232,8 @@ class Trading
         }
     }
 
-    private function balanceChecker(Command $command){
+    private function balanceChecker(){
+        dump('ENTERED balanceChecker');
         /* Balance checker */
         // Get balance
         // If not null -> close it with market order
@@ -238,7 +247,7 @@ class Trading
         //dump($balance);
         if ($balance['total'] != 0)
         {
-            $command->error('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
+            dump('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
             // DB::table('settings_realtime')->first()->symbol
             /* @todo wrong spell of SYMBOL! */
             $buyMarketOrderResponse = $exchange->createMarketSellOrder('ETH/USDT', $balance['total'], []);

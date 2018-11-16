@@ -70,25 +70,6 @@ class ccxtsocket extends Command
     public function handle()
     {
 
-        /*
-        array_push($this->tradesArray,   new OrderObject("", "", 120, 10));
-        array_push($this->tradesArray, new OrderObject("", "", 130, 10));
-
-        foreach ($this->tradesArray as $trade){
-            echo "Trading.php 147:\n";
-            dump($trade);
-            $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;
-            $this->accumulatedOrderVolume += $trade->quantity; // THIS IS WRONG
-        }
-        $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
-
-        echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
-        echo "AVG PRICE: " . $this->averageOrderFillPrice;
-
-        die();
-        */
-
-
         //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
@@ -332,7 +313,6 @@ class ccxtsocket extends Command
         /* Output all messages. No filters. Heavy output! */
         //dump($message); 
 
-
         /* Set messages that should not outputed */
         $this->logMessageFlag = true;
         if (array_key_exists('method', $message)){
@@ -361,7 +341,7 @@ class ccxtsocket extends Command
         /* Main log output */
         if($this->logMessageFlag){
             //dump("ccxtsocket.php 226. MAIN LOG:");
-           // dump($message);
+            //dump($message);
         }
         $this->logMessageFlag = true;
 
@@ -378,11 +358,12 @@ class ccxtsocket extends Command
                         $trading->parseTicker(null, $message['params']['ask'], $this);
             }
 
-            /* Order condition parse.
-               Order placed and order filled statuses.
+            /**
+             * Order condition parse.
+             * Order placed and order filled statuses.
              */
             if($message['method'] == 'report'){
-                $trading->parseActiveOrders($message);
+                $trading->parseActiveOrders($message, $loop);
             }
 
             // Bid/Ask orderbook parse
@@ -444,7 +425,7 @@ class ccxtsocket extends Command
 
         /* Error message handle */
         if (array_key_exists('error', $message)){
-            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454. THREAD NOT STOPED!\n";
+            echo "ERROR MESSAGE HANDLED!. Exit. ccxtsocket.php 454. THREAD STOPED!\n";
             dump($message);
             /* Email notification */
             //$objDemo = new \stdClass();
@@ -454,8 +435,6 @@ class ccxtsocket extends Command
             //Mail::to($emails)->send(new EmptyEmail($objDemo));
 
             $loop->stop(); // Exit from this thread. If not to - app freezes after error Order not found pops up
-            //$loop->run(); // Don't use it
-
 
         }
     }
