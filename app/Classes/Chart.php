@@ -218,9 +218,7 @@ class Chart
                 // Start placing limit order
                 //Artisan::call('ccxtd:start', ['direction' => 'buy']);
                 //PlaceLimitOrder::dispatch('buy')->onQueue('orders');
-
                 Artisan::queue('ccxt:start', ['--buy' => true]);
-
             }
 
             // Trade flag. If this flag set to short -> don't enter this IF and wait for channel low crossing (IF below)
