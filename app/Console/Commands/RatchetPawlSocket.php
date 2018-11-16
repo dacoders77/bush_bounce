@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Classes;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class RatchetPawlSocket extends Command
 {
@@ -33,7 +34,7 @@ class RatchetPawlSocket extends Command
      *
      * @var string
      */
-    protected $signature = 'ratchet:start {--init}'; // php artisan ratchet:start --init
+    protected $signature = 'ratchet:start {--param=}'; // php artisan ratchet:start --init
 
     /**
      * The console command description.
@@ -70,14 +71,14 @@ class RatchetPawlSocket extends Command
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
         echo "Exchange: " . $exchange . "\n";
-        echo "initial start flag from console = " . $this->option('init');
+        echo "initial start flag from console = " . $this->option('param');
 
         event(new \App\Events\ConnectionError("Connection attempt"));
         event(new \App\Events\ConnectionError("Exchange: " . $exchange));
 
         Log::useDailyFiles(storage_path().'/logs/debug.log'); // Setup log name and math. Logs are created daily
         Log::debug("*****Ratchet websocket console command(app) started!*****");
-        Log::debug("initial start flag from console = " . $this->option('init'));
+        Log::debug("initial start flag from console = " . $this->option('param'));
 
         /**
          * Reset trade flag. If it is not reseted, it will contain previous position state.
@@ -87,7 +88,10 @@ class RatchetPawlSocket extends Command
          * $this->option('init') can not be set to false that is why We use additional flag to do
          * the initial start only when started from console
          */
-        if($this->option('init') && $this->initStartFlag)
+
+
+
+        if($this->option('param') == 'init' && $this->initStartFlag)
         {
             app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
             echo "command started with --init FLAG\n";
@@ -98,6 +102,15 @@ class RatchetPawlSocket extends Command
             $redis = app()->make('redis');
             $redis->flushAll();
             $this->initStartFlag = false;
+        }
+
+        if($this->option('param') == 'trade' && $this->initStartFlag)
+        {
+            echo "\n";
+            $this->error('Ratchet. Test trade will be placed!');
+            Artisan::queue('ccxt:start', ['--buy' => true]);
+            $this->initStartFlag = false;
+            die('ratchet 112');
         }
 
 
