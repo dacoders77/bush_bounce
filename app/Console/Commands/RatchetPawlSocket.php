@@ -90,10 +90,14 @@ class RatchetPawlSocket extends Command
         if($this->option('init') && $this->initStartFlag)
         {
             app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
-            $this->initStartFlag = false;
             echo "command started with --init FLAG\n";
             event(new \App\Events\ConnectionError("Ratchet. Init start"));
+            // Clear text log file
             Classes\LogToFile::createTextLogFile();
+            // Clear all redis queues. Clear entire redis storage! Be careful!
+            $redis = app()->make('redis');
+            $redis->flushAll();
+            $this->initStartFlag = false;
         }
 
 

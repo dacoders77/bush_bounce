@@ -76,7 +76,7 @@ class Trading
             }
 
 
-            Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
+            Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
             $this->activeOrder = "placed";
         }
 
@@ -97,7 +97,7 @@ class Trading
 
                         // Move order
                         // Pass calculated volume
-                        Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("moveOrder","", $this->orderPlacePrice, $this->orderQuantity, $this->orderId, $tempOrderId), 5);
+                        Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("moveOrder","", $this->orderPlacePrice, $this->orderQuantity, $this->orderId, $tempOrderId), 5);
 
                         $this->orderId = $tempOrderId;
                         $this->needToMoveOrder = false;
@@ -155,7 +155,7 @@ class Trading
 
             dump('Dump from Trading.php 155');
             dump($message);
-            Cache::put('orderObject' . env("ASSET_TABLE"), new OrderObject("getActiveOrders"), 5);
+            Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("getActiveOrders"), 5);
 
 
             // ** VOL
@@ -174,7 +174,7 @@ class Trading
 
             echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
 
-            $kostylVolume = 90 * $this->orderQuantity / 100;
+            $kostylVolume = 90 * $this->orderQuantity / 100; // 90% volume
             echo "KOSTYL VOLUME: " . $kostylVolume . "\n";
 
             if ($this->accumulatedOrderVolume > $kostylVolume ){
@@ -189,7 +189,7 @@ class Trading
                 //$this->activeOrder = null; // Test var reset
 
                 //$loop->stop();
-                Cache::put('commandExit' . env("ASSET_TABLE"), true, 5); // Stop executing this thread
+                Cache::put('commandExit' . env("DB_DATABASE"), true, 5); // Stop executing this thread
             }
             $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
 

@@ -76,6 +76,7 @@ class ccxtsocket extends Command
         //dump($redis); // Output the redis object including all variables
         //echo $redis->get("jo");
 
+
         $trading = new \App\Classes\Hitbtc\Trading();
 
         echo "***** CCXT websocket app started! ccxtsocket.php line 100 *****\n";
@@ -105,16 +106,16 @@ class ccxtsocket extends Command
         $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
             // Finish end exit from the current command
-            if (Cache::get('commandExit' . env("ASSET_TABLE"))){
-                Cache::put('commandExit' . env("ASSET_TABLE"), false, 5);
+            if (Cache::get('commandExit' . env("DB_DATABASE"))){
+                Cache::put('commandExit' . env("DB_DATABASE"), false, 5);
                 echo "Exit!";
                 $loop->stop();
             }
 
             // Cache setup
-            if (Cache::get('orderObject' . env("ASSET_TABLE")) != null)
+            if (Cache::get('orderObject' . env("DB_DATABASE")) != null)
             {
-                $value = Cache::get('orderObject' . env("ASSET_TABLE"));
+                $value = Cache::get('orderObject' . env("DB_DATABASE"));
                 if ($value->action == "placeOrder"){
                     // Place order with the price and volume from cache
                     $orderObject = json_encode([
@@ -156,7 +157,7 @@ class ccxtsocket extends Command
                     //$this->connection->send(json_encode(['method' => 'getTradingBalance', 'params' => [], 'id' => '123'])); // Get trading balances
                 }
 
-                Cache::put('orderObject' . env("ASSET_TABLE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
+                Cache::put('orderObject' . env("DB_DATABASE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
             }
         });
 
@@ -429,7 +430,7 @@ class ccxtsocket extends Command
             dump($message);
             /* Email notification */
             //$objDemo = new \stdClass();
-            //$objDemo->subject = 'BUSH error: ' . env("ASSET_TABLE") . " " . DB::table('settings_realtime')->first()->symbol;
+            //$objDemo->subject = 'BUSH error: ' . env("DB_DATABASE") . " " . DB::table('settings_realtime')->first()->symbol;
             //$objDemo->body = "Error code: " . $message['error']['code'] . " Message: " . $message['error']['message'] . " Description: " . $message['error']['description'] . " Time: " . date("Y-m-d G:i:s");
             //$emails = ['nextbb@yandex.ru', 'aleksey.kirushin2015@yandex.ru', 'Ikorepov@gmail.com', 'busch.art@yandex.ru'];
             //Mail::to($emails)->send(new EmptyEmail($objDemo));
