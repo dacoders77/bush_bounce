@@ -75,7 +75,6 @@ class Trading
                 $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift;
             }
 
-
             Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
             $this->activeOrder = "placed";
         }
@@ -250,7 +249,7 @@ class Trading
             dump('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
             // DB::table('settings_realtime')->first()->symbol
             /* @todo wrong spell of SYMBOL! */
-            $buyMarketOrderResponse = $exchange->createMarketSellOrder('ETH/USDT', $balance['total'], []);
+            $buyMarketOrderResponse = $exchange->createMarketSellOrder(DB::table('settings_realtime')->first()->symbol_market, $balance['total'], []);
             //dump($buyMarketOrderResponse['amount']);
             LogToFile::add(__FILE__ . " Account volume corrected: ", json_encode($buyMarketOrderResponse));
         }

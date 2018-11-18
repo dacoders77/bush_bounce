@@ -20,6 +20,7 @@ class SettingsRealtime extends Migration
             $table->boolean('initial_start');
             $table->string('exchange');
             $table->string('symbol');
+            $table->string('symbol_market');
             $table->string('price_step');
             $table->double('volume')->nullable();
             $table->integer('time_frame');
@@ -42,6 +43,7 @@ class SettingsRealtime extends Migration
             'time_frame' => 1,
             'exchange' => 'hitbtc',
             'symbol' => "ETHUSD",
+            'symbol_market' => "ETH/USDT",
             'price_step' => 0.01,
             'volume' => 0.1,
             'request_bars' => 30,

@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
-use App\Classes\Hitbtc\DataBase;
-use App\Classes\Hitbtc\Hitbtc;
-use App\Classes\Hitbtc\OrderObject;
+//use App\Classes\Hitbtc\DataBase;
+//use App\Classes\Hitbtc\Hitbtc;
+//use App\Classes\Hitbtc\OrderObject;
+use ccxt\hitbtc;
+
 use App\Classes\Hitbtc\Trading;
 use App\Classes\LogToFile;
 use App\Jobs\PlaceLimitOrder;
@@ -24,6 +26,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 
+
 class ccxtsocket extends Command
 {
 
@@ -41,7 +44,7 @@ class ccxtsocket extends Command
      * The name and signature of the console command.
      * @var string
      */
-    protected $signature = 'ccxt:start {--buy}'; // php artisan ratchet:start --init
+    protected $signature = 'ccxt:start {--buy : xxxxee}'; // php artisan ratchet:start --init
 
     /**
      * The console command description.
