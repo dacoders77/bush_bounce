@@ -79,7 +79,6 @@ class ccxtsocket extends Command
         //dump($redis); // Output the redis object including all variables
         //echo $redis->get("jo");
 
-
         $trading = new \App\Classes\Hitbtc\Trading();
 
         echo "***** CCXT websocket app started! ccxtsocket.php line 82 *****\n";

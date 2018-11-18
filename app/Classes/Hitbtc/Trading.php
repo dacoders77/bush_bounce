@@ -242,7 +242,11 @@ class Trading
         $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
         //dump(array_keys($exchange->load_markets()));
         //$command->info('Account balance');
-        $balance = ($exchange->fetchBalance()['ETH']);
+
+        $parts = explode("/", DB::table('settings_realtime')->first()->symbol_market);
+        $currency = $parts[0];
+
+        $balance = ($exchange->fetchBalance()[$currency]);
         //dump($balance);
         if ($balance['total'] != 0)
         {

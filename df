@@ -1,0 +1,372 @@
+[33mcommit 00e37c30d2e36779b99f5705cfb6ed15701b1fb0[m[33m ([m[1;36mHEAD -> [m[1;32mbacktest[m[33m, [m[1;31morigin/backtest[m[33m)[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Nov 16 15:35:11 2018 -0500
+
+    Separate que perfix added
+
+[33mcommit c8bef41f80a031a79c366baff147469802241f4a[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Nov 16 13:36:46 2018 -0500
+
+    Params init start added
+
+[33mcommit 721c4eff4cb8ea198bc6092c1c69a5701ad30598[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Nov 16 12:28:18 2018 -0500
+
+    EOS worong ticker price bug discovered
+
+[33mcommit 49c2c4a8738fd532f3d6331ef1c8fae3e721a715[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Nov 16 10:31:20 2018 -0500
+
+    Cache perfix changed to DB_DATABASE
+
+[33mcommit 5242a798dd4c95712844934e59c70131bb8db529[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Nov 16 06:25:06 2018 -0500
+
+    Balance checker fixed
+
+[33mcommit 7f34dc564bc2d923c80f53b2b9c9720bd5ce5867[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 15 16:41:25 2018 -0500
+
+    Fix. Volume balancer disabled. Throws error
+
+[33mcommit 1ce6023acd2235923075e2b8ed2c73477feae513[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 15 16:21:35 2018 -0500
+
+    Fix
+
+[33mcommit ac9104b2a065b19e985738d9fe7f11fd6158df6f[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 15 16:16:42 2018 -0500
+
+    Fix
+
+[33mcommit 90e930ecbf6ebcb93a0a24c5677b700f3033047b[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 15 16:10:45 2018 -0500
+
+    Fix
+
+[33mcommit 0b9138be6cb83feafa0dcbb5f5af9d1d56762347[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 15 15:28:26 2018 -0500
+
+    Account balancer feature added, tested
+
+[33mcommit a2ab3928c7419fd70fa51f3ceb6b47e3e596c3ae[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 15 10:20:39 2018 -0500
+
+    New formula for oeders table - empty trade. Tests enchanced
+
+[33mcommit 9717ace081001566393c3198dd8401f74840c9d1[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Nov 13 10:04:36 2018 -0500
+
+    Events broadcast to redis instead of sync bug found and fixed
+
+[33mcommit 3fd4115e6aa18fb479e027cea909a6495a48a04c[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Nov 12 15:27:47 2018 -0500
+
+    Controller case linux bug fixed
+
+[33mcommit 7c116b01bde710d73ab2e5613d5fc201586be467[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Nov 12 05:51:35 2018 -0500
+
+    Rebate, accum profit bug fixed
+
+[33mcommit 6d69c5630fe726e871a06cb1053b9a3ece4d2a92[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Nov 11 10:52:07 2018 -0500
+
+    Thread non stop
+
+[33mcommit 3e6eea53ab671d200b45ab93671ca99bfe64ad39[m
+Merge: 8d645d2 b777b70
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Nov 11 10:44:23 2018 -0500
+
+    Merge
+
+[33mcommit 8d645d2b10b47f2882247a81657e731ea2cb4a34[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Nov 11 10:40:38 2018 -0500
+
+    Merge
+
+[33mcommit b777b70c1a031504ddbce1485590b809fcc36239[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Nov 11 10:37:06 2018 -0500
+
+    Orders table, unit tests ready
+
+[33mcommit d200d75876599a30158c1f7f756db8d9093f66b6[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Nov 9 14:26:02 2018 -0500
+
+    New accounting table dev has started
+
+[33mcommit 8328f34efb22767dfe993c406ee53205227f5abf[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Nov 5 14:39:45 2018 -0500
+
+    Filter fix
+
+[33mcommit 1891652a48177b2ce1dd9e81f49309862074d9c5[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Nov 5 14:09:45 2018 -0500
+
+    trade filter added
+
+[33mcommit 648ec644975e7e6b790ee2dcd78c0cf26684ba04[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Nov 5 13:44:00 2018 -0500
+
+    partiallyFilled added to filter
+
+[33mcommit b5a90a3b5a471ea6bfb287adab6e246b1dd1a7d3[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Nov 5 11:35:18 2018 -0500
+
+    Limit routine updated. Partial fill
+
+[33mcommit d2bc317517c91fa396a4ad814abaa817d90919a7[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 1 06:44:10 2018 -0400
+
+    Parsing rule added. Balance heavy message not shown
+
+[33mcommit 1767899649f59a3b678e3c6639c7cb17b1010c31[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Nov 1 05:34:28 2018 -0400
+
+    No short close bug fixed. Debug text file adjusted
+
+[33mcommit fc548946bc143a68d2cf6ffcc208f7a1cfa65f88[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Wed Oct 31 07:48:06 2018 -0400
+
+    Partial order fill debug started. debug.txt added
+
+[33mcommit e2e9d92192f089711f0d056f73b576f3d1445ae2[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Oct 30 05:42:34 2018 -0400
+
+    2nd profit column in DB added. Null close shall be checked
+
+[33mcommit 3a78daf9842b29d64dc3a6363af86fb5ac6b4645[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Wed Oct 24 08:13:04 2018 -0400
+
+    Profit calculation fixed
+
+[33mcommit e6a3df27d1d9f831f4c8487ea62554eeaebfc587[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Wed Oct 24 07:02:38 2018 -0400
+
+    Profit calculation check. Only when in-out prices are in DB
+
+[33mcommit 1df3affbb455a6af832b6d60ceb4fa4c4cf67a50[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Oct 23 16:05:14 2018 -0400
+
+    Fix
+
+[33mcommit a3f3cb34e6c33d857e585462f2cc773adca5deba[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Oct 23 16:02:26 2018 -0400
+
+    Order not found error handled. Email error alerts added
+
+[33mcommit 8da10af6684afd813e3b06f52476bca16ffa2e97[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Oct 22 12:07:04 2018 -0400
+
+    Order not found error is back
+
+[33mcommit e989f34765b8f3def8cd58fb6f1d9952ece2ea80[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Oct 22 10:38:27 2018 -0400
+
+    Order not found error fixed
+
+[33mcommit 4cac14a37a650567d1e9255263963a025f80b525[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Oct 21 16:18:53 2018 -0400
+
+    Separate accounting table is ready. Tested
+
+[33mcommit c36ef74fc57615b4685a481a32e82580c0a1b3d6[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Oct 19 04:38:20 2018 -0400
+
+    Limit orders statuses ready. Need to test several instances run
+
+[33mcommit bcc5024180d88f1544ab43f63aaa4b65a6b7d742[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Oct 16 15:31:33 2018 -0400
+
+    Live version. Ready for testing. Limit orders added to Chart.php. Que - ok
+
+[33mcommit dbf61e9642285cf589205b50b5df47ec01bcd693[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Oct 16 13:39:22 2018 -0400
+
+    Order not found error handled
+
+[33mcommit b96682035cb879ed1125c3bc548df2ba276b140c[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Oct 16 10:26:27 2018 -0400
+
+    Redis que ready, commands ready. Ready for testing
+
+[33mcommit 38eb93775d6573e36146f5a82dbd1ebe40921d63[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Oct 15 13:52:37 2018 -0400
+
+    Buy and sell limit orders ready, controller set up. Testing
+
+[33mcommit cb957f15d6bf5e5e46f56586c445e569cc326b60[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Oct 15 07:17:43 2018 -0400
+
+    Limit orders ready. Testing needed
+
+[33mcommit 7b101705592fddf3f168000ce56185a99ef88008[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Oct 15 01:37:34 2018 -0400
+
+    Limit orders are andled via websicket. Orderbook is not ready yet
+
+[33mcommit 6f96931fb883b77417a1dd791f6302c8000d8074[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sat Sep 22 15:46:48 2018 -0400
+
+    Limit orders moved to a separate que. Tested
+
+[33mcommit e3a6f2ae52fa3c1c5285cd0df711d9b4e5f5baf0[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sat Sep 22 14:49:11 2018 -0400
+
+    Frontend enchanced, limit orders work good. Queues are in progress
+
+[33mcommit a419c5e5679895f07fdafe25132e82f54e6ceb06[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Sep 18 14:17:50 2018 -0400
+
+    Limit orders ready and tested
+
+[33mcommit 1f95b3b041aca3454071581f612c8afdaf10daa6[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Aug 30 16:29:34 2018 -0400
+
+    HitBtc echange added
+
+[33mcommit f9650a983de98db7f12ffe1c2c3ebe2442f8c7ca[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Wed Aug 22 02:22:50 2018 -0400
+
+    Non object error fixed while new bar issued
+
+[33mcommit 181b0c71ccbb287126b0b9797f7572d4d3aa5e31[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Aug 21 16:44:54 2018 -0400
+
+    Accounting fixed, new formula and request for accumulated_profit applied
+
+[33mcommit d3bff28a5c2ad60d51b2bf575d72e0dec2d5f836[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Aug 19 16:40:41 2018 -0400
+
+    Accounting, frontend fixed
+
+[33mcommit c7f8241a1854a16a490c198eee7cea9df73eedfd[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Aug 12 16:18:08 2018 -0400
+
+    SMA filter ready. History backtest not tested
+
+[33mcommit 492a3da0ae89d71b2a48ce64de6aec671022bb0e[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sun Aug 12 08:38:10 2018 -0400
+
+    Wrong SMA value when new bar issued
+
+[33mcommit 370f2338723b85c5b3547fc5179083119f73e0cf[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sat Aug 11 15:46:06 2018 -0400
+
+    Bar close price changed to DB source in Chart.php. Not tested
+
+[33mcommit 0fd1d64511db0a3cdbba538a6d37717cabbe0ea0[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Wed Aug 8 16:29:51 2018 -0400
+
+    SMA used instead of close for trade signals
+
+[33mcommit a7ceebb6dd9948130520e3aed607fb417431ffcd[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Aug 7 17:07:24 2018 -0400
+
+    Sma added as a filter
+
+[33mcommit 1a220222b710b493b84584cf74a7681ad60ab34a[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Aug 6 16:33:15 2018 -0400
+
+    Accumulated profit fixed. Request changed to ->skip(1)->take(1)
+
+[33mcommit 29c74d73b73f726c4acdcc1dcd24b924cceffc33[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Mon Aug 6 01:56:29 2018 -0400
+
+    Accumulated profit calculation fixed
+
+[33mcommit 2352706bc90fc8669945bd9bbe1ec94b2116f29c[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Jun 29 13:46:47 2018 +0300
+
+    Spontaneous init strat bug fixed
+
+[33mcommit 17908ce5edca4b3fd68c3fb41db67dc1d89d737a[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Fri Jun 29 00:23:46 2018 +0300
+
+    Call middle-ware on integer error fixed
+
+[33mcommit 5a6706f2870aabecdcf9905a768e535a0bce57bb[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Thu Jun 28 23:34:58 2018 +0300
+
+    Auth added. /realtime rout is protected
+
+[33mcommit 6a1a39511f53bd7afb08f6756011fa56a05318e6[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sat Jun 23 15:13:46 2018 +0300
+
+    Init start fix
+
+[33mcommit 72dc99302d5dfe91459c9afb0a8986d2cadfbfcd[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sat Jun 23 12:46:34 2018 +0300
+
+    Server initial start added, broadcast subscription ticker is pulled from DB
+
+[33mcommit 01947a02fb5cf2ebf1b6b5030ae26f562223ff54[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Sat Jun 23 00:46:28 2018 +0300
+
+    Tick skip added, time to the form, separate log
+
+[33mcommit 3c947b30b8e4719da218af098fb600c77bf374eb[m
+Author: Boris Borisov <djslinger77@gmail.com>
+Date:   Tue Jun 19 14:20:31 2018 +0300
+
+    Fantom orders sequence while switching app mode is fixed
