@@ -17,6 +17,7 @@ class PlaceLimitOrder implements ShouldQueue
 
     protected $direction;
     private $exchange;
+    public $timeout = 5;
 
     /**
      * Create a new job instance.

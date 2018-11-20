@@ -40,6 +40,8 @@ class ccxtsocket extends Command
     private $logMessageFlag;
     protected $connection;
 
+    private $rateLimitTime;
+
     /**
      * The name and signature of the console command.
      * @var string
@@ -73,6 +75,11 @@ class ccxtsocket extends Command
     public function handle()
     {
 
+       /*while (true){
+           dump('zzz');
+           sleep(1);
+       }*/
+
         //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
@@ -104,18 +111,27 @@ class ccxtsocket extends Command
             'timeout' => 10
         ]);
 
-        // MOVE TO SEPARATE METHOD!
-        /* React loop cycle */
+        $this->rateLimitTime = time(); // Kill process start time
+
+        /** React loop cycle
+         * @todo MOVE TO SEPARATE METHOD!
+         */
         $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
-            // Finish end exit from the current command
+            /*Kill process*/
+            if (time() > $this->rateLimitTime + 900){
+                dump(__FILE__ . ' ' . __LINE__ . " Process killed due expiration. >15 min.");
+                $loop->stop();
+            }
+
+            /*Finish end exit from the current command*/
             if (Cache::get('commandExit' . env("DB_DATABASE"))){
                 Cache::put('commandExit' . env("DB_DATABASE"), false, 5);
                 echo "Exit!";
                 $loop->stop();
             }
 
-            // Cache setup
+            /*Cache setup*/
             if (Cache::get('orderObject' . env("DB_DATABASE")) != null)
             {
                 $value = Cache::get('orderObject' . env("DB_DATABASE"));

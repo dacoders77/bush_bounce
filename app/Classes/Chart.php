@@ -218,6 +218,7 @@ class Chart
                 // Start placing limit order
                 //Artisan::call('ccxtd:start', ['direction' => 'buy']);
                 //PlaceLimitOrder::dispatch('buy')->onQueue('orders');
+                DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
                 Artisan::queue('ccxt:start', ['--buy' => true])->onQueue(env("DB_DATABASE"));
             }
 
@@ -278,7 +279,7 @@ class Chart
                 // Start placing limit order
                 //Artisan::call('ccxtd:start', ['direction' => 'sell']);
                 //PlaceLimitOrder::dispatch('sell')->onQueue('orders');
-
+                DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
                 Artisan::queue('ccxt:start', ['--buy' => false])->onQueue(env("DB_DATABASE"));
             }
 
