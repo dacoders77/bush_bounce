@@ -41,6 +41,7 @@ class ccxtsocket extends Command
     protected $connection;
 
     private $rateLimitTime;
+    private $exchange;
 
     /**
      * The name and signature of the console command.
@@ -75,11 +76,6 @@ class ccxtsocket extends Command
     public function handle()
     {
 
-       /*while (true){
-           dump('zzz');
-           sleep(1);
-       }*/
-
         //Redis set up
         //$redis = app()->make('redis');
         //$redis->set("jo","jo");
@@ -88,7 +84,11 @@ class ccxtsocket extends Command
 
         $trading = new \App\Classes\Hitbtc\Trading();
 
-        echo "***** CCXT websocket app started! ccxtsocket.php line 82 *****\n";
+        $this->exchange = new hitbtc();
+        $this->exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
+        $this->exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+
+        echo "***** CCXT websocket app started! ccxtsocket.php line 86 *****\n";
         echo "symbol: " . DB::table('settings_realtime')->first()->symbol . "\n";
 
         /**
@@ -114,7 +114,7 @@ class ccxtsocket extends Command
         $this->rateLimitTime = time(); // Kill process start time
 
         /** React loop cycle
-         * @todo MOVE TO SEPARATE METHOD!
+         * @todo MOVE TO A SEPARATE METHOD!
          */
         $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
@@ -371,11 +371,11 @@ class ccxtsocket extends Command
             if($message['method'] == 'ticker'){
                 if ($message['params']['bid'] && $this->option('buy')) // ccxt:start --buy
                     if(array_key_exists('bid', $message['params']))
-                        $trading->parseTicker($message['params']['bid'], null, $this);
+                        $trading->parseTicker($message['params']['bid'], null, $this->exchange);
 
                 if ($message['params']['bid'] && !$this->option('buy')) // // ccxt:start --NO PARAM
                     if(array_key_exists('ask', $message['params']))
-                        $trading->parseTicker(null, $message['params']['ask'], $this);
+                        $trading->parseTicker(null, $message['params']['ask'], $this->exchange);
             }
 
             /**

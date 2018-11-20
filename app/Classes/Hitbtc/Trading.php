@@ -58,20 +58,27 @@ class Trading
      * @param   double @ask
      * @return  void
      */
-    public function parseTicker($bid = null, $ask = null){
+    public function parseTicker($bid = null, $ask = null, $exchange){
 
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
         if ($this->activeOrder == null){
-
             $this->orderId = floor(round(microtime(true) * 1000));
+            // BUY
             if ($direction == "buy") {
-                $this->checkBalanceBeforeOpen(); // Run balance check. If balance !=0 - sell this quantity. Account must be emty befor trade is open.
-                $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift;
+                $this->checkBalanceBeforeOpen($exchange); // Run balance check. If balance !=0 - sell this quantity. Account must be emty befor trade is open.
+                $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift; // Calculate price for the limit order.
             }
+            // SELL
             else
             {
                 $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift;
+
+                /* @todo move to separate method */
+                $parts = explode("/", DB::table('settings_realtime')->first()->symbol_market);
+                $currency = $parts[0];
+                $this->orderQuantity = $exchange->fetchBalance()[$currency]['total'];
+                echo "CUR BAL: " . $this->orderQuantity . "\n";
             }
 
             Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("placeOrder", $direction, $this->orderPlacePrice, $this->orderQuantity, $this->orderId, ""), 5);
@@ -186,7 +193,7 @@ class Trading
 
                 Cache::put('commandExit' . env("DB_DATABASE"), true, 5); // Stop executing this thread
             }
-            $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity'];
+            $this->orderQuantity = $this->orderQuantity - $message['params']['tradeQuantity']; // Decrease order volume
 
             // Orders table. Accounting
             $this->addOrderExecPriceToDB($message);
@@ -232,16 +239,13 @@ class Trading
      * Get balance
      * If not null -> close it with market order
      */
-    private function checkBalanceBeforeOpen(){
+    private function checkBalanceBeforeOpen(hitbtc $exchange){
         dump('ENTERED balanceChecker');
-        $exchange = new hitbtc;
-        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
-        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
 
         $parts = explode("/", DB::table('settings_realtime')->first()->symbol_market);
         $currency = $parts[0];
 
-        $balance = ($exchange->fetchBalance()[$currency]);
+        $balance = $exchange->fetchBalance()[$currency];
         if ($balance['total'] != 0)
         {
             dump('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
@@ -258,28 +262,27 @@ class Trading
     /**
      * Balance checker. If after the trade is open it's volume =! desired volume - correct it.
      */
-    private function checkBalanceAfterOpen(){
-        dump('ENTERED balanceChecker');
-        $exchange = new hitbtc;
-        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
-        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+    private function checkBalanceAfterOpen(hitbtc $exchange, $orderQuantity){
+        dump('ENTERED balanceChecker AFTER open');
 
         $parts = explode("/", DB::table('settings_realtime')->first()->symbol_market);
         $currency = $parts[0];
-
         $balance = ($exchange->fetchBalance()[$currency]);
-        if ($balance['total'] != 0)
-        {
-            dump('Account balance is being corrected! Account balance: ' . $balance['total'] . " SOLD");
-            /* @todo wrong spell of SYMBOL! */
-            $buyMarketOrderResponse = $exchange->createMarketSellOrder(DB::table('settings_realtime')->first()->symbol_market, $balance['total'], []);
-            LogToFile::add(__FILE__ . " Account volume corrected: ", json_encode($buyMarketOrderResponse));
+
+
+        if ($balance > $orderQuantity){
+            // sell
+            dump('After open balance coorection: Account balance: ' . $balance['total'] . " SELL");
+            $marketOrderResponse = $exchange->createMarketSellOrder(DB::table('settings_realtime')->first()->symbol_market, $balance['total'] - $orderQuantity, []);
+            LogToFile::add(__FILE__ . " After open balance SELL correction: Corr vol: ", $balance['total'] - $orderQuantity . " " . $marketOrderResponse);
         }
-        else{
-            //$command->question('Accoute balance = 0. No need to correct');
+
+        if ($balance < $orderQuantity){
+            // buy
+            dump('After open balance coorection: Account balance: ' . $balance['total'] . " Buy");
+            $marketOrderResponse = $exchange->createMarketBuyOrder(DB::table('settings_realtime')->first()->symbol_market, $orderQuantity - $balance['total'], []);
+            LogToFile::add(__FILE__ . " After open balance BUY correction: Corr vol: ", $orderQuantity - $balance['total'] . "" . $marketOrderResponse);
         }
     }
-
-
 }
 
