@@ -30,7 +30,7 @@ use Symfony\Component\Console\Command\Command;
 class Trading
 {
     private $priceStep ; // ETHBTC price step 0.000001. ETHUSD 0.01
-    private $priceShift = 0; // How far (steps) the limit order will be placed away from the market price.
+    private $priceShift = 0.3; // How far (steps) the limit order will be placed away from the market price.
     private $orderId;
     private $orderPlacePrice;
     private $orderQuantity;
@@ -116,7 +116,7 @@ class Trading
 
                     }
                     else{
-                        echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
+                        //echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
                     }
                 }
             }

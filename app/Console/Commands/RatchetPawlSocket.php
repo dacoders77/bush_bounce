@@ -104,15 +104,25 @@ class RatchetPawlSocket extends Command
             $this->initStartFlag = false;
         }
 
-        /* Throw a test trade. Used when there is no time to wait for signal at the char */
-        if($this->option('param') == 'trade' && $this->initStartFlag)
+        /* Throw a test trade. Used when there is no time to wait for signal at the chart */
+        if($this->option('param') == 'buy' && $this->initStartFlag)
         {
             echo "\n";
-            $this->error('Ratchet. Test trade will be placed!');
+            $this->error('Ratchet. Test trade BUY will be placed!');
             DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
             Artisan::queue('ccxt:start', ['--buy' => true])->onQueue(env("DB_DATABASE"));
             $this->initStartFlag = false;
-            die('ratchet 112');
+            die('Die after test trade.' . __FILE__ . " " . __LINE__);
+        }
+
+        if($this->option('param') == 'sell' && $this->initStartFlag)
+        {
+            echo "\n";
+            $this->error('Ratchet. Test trade SELL will be placed!');
+            DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
+            Artisan::queue('ccxt:start')->onQueue(env("DB_DATABASE"));
+            $this->initStartFlag = false;
+            die('Die after test trade.' . __FILE__ . " " . __LINE__);
         }
 
 
