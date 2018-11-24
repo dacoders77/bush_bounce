@@ -94,7 +94,7 @@ class Trading
             if ($this->orderPlacePrice != $priceToCheck){
 
                 if ($this->needToMoveOrder){
-                    echo "TIME to move the order! " . date("Y-m-d G:i:s") . "Order ID to move: $this->orderId \n";
+                    //echo "TIME to move the order! " . date("Y-m-d G:i:s") . "Order ID to move: $this->orderId \n";
 
                     if (time() > $this->rateLimitTime || $this->rateLimitFlag){
                         ($direction == "buy" ? $this->orderPlacePrice = $bid - $this->priceStep * $this->priceShift : $this->orderPlacePrice = $ask + $this->priceStep * $this->priceShift);

@@ -12,6 +12,7 @@ use App\Classes\LogToFile;
 use App\Jobs\PlaceLimitOrder;
 use App\Mail\EmptyEmail;
 use App\Mail\EmptyEmail2;
+use ccxt\hitbtc2;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Console\Presets\React;
 use Illuminate\Support\Facades\Redis;
@@ -84,12 +85,21 @@ class ccxtsocket extends Command
 
         $trading = new \App\Classes\Hitbtc\Trading();
 
+
         $this->exchange = new hitbtc();
-        $this->exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'];
+        $this->exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
         $this->exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+
 
         echo "***** CCXT websocket app started! ccxtsocket.php line 86 *****\n";
         echo "symbol: " . DB::table('settings_realtime')->first()->symbol . "\n";
+
+
+        $response = $this->exchange->fetchOpenOrders(DB::table('settings_realtime')->first()->symbol_market);
+        foreach ($response as $order){
+            dump('------------------There is an open order! Cancel it! Id: ' . $order['id']);
+            dump($this->exchange->cancelOrder($order['id']));
+        }
 
         /**
          * Reset trade flag. If it is not reseted, it will contain previous position state.
