@@ -1,7 +1,6 @@
 <template>
     <div>
 
-
         <b-tabs>
             <b-tab title="Main" active>
 

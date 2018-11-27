@@ -59,7 +59,6 @@ class Trading
      * @return  void
      */
     public function parseTicker($bid = null, $ask = null, $exchange){
-
         /* Place order */
         ($bid ? $direction = "buy" : $direction = "sell");
         if ($this->activeOrder == null){
@@ -113,7 +112,6 @@ class Trading
                         // On each move - store to price in DB
                         //DataBase::addOrderOutExecPrice2($this->orderPlacePrice);
                         echo "Order place price: " . $this->orderPlacePrice . "\n";
-
                     }
                     else{
                         //echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";
@@ -155,11 +153,9 @@ class Trading
          * 1. Full volume execution
          * 2. Partial fill
          */
-        //if ($message['params']['clientOrderId'] == $this->orderId && ($message['params']['status'] == "filled" || $message['params']['status'] == "partiallyFilled" )){
-        // "reportType" => "trade"
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['reportType'] == "trade"){
 
-            dump('Dump from Trading.php 155');
+            dump('Dump from Trading.php 162');
             dump($message);
             Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("getActiveOrders"), 5);
 
@@ -168,22 +164,19 @@ class Trading
 
             $this->accumulatedOrderVolume = 0;
             foreach ($this->tradesArray as $trade){
-                echo "Trading.php 147:\n";
+                echo "Trading.php 167:\n";
                 dump($trade);
                 $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;
-                $this->accumulatedOrderVolume += $trade->quantity; // THIS IS WRONG
-
+                $this->accumulatedOrderVolume += $trade->quantity;
             }
             $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);
 
-            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
-
+            echo "--------------------ACUMM VOLL: " . $this->accumulatedOrderVolume . "\n";
             $kostylVolume = 90 * $this->orderQuantity / 100; // 90% volume
             echo "KOSTYL VOLUME: " . $kostylVolume . "\n";
 
             if ($this->accumulatedOrderVolume > $kostylVolume ){
-                dump("Trading.php 156. FULL EXEC. Stop thread");
-
+                dump("FULL EXEC. Stop thread");
                 $this->activeOrder = "filled"; // Then we can open a new order
                 $this->needToMoveOrder = false; // When order has been filled - don't move it
                 echo "THREAD STOP. Order FILLED! filled price: ";
