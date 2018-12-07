@@ -59,10 +59,9 @@ class Chart
      * @see Classes and backtest scheme https://drive.google.com/file/d/1IDBxR2dWDDsbFbradNapSo7QYxv36EQM/view?usp=sharing
      */
     private $z = 0;
-    //public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
     public function index($mode, $barDate, $timeStamp, $bbbbb, $id)
     {
-        echo "**********************************************Chart.php!<br>\n";
+        echo "**********************************************Chart.php" . __LINE__ . "<br>\n";
 
         /**
          * @todo Read the whole settings row and access it with keys.
@@ -70,8 +69,6 @@ class Chart
          */
         $this->volume = DB::table('settings_realtime')->where('id', 1)->value('volume');
         $this->trade_flag = DB::table('settings_realtime')->where('id', 1)->value('trade_flag');
-
-
 
 
         if ($mode == "backtest")
@@ -95,20 +92,20 @@ class Chart
         }
         else // Realtime
         {
-            // Realtime mode. No ID of the record is sent. Get the quantity of all records using request
-            /** In this case we do the same request, take the last record from the DB */
+
+            /**
+             * In this case we do the same request, take the last record from the DB.
+             * Realtime mode. No ID of the record is sent. Get the quantity of all records using request.
+             */
             $assetRow =
                 DB::table('asset_1')
                     ->orderBy('id', 'desc')->take(1)
                     ->get();
 
             $recordId = $assetRow[0]->id;
-
         }
 
         $barClosePrice = $assetRow[0]->sma;
-
-
 
         /** We do this check because sometimes, don't really understand under which circumstances, we get
          * trying to get property of non-object
@@ -127,7 +124,6 @@ class Chart
         {
             echo "Null check. Chart.php line 132";
             event(new \App\Events\ConnectionError("Excp catch! Chart.php line 132. Null check penultimate"));
-            //die();
         }
 
 

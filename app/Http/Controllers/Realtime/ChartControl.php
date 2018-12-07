@@ -10,7 +10,7 @@ use Illuminate\Http;
 
 /**
  * Class ChartControl
- * Updates price channel value and DB and then recalculates price channel via PriceChannel::calculate() method call.
+ * Updates price channel value in DB and then recalculates price channel via PriceChannel::calculate() method call.
  * This class is called from ChartControl.vue when app mode is changed from history to real-time and back
  * @package App\Http\Controllers\Realtime
  */

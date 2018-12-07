@@ -88,7 +88,7 @@ Route::get('/tickers', function ()
 Route::post('/tickers_record_todb', 'tickers_record_todb@index')->name('tickers_record_todb.post'); // Controller is called using given name
 
 // ChangeAsset
-route::get('/change_asset/{z}', 'ChangeAsset@index'); // Controller call and passing {z} to it
+route::get('/change_asset/{z}', 'ChangeAsset@index'); // Controller call and passing {z} parameter  to it
 
 // ChangeAsset
 //route::get('/minmax', 'controller@index'); // Test controller for local min max search

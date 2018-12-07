@@ -30,7 +30,7 @@ use Symfony\Component\Console\Command\Command;
 class Trading
 {
     private $priceStep ; // ETHBTC price step 0.000001. ETHUSD 0.01
-    private $priceShift = 0.3; // How far (steps) the limit order will be placed away from the market price.
+    private $priceShift = 0.0; // How far (steps) the limit order will be placed away from the market price.
     private $orderId;
     private $orderPlacePrice;
     private $orderQuantity;
@@ -257,11 +257,9 @@ class Trading
      */
     private function checkBalanceAfterOpen(hitbtc $exchange, $orderQuantity){
         dump('ENTERED balanceChecker AFTER open');
-
         $parts = explode("/", DB::table('settings_realtime')->first()->symbol_market);
         $currency = $parts[0];
         $balance = ($exchange->fetchBalance()[$currency]);
-
 
         if ($balance > $orderQuantity){
             // sell

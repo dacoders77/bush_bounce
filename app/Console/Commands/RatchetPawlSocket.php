@@ -7,25 +7,23 @@ use Illuminate\Support\Facades\DB;
 use App\Classes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
+use ccxt\hitbtc2;
+use Mockery\Matcher\Ducktype;
 
 class RatchetPawlSocket extends Command
 {
-    /** @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
+    /* @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
     private $isFirstTimeBroadcastCheck = true;
-
-    /** @var bool $isFirstTimeTickCheck First tick check. Used in order to decrease quantity of ticks because pusher limit exceeds sometime*/
+    /* @var bool $isFirstTimeTickCheck First tick check. Used in order to decrease quantity of ticks because pusher limit exceeds sometime*/
     private $isFirstTimeTickCheck = true;
-
-    /** @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
+    /* @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
     private $addedTime = null;
-
-    /** @var integer $addedTickTime The same but for ticks*/
+    /* @var integer $addedTickTime The same but for ticks*/
     private $addedTickTime = null;
-
-    /** @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
+    /* @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
     private $isBroadCastAllowed;
     private $settings;
-    /** @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
+    /* @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
     private $initStartFlag = true;
 
 
@@ -51,13 +49,8 @@ class RatchetPawlSocket extends Command
      */
     public function __construct()
     {
-        /*
-        DO NOT PLACE CODE IN THE CONSTRUCTOR
-        CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MY CAUSE DIFFERENT PROBLEMS
-        */
         parent::__construct();
     }
-
 
     /**
      * Execute the console command.
@@ -71,7 +64,7 @@ class RatchetPawlSocket extends Command
 
         echo "*****Ratchet websocket console command(app) started!*****\n";
         echo "Exchange: " . $exchange . "\n";
-        echo "initial start flag from console = " . $this->option('param');
+        echo "initial start flag from console = " . $this->option('param') . "\n";
 
         event(new \App\Events\ConnectionError("Connection attempt"));
         event(new \App\Events\ConnectionError("Exchange: " . $exchange));
@@ -88,8 +81,6 @@ class RatchetPawlSocket extends Command
          * $this->option('init') can not be set to false that is why We use additional flag to do
          * the initial start only when started from console
          */
-
-
 
         if($this->option('param') == 'init' && $this->initStartFlag)
         {
@@ -136,6 +127,11 @@ class RatchetPawlSocket extends Command
             'timeout' => 10
         ]);
 
+        /* Periodic check for correct position condition. Sometimes orders accidentally cancel whiteout opening a position. */
+        //$loop->addPeriodicTimer(5, function() use($loop) {
+        //    $this->checkPosition();
+        //});
+
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
         /** Pick up the right websocket endpoint accordingly to the exchange */
@@ -169,7 +165,7 @@ class RatchetPawlSocket extends Command
                         //print_r(array_keys($z));
                         //echo $message->__toString() . "\n"; // Decode each message
 
-                        if (array_key_exists('chanId',$jsonMessage)){
+                        if (array_key_exists('chanId', $jsonMessage)){
                             $chanId = $jsonMessage['chanId']; // Parsed channel ID then we are gonna listen exactly to this channel number. It changes each time you make a new connection
                         }
 
@@ -275,14 +271,9 @@ class RatchetPawlSocket extends Command
                                  * @param collection $settings Row of settings from DB
                                  * @param command $command variable for graphical strings output to the console
                                  */
-
-                                //echo "huj: " . $timestamp . "\n";
-
                                 $candleMaker->index($nojsonMessage['params']['data'][0]['price'], $timestamp, $nojsonMessage['params']['data'][0]['quantity'], $chart, $this->settings, $this);
                             }
-
                         }
-
                         break;
                 }
 
@@ -328,16 +319,72 @@ class RatchetPawlSocket extends Command
                 $errorString = "RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
                 echo $errorString;
                 Log::debug($errorString);
-
-                //event(new \App\Events\ConnectionError($errorString));
-
                 sleep(5); // Wait 5 seconds before next connection try will attpemt
                 $this->handle($chart, $candleMaker); // Call the main method of this class
                 //$loop->stop();
             });
 
         $loop->run();
-
     }
 
+    private function checkPosition(){
+
+        $exchange = new hitbtc2(); // new hitbtc2()
+        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
+        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+        $activeOrders = $exchange->privateGetOrder(['symbol' => DB::table('settings_realtime')->first()->symbol ]);
+
+        If (!$activeOrders && (DB::table('asset_1')->where('trade_direction', '!=', null)->count() != 0)){
+            dump('ENTERED POSITION CHECKER');
+            /* Get current position based on the signal generated on chart */
+            $lastTradeDirection = (DB::table('asset_1')
+                ->orderBy('id', 'desc')
+                ->where('trade_direction', '!=', null)
+                ->first())->trade_direction;
+
+            /* Get trading position from the exchange */
+            $parts = explode("/", DB::table('settings_realtime')->first()->symbol_market);
+            $currency = $parts[0];
+            $balance = $exchange->fetchBalance()[$currency];
+
+            if($lastTradeDirection == 'buy'){
+                if ($balance['total'] > 0){
+                    dump('Buy position is correct. No actions needed.');
+                }
+                else{
+                    dump('Position is not equal to the signal! Need to open long!');
+                    // Open long with planned value
+                    try{
+                        $response = $exchange->createMarketBuyOrder(DB::table('settings_realtime')->first()->symbol_market, DB::table('settings_realtime')->first()->volume, []);
+                    }
+                    catch (\Exception $e){
+                        dump('Sell order error: ' . $e->getMessage() . ' ' . __FILE__ . ' ' . __LINE__);
+                    }
+
+                }
+            }
+
+            if($lastTradeDirection == 'sell'){
+                if ($balance['total'] == 0){
+                    dump('Sell position is correct. No actions needed.');
+                }
+                else{
+                    dump('Position is not equal to the signal! Need to close long!!');
+                    // Close long with balance value
+                    try{
+                        $response = $exchange->createMarketSellOrder(DB::table('settings_realtime')->first()->symbol_market, $balance['total'], []);
+                    }
+                    catch (\Exception $e){
+                        dump('Sell order error: ' . $e->getMessage() . ' ' . __FILE__ . ' ' . __LINE__);
+                    }
+                }
+            }
+        }
+        else
+        {
+            //dump('There are active orders. No need to check positions. ' . __FILE__ . ' ' . __LINE__  );
+        }
+    }
 }
+
+

@@ -28,9 +28,6 @@ class PriceChannel
 {
     public static function calculate()
     {
-
-        Log::debug("price channel calc started");
-
         /** @var int $priceChannelPeriod */
         $priceChannelPeriod = DB::table('settings_realtime')
             ->where('id', 1)
@@ -105,14 +102,12 @@ class PriceChannel
                 // For SMA
                 for ($j = $elementIndex  ; $j < $elementIndex + $smaPeriod; $j++)
                 {
-                    //Log::debug($x);
                     /** SMA calculation */
                     $sma += $records[$j]->close; // SMA based on close value
-                    //$sma = 18800; // Not tested
                 }
 
-
                 /** Update high and low values, sma values in DB */
+                // cpu overload here
                 DB::table("asset_1")
                     ->where('time_stamp', $records[$elementIndex]->time_stamp)
                     ->update([
@@ -120,8 +115,6 @@ class PriceChannel
                         'price_channel_low_value' => $priceChannelLowValue,
                         'sma' => $sma / $smaPeriod,
                     ]);
-
-
 
                 /** Reset high, low price channel values */
                 $priceChannelHighValue = 0;

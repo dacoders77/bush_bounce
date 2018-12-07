@@ -86,10 +86,9 @@ class ccxtsocket extends Command
         $trading = new \App\Classes\Hitbtc\Trading();
 
 
-        $this->exchange = new hitbtc();
+        $this->exchange = new hitbtc2(); // new hitbtc2()
         $this->exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
         $this->exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
-
 
         echo "***** CCXT websocket app started! ccxtsocket.php line 86 *****\n";
         echo "symbol: " . DB::table('settings_realtime')->first()->symbol . "\n";

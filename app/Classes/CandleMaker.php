@@ -136,7 +136,7 @@ class CandleMaker
              * PriceChannel::calculate() may result as two different SMA values - one on the chart and one in DB. This makes hard
              * to trace and debug the code.
              */
-            PriceChannel::calculate();
+            //PriceChannel::calculate();
 
             // SEND TICK TO CHART
             /** Send tick to Chart.php in order to calculate profit and add bars to D
@@ -154,31 +154,32 @@ class CandleMaker
                 'low' => $tickPrice,
                 'volume' => $tickVolume,
             ));
-                /**
-                 * We get settings values from DB one more time just in case it was changed.
-                 * For example the price channel value. Otherwise the price channel value will remain the same
-                 * and the only option to update it would be restarting the application from console
-                 */
-                $this->settings = DB::table('settings_realtime')->first();
+            /**
+             * We get settings values from DB one more time just in case it was changed.
+             * For example the price channel value. Otherwise the price channel value will remain the same
+             * and the only option to update it would be restarting the application from console
+             */
+            $this->settings = DB::table('settings_realtime')->first();
 
-                /** Set flag to true in order to drop seconds of the time and add time frame */
-                $this->isFirstTickInBar = true;
+            /** Set flag to true in order to drop seconds of the time and add time frame */
+            $this->isFirstTickInBar = true;
 
-                /** Calculate price channel. All records in the DB are gonna be used
-                 * @todo When bars are added, no need go through all bars and calculate price channel. We can go only through price channel perid bars and get the value. In this case PriceChannel class must have a parameter whether to calculate the whole data or just a period
-                 * This price channel calculation is applied when a new bar is added to the chart. Right after it was added
-                 * we calculate price channel and inform front and that the chart mast be reloaded
-                 */
-                PriceChannel::calculate();
+            /** Calculate price channel. All records in the DB are gonna be used
+             * @todo When bars are added, no need go through all bars and calculate price channel.
+             * We can go only through price channel period bars and get the value.
+             * In this case PriceChannel class must have a parameter whether to calculate the whole data or just a period.
+             * This price channel calculation is applied when a new bar is added to the chart.
+             * Right after it was added we calculate price channel and inform front end that the chart mast be reloaded.
+             */
+            PriceChannel::calculate();
 
-                /** This flag informs Chart.vue that it needs to add new bar to the chart.
-                 * We reach this code only when new bar is issued and only in this case this flag is added.
-                 * In all other cases $messageArray[] array does not contain flag ['flag'] which means that Chart.vue is
-                 * not adding new bar and updating the current one
-                 */
-                $messageArray['flag'] = true;
-
-            }
+            /** This flag informs Chart.vue that it needs to add new bar to the chart.
+             * We reach this code only when new bar is issued and only in this case this flag is added.
+             * In all other cases $messageArray[] array does not contain flag ['flag'] which means that Chart.vue is
+             * not adding new bar and updating the current one
+             */
+            $messageArray['flag'] = true;
+        }
 
         /** Prepare message array */
         $messageArray['tradeDate'] = $tickDate;
@@ -193,7 +194,6 @@ class CandleMaker
 
         // Get value. Do the null check
         // If null - add zero to the message array
-
         $messageArray['priceChannelHighValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
         $messageArray['priceChannelLowValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_low_value;
 

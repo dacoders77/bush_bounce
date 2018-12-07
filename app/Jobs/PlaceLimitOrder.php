@@ -41,7 +41,7 @@ class PlaceLimitOrder implements ShouldQueue
     public function handle()
     {
         $counter = 0;
-        for ($i = 0; $counter < 50; $counter++){
+        for ($i = 0; $counter < 5; $counter++){
             dump('the THREAD! ---' . $counter);
             usleep(1000000);
         }
