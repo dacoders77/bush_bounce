@@ -72,8 +72,6 @@ class Chart
         $this->trade_flag = DB::table('settings_realtime')->where('id', 1)->value('trade_flag');
 
 
-
-
         if ($mode == "backtest")
         {
             /** @var int $recordId id of the record in DB
@@ -107,8 +105,6 @@ class Chart
         }
 
         $barClosePrice = $assetRow[0]->sma;
-
-
 
         /** We do this check because sometimes, don't really understand under which circumstances, we get
          * trying to get property of non-object

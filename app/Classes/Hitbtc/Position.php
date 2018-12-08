@@ -13,9 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 class Position
 {
-    public static function checkPosition(){
+    public static function checkPosition(hitbtc2 $exchange){
 
-        $exchange = new hitbtc2(); // new hitbtc2()
         $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
         $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
         $activeOrders = $exchange->privateGetOrder(['symbol' => DB::table('settings_realtime')->first()->symbol ]);

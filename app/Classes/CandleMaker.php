@@ -56,7 +56,6 @@ class CandleMaker
         /** @todo remove this variable. use just $settings*/
         $this->settings = $settings;
 
-
         /** First time ever application run check. Table is empty */
         if(!DB::table('asset_1')->first())
         {
@@ -120,8 +119,8 @@ class CandleMaker
         echo "time frame: " . $this->settings->time_frame . "\n";
 
         /*
-         * New bar is issued
-         * When the time of the tick is > added time - add this bar to the DB
+         * New bar is issued.
+         * When the time of the tick is > added time - add this bar to the DB.
          * @todo now volume is not accumulated. We record it as the last volume of the trade (tick)
          */
         if (floor($tickDate / 1000) >= $this->tt){
@@ -164,10 +163,12 @@ class CandleMaker
                 /** Set flag to true in order to drop seconds of the time and add time frame */
                 $this->isFirstTickInBar = true;
 
-                /** Calculate price channel. All records in the DB are gonna be used
-                 * @todo When bars are added, no need go through all bars and calculate price channel. We can go only through price channel perid bars and get the value. In this case PriceChannel class must have a parameter whether to calculate the whole data or just a period
+                /** Calculate price channel. All records in the DB are gonna be used.
+                 * @todo When bars are added, no need go through all bars and calculate price channel. We can go only
+                 * through price channel period bars and get the value. In this case PriceChannel class must have a parameter
+                 * whether to calculate the whole data or just a period.
                  * This price channel calculation is applied when a new bar is added to the chart. Right after it was added
-                 * we calculate price channel and inform front and that the chart mast be reloaded
+                 * we calculate price channel and inform front end that the chart mast be reloaded
                  */
                 PriceChannel::calculate();
 

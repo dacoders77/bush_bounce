@@ -7,26 +7,25 @@ use Illuminate\Support\Facades\DB;
 use App\Classes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
+use ccxt\hitbtc2;
 
 class RatchetPawlSocket extends Command
 {
-    /** @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
+    /* @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
     private $isFirstTimeBroadcastCheck = true;
-
-    /** @var bool $isFirstTimeTickCheck First tick check. Used in order to decrease quantity of ticks because pusher limit exceeds sometime*/
+    /* @var bool $isFirstTimeTickCheck First tick check. Used in order to decrease quantity of ticks because pusher limit exceeds sometime*/
     private $isFirstTimeTickCheck = true;
-
-    /** @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
+    /* @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
     private $addedTime = null;
-
-    /** @var integer $addedTickTime The same but for ticks*/
+    /* @var integer $addedTickTime The same but for ticks*/
     private $addedTickTime = null;
-
-    /** @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
+    /* @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
     private $isBroadCastAllowed;
     private $settings;
-    /** @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
+    /* @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
     private $initStartFlag = true;
+    /* @var */
+    private $exchange;
 
 
     /**
@@ -66,6 +65,8 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
+        $this->exchange = new hitbtc2();
+
         /** @var string $exchange Exchange name, pulled out of the DB*/
         $exchange = DB::table('settings_realtime')->value('exchange');
 
@@ -136,8 +137,8 @@ class RatchetPawlSocket extends Command
         ]);
 
         /* Periodic check for correct position condition. Sometimes orders accidentally cancel whiteout opening a position. */
-        $loop->addPeriodicTimer(5, function() use($loop) {
-            Classes\Hitbtc\Position::checkPosition();
+        $loop->addPeriodicTimer(1, function() use($loop) {
+            Classes\Hitbtc\Position::checkPosition($this->exchange);
         });
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);

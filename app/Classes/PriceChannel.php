@@ -28,15 +28,14 @@ class PriceChannel
 {
     public static function calculate()
     {
-
         Log::debug("price channel calc started");
 
-        /** @var int $priceChannelPeriod */
+        /* @var int $priceChannelPeriod */
         $priceChannelPeriod = DB::table('settings_realtime')
             ->where('id', 1)
             ->value('price_channel_period');
 
-        /** @var int $smaPeriod */
+        /* @var int $smaPeriod */
         $smaPeriod = DB::table('settings_realtime')
             ->where('id', 1)
             ->value('sma_period');
@@ -79,11 +78,8 @@ class PriceChannel
          */
         foreach ($records as $record) {
 
-            /** @var double $sma Calculated simple moving average value
-             * sma value is rested each iteration
-             */
+            /* @var double $sma Calculated simple moving average value sma value is reset each iteration */
             $sma = 0;
-
             /**
              * Indexes go like this 0,1,2,3,4,5,6 from left to the right
              * We must stop before $requestBars reaches the end of the array
@@ -111,7 +107,6 @@ class PriceChannel
                     //$sma = 18800; // Not tested
                 }
 
-
                 /** Update high and low values, sma values in DB */
                 DB::table("asset_1")
                     ->where('time_stamp', $records[$elementIndex]->time_stamp)
@@ -121,9 +116,7 @@ class PriceChannel
                         'sma' => $sma / $smaPeriod,
                     ]);
 
-
-
-                /** Reset high, low price channel values */
+                /* Reset high, low price channel values */
                 $priceChannelHighValue = 0;
                 $priceChannelLowValue = 999999;
 
@@ -147,8 +140,6 @@ class PriceChannel
 
             }
             $elementIndex++;
-
-
         }
     }
 }

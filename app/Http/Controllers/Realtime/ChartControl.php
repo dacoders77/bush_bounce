@@ -17,7 +17,6 @@ use Illuminate\Http;
 class ChartControl extends \App\Http\Controllers\Controller
 {
     public function update(Request $request){
-
         DB::table('settings_realtime')
             ->where('id', 1)
             ->update([
@@ -28,12 +27,10 @@ class ChartControl extends \App\Http\Controllers\Controller
                 'history_from' => $request->get('historyFrom'),
                 'history_to' => $request->get('historyTo'),
                 'app_mode' => $request->get('appMode')
-
                 //'execution_time' => date("Y-m-d G:i:s", strtotime($request->get('basketExecTime')))
             ]);
 
         // Calculate price channel
         \App\Classes\PriceChannel::calculate();
-
     }
 }
