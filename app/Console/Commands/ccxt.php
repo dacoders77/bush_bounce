@@ -53,13 +53,15 @@ class ccxt extends Command
     public function handle()
     {
         // Create an instance of exchange class
-        $this->exchange = new Classes\Hitbtc\HitBtcPhp($_ENV['HITBTC_PUBLIC_API_KEY'], $_ENV['HITBTC_PRIVATE_API_KEY']);
+        //$this->exchange = new Classes\Hitbtc\HitBtcPhp($_ENV['HITBTC_PUBLIC_API_KEY'], $_ENV['HITBTC_PRIVATE_API_KEY']);
+
+        $exchange = new hitbtc2(); // new hitbtc2()
+        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
+        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
+        $activeOrders = $exchange->privateGetOrder(['symbol' => DB::table('settings_realtime')->first()->symbol ]);
+        dd($activeOrders);
 
 
-        //echo "dd";
-        $value = Cache::get('orderObject');
-        Cache::put('orderObject', new Classes\Hitbtc\OrderObject("buy", "0.0316",(string)time()), 5);
-        dd($value);
 
 
         //$exchange = new \ccxt\hitbtc2();

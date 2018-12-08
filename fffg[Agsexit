@@ -1,0 +1,72 @@
+[1mdiff --git a/app/Classes/Hitbtc/Trading.php b/app/Classes/Hitbtc/Trading.php[m
+[1mindex 9c02839..dd582df 100644[m
+[1m--- a/app/Classes/Hitbtc/Trading.php[m
+[1m+++ b/app/Classes/Hitbtc/Trading.php[m
+[36m@@ -59,6 +59,7 @@[m [mclass Trading[m
+      * @return  void[m
+      */[m
+     public function parseTicker($bid = null, $ask = null, $exchange){[m
+[32m+[m
+         /* Place order */[m
+         ($bid ? $direction = "buy" : $direction = "sell");[m
+         if ($this->activeOrder == null){[m
+[36m@@ -112,6 +113,7 @@[m [mclass Trading[m
+                         // On each move - store to price in DB[m
+                         //DataBase::addOrderOutExecPrice2($this->orderPlacePrice);[m
+                         echo "Order place price: " . $this->orderPlacePrice . "\n";[m
+[32m+[m
+                     }[m
+                     else{[m
+                         //echo "Trading.php rate limit-------------------- " . date("Y-m-d G:i:s") . "\n";[m
+[36m@@ -153,9 +155,11 @@[m [mclass Trading[m
+          * 1. Full volume execution[m
+          * 2. Partial fill[m
+          */[m
+[32m+[m[32m        //if ($message['params']['clientOrderId'] == $this->orderId && ($message['params']['status'] == "filled" || $message['params']['status'] == "partiallyFilled" )){[m
+[32m+[m[32m        // "reportType" => "trade"[m
+         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['reportType'] == "trade"){[m
+ [m
+[31m-            dump('Dump from Trading.php 162');[m
+[32m+[m[32m            dump('Dump from Trading.php 155');[m
+             dump($message);[m
+             Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("getActiveOrders"), 5);[m
+ [m
+[36m@@ -164,19 +168,22 @@[m [mclass Trading[m
+ [m
+             $this->accumulatedOrderVolume = 0;[m
+             foreach ($this->tradesArray as $trade){[m
+[31m-                echo "Trading.php 167:\n";[m
+[32m+[m[32m                echo "Trading.php 147:\n";[m
+                 dump($trade);[m
+                 $this->averageOrderFillPrice = $this->averageOrderFillPrice + $trade->price;[m
+[31m-                $this->accumulatedOrderVolume += $trade->quantity;[m
+[32m+[m[32m                $this->accumulatedOrderVolume += $trade->quantity; // THIS IS WRONG[m
+[32m+[m
+             }[m
+             $this->averageOrderFillPrice = $this->averageOrderFillPrice / count($this->tradesArray);[m
+ [m
+[31m-            echo "--------------------ACUMM VOLL: " . $this->accumulatedOrderVolume . "\n";[m
+[32m+[m[32m            echo "--------------------ACCUMM VOLL: " . $this->accumulatedOrderVolume . "\n";[m
+[32m+[m
+             $kostylVolume = 90 * $this->orderQuantity / 100; // 90% volume[m
+             echo "KOSTYL VOLUME: " . $kostylVolume . "\n";[m
+ [m
+             if ($this->accumulatedOrderVolume > $kostylVolume ){[m
+[31m-                dump("FULL EXEC. Stop thread");[m
+[32m+[m[32m                dump("Trading.php 156. FULL EXEC. Stop thread");[m
+[32m+[m
+                 $this->activeOrder = "filled"; // Then we can open a new order[m
+                 $this->needToMoveOrder = false; // When order has been filled - don't move it[m
+                 echo "THREAD STOP. Order FILLED! filled price: ";[m
+[1mdiff --git a/resources/assets/js/components/ChartControl.vue b/resources/assets/js/components/ChartControl.vue[m
+[1mindex 45a2c61..919dd3a 100644[m
+[1m--- a/resources/assets/js/components/ChartControl.vue[m
+[1m+++ b/resources/assets/js/components/ChartControl.vue[m
+[36m@@ -1,6 +1,7 @@[m
+ <template>[m
+     <div>[m
+ [m
+[32m+[m
+         <b-tabs>[m
+             <b-tab title="Main" active>[m
+ [m

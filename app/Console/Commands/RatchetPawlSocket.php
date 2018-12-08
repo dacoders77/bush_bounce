@@ -125,7 +125,6 @@ class RatchetPawlSocket extends Command
             die('Die after test trade.' . __FILE__ . " " . __LINE__);
         }
 
-
         /**
          * Ratchet/pawl websocket lib
          * @see https://github.com/ratchetphp/Pawl
@@ -135,6 +134,11 @@ class RatchetPawlSocket extends Command
             'dns' => '8.8.8.8', // Does not work through OKADO internet provider. Timeout error
             'timeout' => 10
         ]);
+
+        /* Periodic check for correct position condition. Sometimes orders accidentally cancel whiteout opening a position. */
+        $loop->addPeriodicTimer(5, function() use($loop) {
+            Classes\Hitbtc\Position::checkPosition();
+        });
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 
