@@ -137,7 +137,7 @@ class RatchetPawlSocket extends Command
         ]);
 
         /* Periodic check for correct position condition. Sometimes orders accidentally cancel whiteout opening a position. */
-        $loop->addPeriodicTimer(1, function() use($loop) {
+        $loop->addPeriodicTimer(10, function() use($loop) {
             Classes\Hitbtc\Position::checkPosition($this->exchange);
         });
 
