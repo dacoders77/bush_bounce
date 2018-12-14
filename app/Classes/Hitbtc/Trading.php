@@ -10,6 +10,7 @@ namespace App\Classes\Hitbtc;
 
 use App\Classes\LogToFile;
 use App\Http\Controllers\OrderController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use ccxt\hitbtc;
@@ -155,9 +156,17 @@ class Trading
          */
         if ($message['params']['clientOrderId'] == $this->orderId && $message['params']['reportType'] == "trade"){
 
-            dump('Dump from Trading.php 162');
+            dump('Dump from Trading.php 158');
             dump($message);
+
+            /* Get active orders. Request and response will go through websocket. */
             Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("getActiveOrders"), 5);
+
+            /* Get trades and calculate profit (based and actual trades received from the exchange) */
+            // Get first record from orders table
+            $from = DB::table('orders')->first()->created_at;
+            dd($from);
+            Artisan::queue("stat:start", ["--from" => "2018-12-08 07:28:40"])->onQueue(env("DB_DATABASE"));
 
             // ** VOL
             array_push($this->tradesArray, new OrderObject("", "", $message['params']['tradePrice'], $message['params']['tradeQuantity']));

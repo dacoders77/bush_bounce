@@ -271,7 +271,7 @@ class RatchetPawlSocket extends Command
                             if ($this->isFirstTimeTickCheck || ($timestamp >= $this->addedTickTime && $this->isBroadCastAllowed)) {
 
                                 $this->isFirstTimeTickCheck = false;
-                                $this->addedTickTime = $timestamp + $this->settings->skip_ticks_msec; // Allow ticks not frequenter than twice a second
+                                $this->addedTickTime = $timestamp + $this->settings->skip_ticks_msec; // Allow ticks not more frequent than twice a second
                                 /**
                                  * @param double $nojsonMessage [2][3] ($tickPrice) Price of the trade
                                  * @param integer $nojsonMessage [2][1] ($tickDate) Timestamp
@@ -280,14 +280,10 @@ class RatchetPawlSocket extends Command
                                  * @param collection $settings Row of settings from DB
                                  * @param command $command variable for graphical strings output to the console
                                  */
-
                                 //echo "huj: " . $timestamp . "\n";
-
                                 $candleMaker->index($nojsonMessage['params']['data'][0]['price'], $timestamp, $nojsonMessage['params']['data'][0]['quantity'], $chart, $this->settings, $this);
                             }
-
                         }
-
                         break;
                 }
 
@@ -332,11 +328,8 @@ class RatchetPawlSocket extends Command
             }, function(\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
                 echo $errorString;
-                Log::debug($errorString);
 
-                //event(new \App\Events\ConnectionError($errorString));
-
-                sleep(5); // Wait 5 seconds before next connection try will attpemt
+                sleep(5); // Wait 5 seconds before next connection try will attempt
                 $this->handle($chart, $candleMaker); // Call the main method of this class
                 //$loop->stop();
             });

@@ -52,17 +52,6 @@ class ccxt extends Command
      */
     public function handle()
     {
-        // Create an instance of exchange class
-        //$this->exchange = new Classes\Hitbtc\HitBtcPhp($_ENV['HITBTC_PUBLIC_API_KEY'], $_ENV['HITBTC_PRIVATE_API_KEY']);
-
-        $exchange = new hitbtc2(); // new hitbtc2()
-        $exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
-        $exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
-        $activeOrders = $exchange->privateGetOrder(['symbol' => DB::table('settings_realtime')->first()->symbol ]);
-        dd($activeOrders);
-
-
-
 
         //$exchange = new \ccxt\hitbtc2();
         //$exchange->apiKey = '';
@@ -124,7 +113,6 @@ class ccxt extends Command
 
         While(true) {
 
-
             // Determine whether the bid has changed
             if ($bid != Redis::get('bid')) {
                 $bid = Redis::get('bid');
@@ -134,7 +122,6 @@ class ccxt extends Command
                 $isBidChanged = false;
                 //echo "Bid has not changed: $bid\n";
             }
-
 
             // Is order filled?
 
@@ -164,7 +151,6 @@ class ccxt extends Command
                         }
                     }
                 }
-
 
                 if ($count == 5) break;
                 usleep(500000); // 500000 - half a second
@@ -203,8 +189,6 @@ class ccxt extends Command
                 } else {
                     echo "array key does not exist\n";
                 }
-
-                //usleep(2000000);
 
             }
         }

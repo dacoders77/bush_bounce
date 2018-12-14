@@ -55,7 +55,6 @@ class ccxtsocket extends Command
      * @var string
      */
 
-
     /**
      * Create a new command instance.
      * @return void
@@ -63,8 +62,6 @@ class ccxtsocket extends Command
     public function __construct()
     {
         parent::__construct();
-        // DO NOT PLACE CODE SERIOUS IN THE CONSTRUCTOR
-        // CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MAY CAUSE DIFFERENT PROBLEMS
     }
 
     public $tradesArray = array();
@@ -77,19 +74,11 @@ class ccxtsocket extends Command
     public function handle()
     {
 
-        //Redis set up
-        //$redis = app()->make('redis');
-        //$redis->set("jo","jo");
-        //dump($redis); // Output the redis object including all variables
-        //echo $redis->get("jo");
-
         $trading = new \App\Classes\Hitbtc\Trading();
-
 
         $this->exchange = new hitbtc();
         $this->exchange->apiKey = $_ENV['HITBTC_PUBLIC_API_KEY'] ;
         $this->exchange->secret = $_ENV['HITBTC_PRIVATE_API_KEY'];
-
 
         echo "***** CCXT websocket app started! ccxtsocket.php line 86 *****\n";
         echo "symbol: " . DB::table('settings_realtime')->first()->symbol . "\n";
@@ -128,20 +117,20 @@ class ccxtsocket extends Command
          */
         $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
 
-            /*Kill process*/
+            /* Kill process*/
             if (time() > $this->rateLimitTime + 900){
                 dump(__FILE__ . ' ' . __LINE__ . " Process killed due expiration. >15 min.");
                 $loop->stop();
             }
 
-            /*Finish end exit from the current command*/
+            /* Finish end exit from the current command*/
             if (Cache::get('commandExit' . env("DB_DATABASE"))){
                 Cache::put('commandExit' . env("DB_DATABASE"), false, 5);
                 echo "Exit!";
                 $loop->stop();
             }
 
-            /*Cache setup*/
+            /* Read variables from cache and send them to websocket connection */
             if (Cache::get('orderObject' . env("DB_DATABASE")) != null)
             {
                 $value = Cache::get('orderObject' . env("DB_DATABASE"));
@@ -183,7 +172,6 @@ class ccxtsocket extends Command
                 if ($this->connection){
                     $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123'])); // Get order statuses
                     if ($orderObject) $this->connection->send($orderObject); // Send object to websocket stream;
-                    //$this->connection->send(json_encode(['method' => 'getTradingBalance', 'params' => [], 'id' => '123'])); // Get trading balances
                 }
 
                 Cache::put('orderObject' . env("DB_DATABASE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
