@@ -8,6 +8,7 @@ use App\Classes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use ccxt\hitbtc2;
+use App\FactOrder; // Model link
 
 class RatchetPawlSocket extends Command
 {
@@ -100,8 +101,12 @@ class RatchetPawlSocket extends Command
             // Clear text log file
             Classes\LogToFile::createTextLogFile();
             // Clear all redis queues. Clear entire redis storage! Be careful!
-            $redis = app()->make('redis');
-            $redis->flushAll();
+            //$redis = app()->make('redis');
+            //$redis->flushAll();
+
+            // Clear all fact orders. Financial statement based on actuall trades.
+            FactOrder::truncate();
+
             $this->initStartFlag = false;
         }
 
@@ -138,8 +143,21 @@ class RatchetPawlSocket extends Command
 
         /* Periodic check for correct position condition. Sometimes orders accidentally cancel whiteout opening a position. */
         $loop->addPeriodicTimer(10, function() use($loop) {
-            Classes\Hitbtc\Position::checkPosition($this->exchange);
+            //Classes\Hitbtc\Position::checkPosition($this->exchange);
         });
+
+        $loop->addPeriodicTimer(12, function() use($loop) {
+            /* Get trades and calculate profit (based and actual trades received from the exchange) */
+            Artisan::queue("stat:start", ["--from" => "2018-12-08 07:28:40"])->onQueue(env("DB_DATABASE"));
+        });
+
+
+        // Init start - fact_orders table is truncated
+        // First request is made when orders table has a first record in it
+        // The ann request use the date from last record in fact_orders table
+        //
+
+
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
 

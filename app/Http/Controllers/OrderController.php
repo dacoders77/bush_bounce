@@ -86,11 +86,12 @@ class OrderController extends Controller
     /**
      * Add a record to DB with order data.
      */
-    public static function addOpenOrder(string $orderDirection, float $orderVolume, $inPrice){
+    public static function addOpenOrder(string $orderDirection, float $orderVolume, $inPrice, $orderPlaceTime){
 
         // If order table is empty - add 0 to accum_profit.
         // If not - dublicate accum value from the previous record.
         $recordId = Order::create([
+            'order_time' => $orderPlaceTime,
             'order_direction' => $orderDirection,
             'order_volume' => $orderVolume,
             'in_price' => $inPrice

@@ -16,6 +16,7 @@ class Order extends Model
      */
     protected $fillable = [
         'order_direction',
+        'order_time',
         'order_volume',
         'trade_volume',
         'trade_direction',

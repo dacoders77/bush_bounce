@@ -140,7 +140,7 @@ class Trading
             $this->runOnceFlag = false; // Enter this IF only once
 
             if ($message['params']['side'] == 'buy')
-                OrderController::addOpenOrder("long", $message['params']['quantity'], $message['params']['price']);
+                OrderController::addOpenOrder("long", $message['params']['quantity'], $message['params']['price'], $message['params']['createdAt']);
 
             if ($message['params']['side'] == 'sell'){
                 $recodId = OrderController::addEmptyTrade('sell', $message['params']['quantity'], $message['params']['price']);
@@ -161,12 +161,6 @@ class Trading
 
             /* Get active orders. Request and response will go through websocket. */
             Cache::put('orderObject' . env("DB_DATABASE"), new OrderObject("getActiveOrders"), 5);
-
-            /* Get trades and calculate profit (based and actual trades received from the exchange) */
-            // Get first record from orders table
-            $from = DB::table('orders')->first()->created_at;
-            dd($from);
-            Artisan::queue("stat:start", ["--from" => "2018-12-08 07:28:40"])->onQueue(env("DB_DATABASE"));
 
             // ** VOL
             array_push($this->tradesArray, new OrderObject("", "", $message['params']['tradePrice'], $message['params']['tradeQuantity']));

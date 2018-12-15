@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
  */
 class DataBase
 {
-
     public static function addOrderRecord(string $orderId){
 
         DB::table(env("PROFIT_TABLE"))->insert(array(
