@@ -16,6 +16,7 @@ class CreateFactOrdersTable extends Migration
         Schema::create('fact_orders', function (Blueprint $table) {
             $table->increments('id');
             $table->timestamps();
+            $table->string('time')->nullable();
 
             $table->integer('trade_id')->nullable();
             $table->string('client_order_id')->nullable();
@@ -25,7 +26,12 @@ class CreateFactOrdersTable extends Migration
             $table->string('quantity')->nullable();
             $table->string('price')->nullable();
             $table->string('fee')->nullable();
-            $table->string('time')->nullable();
+            $table->decimal('profit', 10, 5)->nullable();
+            $table->decimal('net_profit', 10, 5)->nullable();
+            $table->decimal('accum_profit', 10, 5)->nullable();
+
+
+
         });
     }
 

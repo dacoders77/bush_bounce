@@ -44,7 +44,7 @@ class SettingsRealtime extends Migration
             'exchange' => 'hitbtc',
             'symbol' => "ETHUSD",
             'symbol_market' => "ETH/USDT",
-            'price_step' => 0.01,
+            'price_step' => 0.001,
             'volume' => 0.1,
             'request_bars' => 30,
             'skip_ticks_msec' => 1000,

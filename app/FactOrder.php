@@ -29,6 +29,9 @@ class FactOrder extends Model
         'quantity',
         'price',
         'fee',
-        'time'
+        'time',
+        'profit',
+        'net_profit',
+        'accum_profit'
     ];
 }

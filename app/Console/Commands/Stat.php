@@ -15,6 +15,7 @@ class Stat extends Command
     private $from;
     private $till;
     private $response;
+    private $fee;
 
     /**
      * The name and signature of the console command.
@@ -49,7 +50,7 @@ class Stat extends Command
     public function handle()
     {
         Dump('Entered stat. ' . __FILE__);
-        FactOrder::truncate();
+        //FactOrder::truncate();
 
         $priceStep = DB::table('settings_realtime')->first()->price_step;
 
@@ -62,18 +63,27 @@ class Stat extends Command
          * False if - inputted
          */
 
-
-        //$get = DB::table('orders')->get();
-        //dd($get->isEmpty());
-
         // Not inputted
         if(!$this->option('from')){
-            // There are orders on orders_table
+            // If orders table is not empty
             if(!DB::table('orders')->get()->isEmpty()){
-                $this->from = DB::table('orders')
-                    //->orderBy('id', 'desc')
-                    ->first()->order_time;
+
+                dump(DB::table('fact_orders')->get()->isEmpty());
+
+                // fact_orders table is empty -> use date from orders table
+                if(DB::table('fact_orders')->get()->isEmpty()){
+                    $this->from = DB::table('orders')
+                        ->first()->order_time;
+                }
+
+                // fact_orders table is not empty -> take the last row from fact_orders table
+                if(!DB::table('fact_orders')->get()->isEmpty()){
+                    $this->from = DB::table('fact_orders')
+                        ->orderBy('id', 'desc')
+                        ->first()->time;
+                }
             }
+
         }
         // Inputted
         else{
@@ -81,9 +91,10 @@ class Stat extends Command
             $this->till = strtotime($this->option('till')) * 1000;
         }
 
+        dump($this->from);
 
 
-        // When param date not inputted and orders table is empty.
+        // When param date is not inputted and orders table is empty.
         // No trades has been opend yet.
         if ($this->from)
             // Case 1: fact_orders is empty
@@ -94,16 +105,15 @@ class Stat extends Command
         $this->response = $this->exchange->privateGetHistoryTrades([
             'symbol' => DB::table('settings_realtime')->first()->symbol,
             'by' => 'timestamp',
-            'from' => $this->from,
+            'from' => strtotime($this->from) * 1000 + 1000,
             'till' => $this->till
         ]);
 
+        dump($this->response);
+
+
         if($this->response){
-
-            dump($this->response);
-            //FactOrder::truncate();
-
-            foreach ($this->response as $order){
+            foreach (array_reverse($this->response) as $order){
                 FactOrder::create([
                     'trade_id' => $order['id'],
                     'client_order_id' => $order['clientOrderId'],
@@ -126,24 +136,23 @@ class Stat extends Command
             */
 
             foreach ($this->response as $order) {
+            //foreach (FactOrder::all()->toArray() as $order) { // Take trades from fact orders without a request
                 if($order['side'] == 'buy'){
                     $x = 0;
                     do {
-                        array_push($this->buys, $order['price']);
+                        array_push($this->buys, ['price' => $order['price'], 'fee' => $order['fee']]);
                         $x++;
                     } while ($x < $order['quantity'] / $priceStep);
                 }
                 else{
                     $x = 0;
                     do {
-                        array_push($this->sells, $order['price']);
+                        array_push($this->sells, ['price' => $order['price'], 'fee' => $order['fee']]);
                         $x++;
                     } while ($x < $order['quantity'] / $priceStep);
                 }
+                $this->fee += $order['fee'];
             }
-
-            //dump($this->sells);
-            //dump($this->buys);
 
             /**
              * If both arrays are not empty.
@@ -153,16 +162,25 @@ class Stat extends Command
             if($this->buys && $this->sells){
                 $x = 0;
                 do {
-                    $this->profit += ($this->sells[$x] - $this->buys[$x]) * $priceStep;
-                    //echo $this->sells[$x] . " - " . $this->buys[$x] . "\n";
-
+                    $this->profit += ($this->sells[$x]['price'] - $this->buys[$x]['price']) * $priceStep; // Accumulate profit
+                    //$this->fee += (($this->sells[$x]['fee'] + $this->buys[$x]['fee'])) * $priceStep * 10;
                     $x++;
-                    // Compare arrays. Which one is smaller - use that one for for each
+                    // Compare arrays. Which one is smaller - use that one for foreach
                 } while ($x < (count($this->buys) > count($this->sells) ? count($this->sells) : count($this->buys)));
             }
             else{
                 $this->error('Only first trade in fact_orders is present which is not yet closed. Profit can not be calculated.');
             }
+
+            // Update profit column
+            $priceStep = DB::table('settings_realtime')->first()->price_step;
+            FactOrder::where('id', '!=', null)
+                ->orderBy('id', 'desc')
+                ->first()
+                ->update([
+                    'profit' => $this->profit,
+                    'net_profit' => $this->fee
+                ]);
 
             dump($this->profit);
         }
