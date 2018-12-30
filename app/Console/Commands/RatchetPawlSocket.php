@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use ccxt\hitbtc2;
 use App\FactOrder; // Model link
+use Illuminate\Support\Facades\Cache;
 
 class RatchetPawlSocket extends Command
 {
@@ -25,9 +26,8 @@ class RatchetPawlSocket extends Command
     private $settings;
     /* @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
     private $initStartFlag = true;
-    /* @var */
-    private $exchange;
 
+    protected $connection;
 
     /**
      * The name and signature of the console command.
@@ -51,13 +51,8 @@ class RatchetPawlSocket extends Command
      */
     public function __construct()
     {
-        /*
-        DO NOT PLACE CODE IN THE CONSTRUCTOR
-        CONSTRUCTORS ARE CALLED WHEN APPLICATION STARTS (the whole laravel!) AND MY CAUSE DIFFERENT PROBLEMS
-        */
         parent::__construct();
     }
-
 
     /**
      * Execute the console command.
@@ -66,19 +61,12 @@ class RatchetPawlSocket extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
-        $this->exchange = new hitbtc2();
-
-        /** @var string $exchange Exchange name, pulled out of the DB*/
-        $exchange = DB::table('settings_realtime')->value('exchange');
-
         echo "*****Ratchet websocket console command(app) started!*****\n";
-        echo "Exchange: " . $exchange . "\n";
         echo "initial start flag from console = " . $this->option('param');
 
         event(new \App\Events\ConnectionError("Connection attempt"));
-        event(new \App\Events\ConnectionError("Exchange: " . $exchange));
 
-        Log::useDailyFiles(storage_path().'/logs/debug.log'); // Setup log name and math. Logs are created daily
+        Log::useDailyFiles(storage_path() . '/logs/debug.log'); // Setup log name and math. Logs are created daily
         Log::debug("*****Ratchet websocket console command(app) started!*****");
         Log::debug("initial start flag from console = " . $this->option('param'));
 
@@ -91,45 +79,9 @@ class RatchetPawlSocket extends Command
          * the initial start only when started from console
          */
 
-
-
-        if($this->option('param') == 'init' && $this->initStartFlag)
-        {
-            app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
-            echo "command started with --init FLAG\n";
-            event(new \App\Events\ConnectionError("Ratchet. Init start"));
-            // Clear text log file
-            Classes\LogToFile::createTextLogFile();
-            // Clear all redis queues. Clear entire redis storage! Be careful!
-            //$redis = app()->make('redis');
-            //$redis->flushAll();
-
-            // Clear all fact orders. Financial statement based on actuall trades.
-            FactOrder::truncate();
-
-            $this->initStartFlag = false;
-        }
-
-        /* Throw a test trade. Used when there is no time to wait for signal at the chart */
-        if($this->option('param') == 'buy' && $this->initStartFlag)
-        {
-            echo "\n";
-            $this->error('Ratchet. Test trade BUY will be placed!');
-            DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
-            Artisan::queue('ccxt:start', ['--buy' => true])->onQueue(env("DB_DATABASE"));
-            $this->initStartFlag = false;
-            die('Die after test trade.' . __FILE__ . " " . __LINE__);
-        }
-
-        if($this->option('param') == 'sell' && $this->initStartFlag)
-        {
-            echo "\n";
-            $this->error('Ratchet. Test trade SELL will be placed!');
-            DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
-            Artisan::queue('ccxt:start')->onQueue(env("DB_DATABASE"));
-            $this->initStartFlag = false;
-            die('Die after test trade.' . __FILE__ . " " . __LINE__);
-        }
+        if ($this->option('param') == 'init' && $this->initStartFlag) $this->startInit();
+        if ($this->option('param') == 'buy' && $this->initStartFlag) $this->startBuy(); // Throw a test trade. Used when there is no time to wait for signal at the chart
+        if ($this->option('param') == 'sell' && $this->initStartFlag) $this->startSell();
 
         /**
          * Ratchet/pawl websocket lib
@@ -141,171 +93,89 @@ class RatchetPawlSocket extends Command
             'timeout' => 10
         ]);
 
+        // CACHE GOES HERE. Listen cache
+        $loop->addPeriodicTimer(0.5, function() use($loop) { // addPeriodicTimer($interval, callable $callback)
+            $this->listenCacheQue();
+        });
+
         /* Periodic check for correct position condition. Sometimes orders accidentally cancel whiteout opening a position. */
-        $loop->addPeriodicTimer(10, function() use($loop) {
+        $loop->addPeriodicTimer(10, function () use ($loop) {
             //Classes\Hitbtc\Position::checkPosition($this->exchange);
         });
 
-        $loop->addPeriodicTimer(12, function() use($loop) {
+        $loop->addPeriodicTimer(12, function () use ($loop) {
             /* Get trades and calculate profit (based and actual trades received from the exchange) */
-            Artisan::queue("stat:start", ["--from" => "2018-12-08 07:28:40"])->onQueue(env("DB_DATABASE"));
+            //Artisan::queue("stat:start", ["--from" => "2018-12-08 07:28:40"])->onQueue(env("DB_DATABASE"));
         });
-
 
         // Init start - fact_orders table is truncated
         // First request is made when orders table has a first record in it
         // The ann request use the date from last record in fact_orders table
-        //
-
-
 
         $connector = new \Ratchet\Client\Connector($loop, $reactConnector);
+        $connector("ws://localhost:8181", [], ['Origin' => 'http://localhost'])
+            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $candleMaker, $loop) {
+                $this->connection = $conn; // For accessing conn outside of the this unanimous func
+                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop) {
+                    $nojsonMessage = json_decode($socketMessage->getPayload(), true);
 
-        /** Pick up the right websocket endpoint accordingly to the exchange */
-        switch ($exchange){
-            case "bitfinex":
-                $exchangeWebSocketEndPoint = "wss://api.bitfinex.com/ws/2";
-                break;
 
-            case "hitbtc":
-                $exchangeWebSocketEndPoint = "wss://api.hitbtc.com/api/2/ws";
-                break;
-        }
+                    if ($nojsonMessage)
+                    {
+                        dump($nojsonMessage);
+                        Classes\History::load($nojsonMessage);
+                        \App\Classes\PriceChannel::calculate();
+                    }
 
-        $connector($exchangeWebSocketEndPoint, [], ['Origin' => 'http://localhost'])
-            ->then(function(\Ratchet\Client\WebSocket $conn) use ($chart, $candleMaker, $loop, $exchange) {
-                $conn->on('message', function(\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop, $exchange) {
+                    /*
+                    if (array_key_exists('method', $nojsonMessage)) {
 
-                /** Use different parsing algorithms for each exchange  */
-                switch ($exchange){
-                    case "bitfinex":
+                        $timestamp = strtotime($nojsonMessage['params']['data'][0]['timestamp']) * 1000;
 
-                        /**
-                         * If the broadcast is on - proceed events, pass it to Chart class
-                         * @todo 05.26.18 This check must be performed once a second otherwise each tick will execute a requse to DB wich will overload the data base
-                         *
-                         */
+                        // Check whether broadcast is allowed only once a second
+                        if ($this->isFirstTimeBroadcastCheck || $timestamp >= $this->addedTime) {
+                            $this->addedTime = $timestamp + 1000;
+                            $this->isFirstTimeBroadcastCheck = false;
 
-                        /* @see http://socketo.me/api/class-Ratchet.RFC6455.Messaging.MessageInterface.html */
-                        $jsonMessage = json_decode($socketMessage->getPayload(), true);
-                        //print_r($jsonMessage);
-                        //print_r(array_keys($z));
-                        //echo $message->__toString() . "\n"; // Decode each message
+                            // @var collection $settings The whole row from settings table.
+                            //  Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
+                            //  We already have this functionality here - broadcast allowed check
+                            $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
 
-                        if (array_key_exists('chanId',$jsonMessage)){
-                            $chanId = $jsonMessage['chanId']; // Parsed channel ID then we are gonna listen exactly to this channel number. It changes each time you make a new connection
-                        }
-
-                        $nojsonMessage = json_decode($socketMessage->getPayload());
-
-                        if (!array_key_exists('event',$jsonMessage)) { // All messages except first two associated arrays
-                            if ($nojsonMessage[1] == "te") // Only for the messages with 'te' flag. The faster ones
-                            {
-                                /** Check whether broadcast is allowed only once a second */
-                                if ($this->isFirstTimeBroadcastCheck || $nojsonMessage[2][1] >= $this->addedTime)
-                                {
-                                    $this->addedTime = $nojsonMessage[2][1] + 1000;
-                                    $this->isFirstTimeBroadcastCheck = false;
-
-                                    /** @var collection $settings The whole row from settings table.
-                                     * Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
-                                     * We already have this functionality here - broadcast allowed check*/
-                                    $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
-
-                                    if (DB::table('settings_realtime')
-                                            ->where('id', 1)
-                                            ->value('broadcast_stop') == 0)
-                                    {
-                                        $this->isBroadCastAllowed = true;
-                                    }
-                                    else
-                                    {
-                                        $this->isBroadCastAllowed = false;
-                                        echo "RatchetPawlSocket.php Broadcast flag is set to FALSE. Line 171 \n";
-                                        event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
-                                    }
-                                }
-
-                                /**
-                                 * 1st condition $this->isFirstTimeTickCheck - enter here only once when the app starts
-                                 * 2nd tick time > computed time and broadcast is allowed
-                                 */
-                                if ($this->isFirstTimeTickCheck || ($nojsonMessage[2][1] >= $this->addedTickTime && $this->isBroadCastAllowed))
-                                {
-                                    $this->isFirstTimeTickCheck = false;
-                                    $this->addedTickTime = $nojsonMessage[2][1] + $this->settings->skip_ticks_msec; // Allow ticks not frequenter than twice a second
-                                    /**
-                                     * @param double        $nojsonMessage[2][3] ($tickPrice) Price of the trade
-                                     * @param integer       $nojsonMessage[2][1] ($tickDate) Timestamp
-                                     * @param double        $nojsonMessage[2][2] ($tickVolume) Volume of the trade
-                                     * @param Classes\Chart $chart Chart class instance
-                                     * @param collection    $settings Row of settings from DB
-                                     * @param command       $command variable for graphical strings output to the console
-                                     */
-
-                                    //echo $nojsonMessage[2][3] . "\n";
-
-                                    $candleMaker->index($nojsonMessage[2][3], $nojsonMessage[2][1], $nojsonMessage[2][2], $chart, $this->settings, $this);
-                                }
+                            if (DB::table('settings_realtime')
+                                    ->where('id', 1)
+                                    ->value('broadcast_stop') == 0) {
+                                $this->isBroadCastAllowed = true;
+                            } else {
+                                $this->isBroadCastAllowed = false;
+                                echo "RatchetPawlSocket.php Broadcast flag is set to FALSE. line 226  \n";
+                                event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
                             }
                         }
 
 
-                        break;
+                         // 1st condition $this->isFirstTimeTickCheck - enter here only once when the app starts
+                         // 2nd tick time > computed time and broadcast is allowed
 
-                    case "hitbtc":
-                        $nojsonMessage = json_decode($socketMessage->getPayload(), true);
+                        if ($this->isFirstTimeTickCheck || ($timestamp >= $this->addedTickTime && $this->isBroadCastAllowed)) {
 
-                        if (array_key_exists('method', $nojsonMessage)) {
-
-                            $timestamp = strtotime($nojsonMessage['params']['data'][0]['timestamp']) * 1000;
-
-                            /** Check whether broadcast is allowed only once a second */
-                            if ($this->isFirstTimeBroadcastCheck || $timestamp >= $this->addedTime) {
-                                $this->addedTime = $timestamp + 1000;
-                                $this->isFirstTimeBroadcastCheck = false;
-
-                                /** @var collection $settings The whole row from settings table.
-                                 * Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
-                                 * We already have this functionality here - broadcast allowed check*/
-                                $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
-
-
-                                if (DB::table('settings_realtime')
-                                        ->where('id', 1)
-                                        ->value('broadcast_stop') == 0) {
-                                    $this->isBroadCastAllowed = true;
-                                } else {
-                                    $this->isBroadCastAllowed = false;
-                                    echo "RatchetPawlSocket.php Broadcast flag is set to FALSE. line 226  \n";
-                                    event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
-                                }
-                            }
-
-                            /**
-                             * 1st condition $this->isFirstTimeTickCheck - enter here only once when the app starts
-                             * 2nd tick time > computed time and broadcast is allowed
-                             */
-                            if ($this->isFirstTimeTickCheck || ($timestamp >= $this->addedTickTime && $this->isBroadCastAllowed)) {
-
-                                $this->isFirstTimeTickCheck = false;
-                                $this->addedTickTime = $timestamp + $this->settings->skip_ticks_msec; // Allow ticks not more frequent than twice a second
-                                /**
-                                 * @param double $nojsonMessage [2][3] ($tickPrice) Price of the trade
-                                 * @param integer $nojsonMessage [2][1] ($tickDate) Timestamp
-                                 * @param double $nojsonMessage [2][2] ($tickVolume) Volume of the trade
-                                 * @param Classes\Chart $chart Chart class instance
-                                 * @param collection $settings Row of settings from DB
-                                 * @param command $command variable for graphical strings output to the console
-                                 */
-                                //echo "huj: " . $timestamp . "\n";
-                                $candleMaker->index($nojsonMessage['params']['data'][0]['price'], $timestamp, $nojsonMessage['params']['data'][0]['quantity'], $chart, $this->settings, $this);
-                            }
+                            $this->isFirstTimeTickCheck = false;
+                            $this->addedTickTime = $timestamp + $this->settings->skip_ticks_msec; // Allow to send ticks not more frequent that twice a second
+                            //
+                            //   @param double $nojsonMessage [2][3] ($tickPrice) Price of the trade
+                            //  @param integer $nojsonMessage [2][1] ($tickDate) Timestamp
+                            //  @param double $nojsonMessage [2][2] ($tickVolume) Volume of the trade
+                            //  @param Classes\Chart $chart Chart class instance
+                            //  @param collection $settings Row of settings from DB
+                            //  @param command $command variable for graphical strings output to the console
+                            //
+                            $candleMaker->index($nojsonMessage['params']['data'][0]['price'], $timestamp, $nojsonMessage['params']['data'][0]['quantity'], $chart, $this->settings, $this);
                         }
-                        break;
-                }
+                    }
+                    */
 
                 });
+
                 $conn->on('close', function($code = null, $reason = null) use ($chart, $candleMaker) {
                     echo "Connection closed ({$code} - {$reason})\n";
                     $this->info("line 82. connection closed");
@@ -315,34 +185,19 @@ class RatchetPawlSocket extends Command
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
-                /** Use different json request object for each exchange */
-                switch ($exchange){
-                    case "bitfinex":
-                        //$conn->send(['event' => 'ping']); // Only for bitfinex
-                        $requestObject = json_encode([
-                            //'event' => 'ping', // 'event' => 'ping'
-                            'event' => 'subscribe',
-                            'channel' => 'trades',
-                            'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // tBTCUSD tETHUSD tETHBTC
-
-                        ]);
-                        break;
-
-                    case "hitbtc":
-                        $requestObject = json_encode([
-                            'method' => 'subscribeTrades',
-                            'params' => [
-                                'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol // ETHBTC BTCUSD
-                            ],
-                            'id' => 123
-                        ]);
-                        break;
-                }
-
+                /*
+                $requestObject = json_encode([
+                    'method' => 'subscribeTrades',
+                    'params' => [
+                        'symbol' => $this->settings = DB::table('settings_realtime')->first()->symbol
+                    ],
+                ]);
                 $conn->send($requestObject);
-                //$conn->send($x);
+                */
 
-                /** @todo Add sleep function, for example 1 minute, after which reconnection attempt will be performed again */
+                // SEND CACHE TEST
+                Cache::put('webSocketObject' . env("DB_DATABASE"), 'hello form ratchet line 190. json goes here', 5);
+
             }, function(\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php line 210. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
                 echo $errorString;
@@ -355,5 +210,58 @@ class RatchetPawlSocket extends Command
         $loop->run();
 
     }
+
+    private function startInit(){
+        app('App\Http\Controllers\initialstart')->index(); // Moved all initial start code to a separate controller
+        echo "command started with --init FLAG\n";
+        event(new \App\Events\ConnectionError("Ratchet. Init start"));
+        Classes\LogToFile::createTextLogFile();
+        FactOrder::truncate();
+        $this->initStartFlag = false;
+    }
+
+    private function startBuy(){
+        echo "\n";
+        $this->error('Ratchet. Test trade BUY will be placed!');
+        DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
+        Artisan::queue('ccxt:start', ['--buy' => true])->onQueue(env("DB_DATABASE"));
+        $this->initStartFlag = false;
+        die('Die after test trade.' . __FILE__ . " " . __LINE__);
+    }
+
+    private function startSell(){
+        echo "\n";
+        $this->error('Ratchet. Test trade SELL will be placed!');
+        DB::table('jobs')->where('queue', env("DB_DATABASE"))->delete(); // Empty jobs table
+        Artisan::queue('ccxt:start')->onQueue(env("DB_DATABASE"));
+        $this->initStartFlag = false;
+        die('Die after test trade.' . __FILE__ . " " . __LINE__);
+    }
+
+    private function listenCacheQue(){
+        /* Read variables from cache and send them to websocket connection */
+        if (Cache::get('webSocketObject' . env("DB_DATABASE")) != null)
+        {
+            $value = Cache::get('webSocketObject' . env("DB_DATABASE"));
+            $this->error($value);
+
+            //if ($value->action == "placeOrder"){
+            if (true){
+                $orderObject = json_encode([
+                    'clientId' => env("DB_DATABASE"),
+                    'requestType' => "historyLoad",
+                    'body' => [
+                        'symbol' => DB::table('settings_realtime')->first()->symbol,
+                        'hoursToLoad' => 2
+                    ]
+                ]);
+            }
+
+            if ($this->connection && $orderObject) $this->connection->send($orderObject); // Send object to websocket stream
+
+            Cache::put('webSocketObject' . env("DB_DATABASE"), null, now()->addMinute(5)); // Clear the cache. Assigned value Expires in 5 minutes
+        }
+    }
+
 
 }

@@ -18,8 +18,9 @@ class initialstart extends Controller
         DB::table(env("PROFIT_TABLE"))->truncate();
         DB::table('orders')->truncate();
 
-        \App\Classes\History::load(); // Load history from www.bitfinex.com
-        \App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
+        //\App\Classes\History::load(); // Moved to RatchetPawlSockt.php
+
+        //\App\Classes\PriceChannel::calculate(); // Calculate price channel for loaded data
 
         $messageArray['serverInitialStart'] = true;
         event(new \App\Events\BushBounce($messageArray)); // Event is received in Chart.vue

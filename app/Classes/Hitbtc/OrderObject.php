@@ -8,7 +8,6 @@
 
 namespace App\Classes\Hitbtc;
 
-
 /*
  * Object order class.
  *

@@ -26,145 +26,42 @@ class History
      * @return void
      */
 
+
     /** Gets specified number of bars. This method is called when real-time mode is activated */
-    static public function load(){
+    static public function load(array $historyBars){
 
-        /**
-         * If initial start is true
-         * True is set by default or by Initial start button click at the start page
-         * Is Set to false after history data is loaded
-         */
-        if (true){
+        /** Add candles to DB */
 
-            DB::table('asset_1') // Drop all records in the table
-                ->truncate();
+        foreach ($historyBars['barsList'] as $z) { // The first element in array is the youngest - first from the left on the chart. Go through the array backwards. This is the order how points will be read from DB and outputed to the chart
 
-            $timeframe =
-                DB::table('settings_realtime')
-                    ->where('id', 1)
-                    ->value('time_frame');
+            //echo gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])) . "\n";
+            //dump($z);
 
-            $asset =
-                DB::table('settings_realtime')
-                    ->where('id', 1)
-                    ->value('symbol');
+            DB::table('asset_1')->insert(array(
+                'date' => $z['date'], // gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])), // Date in regular format. Converted from unix timestamp
+                'time_stamp' => $z['time_stamp'], //strtotime($z['timestamp']) * 1000, // 13 digits integer
+                'open' => $z['open'],
+                'close' => $z['close'],
+                'high' => $z['high'],
+                'low' => $z['low'],
+                'volume' => round($z['volume'],1),
+            ));
 
-            /**
-             * Create guzzle http client
-             * @var GuzzleHttp\Client $api_connection Provides http headers send functionality
-             * @link http://docs.guzzlephp.org/en/stable/
-             */
-            $api_connection = new Client([
-                //'base_uri' => 'https://api.bitfinex.com/v2/', // Base uri and end points can be specified separately. This uri was commented and moved to $restEndpoint
-                'timeout' => 50 // If make this value small - fatal error occurs
-            ]);
+            //echo gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])) . "\n";
 
-            //$restEndpoint = "candles/trade:" . $timeframe . ":t" . $asset . "/hist?limit=20&start=" . $start . "&end=" . $end . "&sort=1";
-
-            /**
-             * Gets bars from the present moment. No dates needed. Values must be reversed before adding to DB.
-             * Otherwise - the chart is not properly rendered, all bars look fat.
-             */
-
-            /** @var string $exchange Exchange name, pulled out of the DB*/
-            $exchange = DB::table('settings_realtime')->value('exchange');
-
-            //$exchange = "bitfinex";
-            //$exchange = "hitbtc";
-
-            switch ($exchange){
-                case "bitfinex":
-                    $restEndpoint = "https://api.bitfinex.com/v2/candles/trade:" . $timeframe . "m:t" . $asset . "/hist?limit=" . DB::table('settings_realtime')->where('id', 1)->value('request_bars');
-                    break;
-
-                case "hitbtc":
-                    $restEndpoint = "https://api.hitbtc.com/api/2/public/candles/$asset?period=M1&limit=" . DB::table('settings_realtime')->where('id', 1)->value('request_bars');
-                    break;
-            }
+        }
 
 
-            /** http://docs.guzzlephp.org/en/stable/request-options.html#http-errors */
-            $response = $api_connection->request('GET', $restEndpoint, ['http_errors' => true ]);
-
-            $body = $response->getBody(); // Get the body out of the response
-            $json = json_decode($body, true); // Decode JSON. Associative array will be outputted
-
-            if ($response->getStatusCode() == 200) // Request successful
-            {
-
-                switch ($exchange){
-                    case "bitfinex":
-                        $json = array_reverse($json);
-                        break;
-
-                    case "hitbtc":
-                        // No need to reverse
-                        break;
-                }
-
-                /** Add candles to DB */
-                foreach ($json as $z) { // The first element in array is the youngest - first from the left on the chart. Go through the array backwards. This is the order how points will be read from DB and outputed to the chart
-
-                    switch ($exchange){
-                        case "bitfinex":
-
-                            echo gmdate("Y-m-d G:i:s", ($z[0] / 1000)) . "\n";
-                            //dump($z);
-
-                            DB::table('asset_1')->insert(array(
-                                'date' => gmdate("Y-m-d G:i:s", ($z[0] / 1000)), // Date in regular format. Converted from unix timestamp
-                                'time_stamp' => $z[0], // 13 digits integer
-                                'open' => $z[1],
-                                'close' => $z[2],
-                                'high' => $z[3],
-                                'low' => $z[4],
-                                'volume' => round($z[5],1),
-                            ));
-
-                            break;
-
-                        case "hitbtc":
-
-                            echo gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])) . "\n";
-                            //dump($z);
-
-                            DB::table('asset_1')->insert(array(
-                                'date' => gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])), // Date in regular format. Converted from unix timestamp
-                                'time_stamp' => strtotime($z['timestamp']) * 1000, // 13 digits integer
-                                'open' => $z['open'],
-                                'close' => $z['close'],
-                                'high' => $z['max'],
-                                'low' => $z['min'],
-                                'volume' => round($z['volume'],1),
-                            ));
-
-                            //echo gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])) . "\n";
-
-                            break;
-                    }
-
-
-
-
-                }
-            }
-            else // Request is not successful. Error code is not 200
-            {
-                echo "History. Too many request error. " . $response->getStatusCode();
-                event(new \App\Events\ConnectionError("History.php. To many requests. " . $response->getStatusCode()));
-                Log::debug("History.php. line 95. To many requests. Rsponce code:" . $response->getStatusCode());
-            }
-
-            /** Calculate price channel */
+            /* Calculate price channel */
             //PriceChannel::calculate();
 
-            /** Ste Initial start flag to false */
+            /* Ste Initial start flag to false */
             DB::table('settings_realtime')
                 ->where('id', 1)
                 ->update([
                     'initial_start' => 0,
                 ]);
-        }
+
 
     }
 
@@ -189,7 +86,7 @@ class History
 
             // Working end point! do not touch it!
             //$restEndpoint = "candles/trade:" . $timeframe . ":tBTCUSD/hist?limit=1000&start=" . $start . "&end=" . $end . "&sort=1";
-           // https://api.bitfinex.com/v2/candles/trade:1m:tBTCUSD/hist?limit=1000&start=1518480000000&end=1518566400000&sort=1
+            // https://api.bitfinex.com/v2/candles/trade:1m:tBTCUSD/hist?limit=1000&start=1518480000000&end=1518566400000&sort=1
 
             // Break requested time period into pieces and request one by one
             $q = 1;
@@ -262,7 +159,7 @@ class History
                     echo "Request error: too many requests!"; // $response->getReasonPhrase()
                 }
 
-                /** Make a staep */
+                /** Make a step */
                 $start = $start + 86400000 * $dayStep; // 10 days step. 86400000 millesecs - 1 day
                 $tempEnd = $tempEnd + 86400000 * $dayStep;
                 $q++;
