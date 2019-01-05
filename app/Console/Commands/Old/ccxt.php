@@ -53,6 +53,18 @@ class ccxt extends Command
     public function handle()
     {
 
+
+        // Works good. History bars received.
+        $exchange = new \ccxt\ccex();
+        dump('Get BITMEX history bars for Roger');
+        //dump($exchange);
+        // exchange.fetchOHLCV ("BTC/USD", "1m" , since, 5 )
+        //$bars = $exchange->fetchOHLCV("BTC/USD", "1m" , null, 5);
+        //dump($bars);
+        dump($exchange->fees);
+        die();
+
+
         //$exchange = new \ccxt\hitbtc2();
         //$exchange->apiKey = '';
         //$exchange->secret = '';

@@ -18,12 +18,11 @@
             }
         },
         methods:{
-            // Load history bars and price channel values from DB. This functions is called at each new bar or on update price channel
+            // Load history bars and price channel values from DB.
+            // This functions is called at each new bar or on update price channel
             HistoryBarsLoad: function(chart1, param) {
-
                 axios.get('/historybarsload') // Load history data from BR
                     .then(response => {
-
                         // Two types of messages can be received: reload the whole chart or the price channel only
                         // The reason is to make chart reload faster
                         if (param == "reload-price-channel")
@@ -45,18 +44,19 @@
                             chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
                             chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
                             chart1.series[5].setData(response.data['sma'],true);
+                            chart1.series[6].setData(response.data['profitDiagram'],true);
                         }
                     })
                     .catch(error => {
-                        console.log('Chart.vue. line 36 /historybarsload function controller error: ');
+                        console.log('Chart.vue. line 51 /historybarsload function controller error: ');
                         console.log(error.response);
                     })
             }
         },
-        created() { // First created then Mounted
+        created() {
+            // First created then Mounted
         },
-        mounted(){ // Then, later mounted
-
+        mounted(){
             var chart1 = Highcharts.stockChart('container', {
                 chart: {
                     animation: false,
@@ -168,6 +168,20 @@
                         dataGrouping: {
                             enabled: false
                         }
+                    },
+                    {
+                        name: 'profitDiagram',
+                        yAxis: 1, // To which of two y axis this series should be linked
+                        //type: 'area',
+
+                        step: true,
+                        visible: true,
+                        //enableMouseTracking: true,
+                        color: 'green',
+                        //negativeColor: 'rgba(255, 0, 0, 1)',
+                        negativeColor: 'red',
+                        //threshold: 2,
+                        lineWidth: 1,
 
                     }
 
@@ -221,11 +235,7 @@
                     this.HistoryBarsLoad(chart1, "reload-whole-chart");
                 }
 
-
-
-
-
-        }); // Echo
+        });
 
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
@@ -235,6 +245,5 @@
             });
 
         }
-
     }
 </script>

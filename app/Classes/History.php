@@ -18,40 +18,22 @@ use Illuminate\Database\Schema\Blueprint;
 
 class History
 {
-    /**
-     * Loads historical data to DB from www.bitfinex.com.
-     * These bars are shown at the chart when the page is open.
-     * Each bar has 5 values: 1526651340000,8095.7,8095.7,8090.1,8090.1
-     *
-     * @return void
-     */
-
 
     /** Gets specified number of bars. This method is called when real-time mode is activated */
     static public function load(array $historyBars){
 
         /** Add candles to DB */
-
-        foreach ($historyBars['barsList'] as $z) { // The first element in array is the youngest - first from the left on the chart. Go through the array backwards. This is the order how points will be read from DB and outputed to the chart
-
-            //echo gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])) . "\n";
-            //dump($z);
-
+        foreach ($historyBars['barsList'] as $bar) { // The first element in array is the youngest - first from the left on the chart. Go through the array backwards. This is the order how points will be read from DB and outputed to the chart
             DB::table('asset_1')->insert(array(
-                'date' => $z['date'], // gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])), // Date in regular format. Converted from unix timestamp
-                'time_stamp' => $z['time_stamp'], //strtotime($z['timestamp']) * 1000, // 13 digits integer
-                'open' => $z['open'],
-                'close' => $z['close'],
-                'high' => $z['high'],
-                'low' => $z['low'],
-                'volume' => round($z['volume'],1),
+                'date' => $bar['date'],
+                'time_stamp' => $bar['time_stamp'],
+                'open' => $bar['open'],
+                'close' => $bar['close'],
+                'high' => $bar['high'],
+                'low' => $bar['low'],
+                'volume' => $bar['volume'],
             ));
-
-            //echo gmdate("Y-m-d G:i:s", strtotime($z['timestamp'])) . "\n";
-
         }
-
-
             /* Calculate price channel */
             //PriceChannel::calculate();
 
@@ -61,8 +43,6 @@ class History
                 ->update([
                     'initial_start' => 0,
                 ]);
-
-
     }
 
     /** Gets history data for specified period of time. This method is called when history back testing mode is activated */

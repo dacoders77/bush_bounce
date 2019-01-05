@@ -33,8 +33,6 @@ class Backtest
                 'net_profit' => null,
             ]);
 
-
-
         $allDbValues = DB::table("asset_1")
             ->whereNotNull('price_channel_high_value')
             ->get(); // Read the whole table from BD to $allDbValues

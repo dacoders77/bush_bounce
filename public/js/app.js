@@ -68122,8 +68122,9 @@ exports.push([module.i, ".fade-enter-active, .fade-leave-active {\n    transitio
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
+  __webpack_require__(243)
   __webpack_require__(222)
-  __webpack_require__(225)
+  __webpack_require__(245)
 }
 var normalizeComponent = __webpack_require__(74)
 /* script */
@@ -68241,46 +68242,8 @@ module.exports = function listToStyles (parentId, list) {
 
 
 /***/ }),
-/* 225 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(226);
-if(typeof content === 'string') content = [[module.i, content, '']];
-if(content.locals) module.exports = content.locals;
-// add the styles to the DOM
-var update = __webpack_require__(73)("4bd06241", content, false);
-// Hot Module Replacement
-if(false) {
- // When the styles change, update the <style> tags
- if(!content.locals) {
-   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-52976716\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=1!./ChartControl.vue", function() {
-     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-52976716\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=1!./ChartControl.vue");
-     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-     update(newContent);
-   });
- }
- // When the module is disposed, remove the <style> tags
- module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 226 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(11)(false);
-// imports
-
-
-// module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
-
-// exports
-
-
-/***/ }),
+/* 225 */,
+/* 226 */,
 /* 227 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -68292,6 +68255,21 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -68837,7 +68815,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
             return enterRealTimeMode;
         }()
-
     },
     created: function created() {
         var _this = this;
@@ -69720,308 +69697,59 @@ var render = function() {
         "b-tabs",
         [
           _c("b-tab", { attrs: { title: "Main", active: "" } }, [
-            _c("form", { staticClass: "form-inline" }, [
-              _c("div", { staticClass: "container" }, [
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [_vm._v("Symbol: ")]),
-                    _vm._v(" "),
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.symbol,
-                          expression: "symbol"
-                        }
-                      ],
-                      staticClass: "form-control form-control-sm border-0",
-                      staticStyle: { height: "20px", width: "70px" },
-                      attrs: { type: "text" },
-                      domProps: { value: _vm.symbol },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.symbol = $event.target.value
-                        }
-                      }
-                    })
-                  ])
-                ]),
-                _vm._v(" "),
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [
-                      _vm._v(
-                        "Volume / Commission: " +
-                          _vm._s(_vm.volume) +
-                          " / " +
-                          _vm._s(_vm.commission)
-                      )
-                    ])
-                  ])
-                ]),
-                _vm._v(" "),
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [
-                      _vm._v(
-                        "Net profit / Broadcast: " +
-                          _vm._s(_vm.netProfit) +
-                          " / " +
-                          _vm._s(_vm.broadcastAllowed)
-                      )
-                    ])
-                  ])
-                ]),
-                _vm._v(" "),
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [
-                      _vm._v("Requested bars(real-time) / Timeframe: ")
-                    ]),
-                    _vm._v(" "),
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.requestBars,
-                          expression: "requestBars"
-                        }
-                      ],
-                      staticClass: "form-control form-control-sm border-0",
-                      staticStyle: {
-                        height: "12px",
-                        width: "35px",
-                        "font-size": "12px",
-                        padding: "0px",
-                        margin: "0px"
-                      },
-                      attrs: { type: "text" },
-                      domProps: { value: _vm.requestBars },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.requestBars = $event.target.value
-                        }
-                      }
-                    }),
-                    _vm._v(" /\n                            "),
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.timeFrame,
-                          expression: "timeFrame"
-                        }
-                      ],
-                      staticClass: "form-control form-control-sm border-0",
-                      staticStyle: { height: "14px", width: "35px" },
-                      attrs: { type: "text" },
-                      domProps: { value: _vm.timeFrame },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.timeFrame = $event.target.value
-                        }
-                      }
-                    })
-                  ])
-                ]),
-                _vm._v(" "),
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [_vm._v("Tst: ")]),
-                    _vm._v(" "),
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.historyFrom,
-                          expression: "historyFrom"
-                        }
-                      ],
-                      staticClass: "form-control form-control-sm",
-                      staticStyle: { height: "30px", width: "140px" },
-                      attrs: { type: "date" },
-                      domProps: { value: _vm.historyFrom },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.historyFrom = $event.target.value
-                        }
-                      }
-                    })
-                  ]),
+            _c("table", { staticClass: "table-sm" }, [
+              _c("tbody", [
+                _c("tr", [
+                  _c("td", [_vm._v("Symbol/Currecy:")]),
                   _vm._v(" "),
-                  _c("div", [_vm._v("-")]),
+                  _c("td", [_vm._v("EUR")]),
+                  _vm._v(" "),
+                  _c("td", [_vm._v("USD")])
+                ]),
+                _vm._v(" "),
+                _c("tr", [
+                  _c("td", [_vm._v("Volume/Commission:")]),
+                  _vm._v(" "),
+                  _c("td", [_vm._v(_vm._s(_vm.volume))]),
+                  _vm._v(" "),
+                  _c("td", [_vm._v(_vm._s(_vm.commission))])
+                ]),
+                _vm._v(" "),
+                _c("tr", [
+                  _c("td", [_vm._v("Longs/Shorts:")]),
+                  _vm._v(" "),
+                  _c("td", [_vm._v("23")]),
+                  _vm._v(" "),
+                  _c("td", [_vm._v("18")])
+                ]),
+                _vm._v(" "),
+                _c("tr", [
+                  _c("td", [_vm._v("Net profit: ")]),
                   _vm._v(" "),
                   _c(
-                    "div",
-                    {
-                      staticClass: "form-group",
-                      staticStyle: { "background-color": "pink" }
-                    },
-                    [
-                      _c("input", {
-                        directives: [
-                          {
-                            name: "model",
-                            rawName: "v-model",
-                            value: _vm.historyTo,
-                            expression: "historyTo"
-                          }
-                        ],
-                        staticClass: "form-control form-control-sm",
-                        staticStyle: { height: "30px", width: "140px" },
-                        attrs: { type: "date" },
-                        domProps: { value: _vm.historyTo },
-                        on: {
-                          input: function($event) {
-                            if ($event.target.composing) {
-                              return
-                            }
-                            _vm.historyTo = $event.target.value
-                          }
-                        }
-                      })
-                    ]
+                    "td",
+                    { staticClass: "text-left", attrs: { colspan: "2" } },
+                    [_vm._v(_vm._s(_vm.netProfit))]
                   )
                 ]),
                 _vm._v(" "),
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [
-                      _vm._v("Application mode:\n                            "),
-                      _c(
-                        "a",
-                        {
-                          attrs: { href: "" },
-                          on: {
-                            click: function($event) {
-                              $event.preventDefault()
-                              return _vm.modeToggle($event)
-                            }
-                          }
-                        },
-                        [_vm._v(_vm._s(_vm.appMode))]
-                      )
-                    ])
+                _c("tr", [
+                  _c("td", [_vm._v("Broadcast: ")]),
+                  _vm._v(" "),
+                  _c("td", { attrs: { colspan: "2" } }, [
+                    _vm._v(_vm._s(_vm.broadcastAllowed))
                   ])
                 ]),
                 _vm._v(" "),
-                _c("div", { staticClass: "row" }, [
-                  _c("div", { staticClass: "form-group" }, [
-                    _c("small", [
-                      _c(
-                        "button",
-                        {
-                          staticStyle: { height: "25px", width: "140px" },
-                          attrs: { id: "initial-start" },
-                          on: { click: _vm.initialStartButton }
-                        },
-                        [_vm._v("Initial run")]
-                      )
-                    ])
+                _c("tr", [
+                  _c("td", [_vm._v("App mode: ")]),
+                  _vm._v(" "),
+                  _c("td", { attrs: { colspan: "2" } }, [
+                    _vm._v(_vm._s(_vm.appMode))
                   ])
                 ])
               ])
             ]),
-            _vm._v(" "),
-            _c(
-              "form",
-              {
-                staticClass: "form-inline",
-                attrs: { disabled: _vm.priceChannelFormDisabled },
-                on: {
-                  submit: function($event) {
-                    $event.preventDefault()
-                    return _vm.priceChannelUpdate($event)
-                  }
-                }
-              },
-              [
-                _c("small", [
-                  _vm._v(
-                    "\n                    Price channel / Stop channel period:"
-                  ),
-                  _c("br"),
-                  _vm._v(" "),
-                  _c("input", {
-                    directives: [
-                      {
-                        name: "model",
-                        rawName: "v-model",
-                        value: _vm.priceChannelPeriod,
-                        expression: "priceChannelPeriod"
-                      }
-                    ],
-                    staticClass: "form-control",
-                    staticStyle: { height: "25px", width: "50px" },
-                    attrs: {
-                      type: "number",
-                      min: "1",
-                      max: "100",
-                      disabled: _vm.priceChannelFormDisabled
-                    },
-                    domProps: { value: _vm.priceChannelPeriod },
-                    on: {
-                      input: function($event) {
-                        if ($event.target.composing) {
-                          return
-                        }
-                        _vm.priceChannelPeriod = $event.target.value
-                      }
-                    }
-                  }),
-                  _vm._v(" "),
-                  _c("input", {
-                    directives: [
-                      {
-                        name: "model",
-                        rawName: "v-model",
-                        value: _vm.priceChannelPeriod,
-                        expression: "priceChannelPeriod"
-                      }
-                    ],
-                    staticClass: "form-control",
-                    staticStyle: { height: "25px", width: "50px" },
-                    attrs: {
-                      type: "number",
-                      min: "1",
-                      max: "100",
-                      disabled: _vm.priceChannelFormDisabled
-                    },
-                    domProps: { value: _vm.priceChannelPeriod },
-                    on: {
-                      input: function($event) {
-                        if ($event.target.composing) {
-                          return
-                        }
-                        _vm.priceChannelPeriod = $event.target.value
-                      }
-                    }
-                  }),
-                  _vm._v(" "),
-                  _c(
-                    "button",
-                    { attrs: { disabled: _vm.priceChannelFormDisabled } },
-                    [_vm._v("Params update")]
-                  )
-                ])
-              ]
-            ),
             _vm._v(" "),
             _c(
               "div",
@@ -70171,12 +69899,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
 
     methods: {
-        // Load history bars and price channel values from DB. This functions is called at each new bar or on update price channel
+        // Load history bars and price channel values from DB.
+        // This functions is called at each new bar or on update price channel
         HistoryBarsLoad: function HistoryBarsLoad(chart1, param) {
-
             axios.get('/historybarsload') // Load history data from BR
             .then(function (response) {
-
                 // Two types of messages can be received: reload the whole chart or the price channel only
                 // The reason is to make chart reload faster
                 if (param == "reload-price-channel") {
@@ -70197,19 +69924,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     chart1.series[3].setData(response.data['longTradeMarkers'], true); // Low. Price channel low
                     chart1.series[4].setData(response.data['shortTradeMarkers'], true); // Low. Price channel low
                     chart1.series[5].setData(response.data['sma'], true);
+                    chart1.series[6].setData(response.data['profitDiagram'], true);
                 }
             }).catch(function (error) {
-                console.log('Chart.vue. line 36 /historybarsload function controller error: ');
+                console.log('Chart.vue. line 51 /historybarsload function controller error: ');
                 console.log(error.response);
             });
         }
     },
-    created: function created() {// First created then Mounted
+    created: function created() {
+        // First created then Mounted
     },
     mounted: function mounted() {
         var _this = this;
-
-        // Then, later mounted
 
         var chart1 = Highcharts.stockChart('container', {
             chart: {
@@ -70315,6 +70042,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 dataGrouping: {
                     enabled: false
                 }
+            }, {
+                name: 'profitDiagram',
+                yAxis: 1, // To which of two y axis this series should be linked
+                //type: 'area',
+
+                step: true,
+                visible: true,
+                //enableMouseTracking: true,
+                color: 'green',
+                //negativeColor: 'rgba(255, 0, 0, 1)',
+                negativeColor: 'red',
+                //threshold: 2,
+                lineWidth: 1
 
             }]
         });
@@ -70364,7 +70104,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 // Load history data from DB and send "reload-whole-chart" parameter
                 _this.HistoryBarsLoad(chart1, "reload-whole-chart");
             }
-        }); // Echo
+        });
 
         // Event bus listener
         // This event is received from ChartControl.vue component when price channel update button is clicked
@@ -70400,6 +70140,93 @@ if (false) {
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 236 */,
+/* 237 */,
+/* 238 */,
+/* 239 */,
+/* 240 */,
+/* 241 */,
+/* 242 */,
+/* 243 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(244);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(73)("3f376cc0", content, false);
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-52976716\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./ChartControl.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-52976716\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./ChartControl.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 244 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(11)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\nth, td {\n    padding: 8px;\n    text-align: left;\n    border-bottom: 1px solid #ddd;\n}\ntable {\n    border-collapse: collapse;\n    width: 100%;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 245 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(246);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(73)("586957c2", content, false);
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-52976716\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=2!./ChartControl.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-52976716\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=2!./ChartControl.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 246 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(11)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", ""]);
+
+// exports
+
 
 /***/ })
 /******/ ]);

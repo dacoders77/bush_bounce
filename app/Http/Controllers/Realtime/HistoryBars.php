@@ -71,6 +71,13 @@ class HistoryBars extends \App\Http\Controllers\Controller
                 $rowValue->sma
             ];
 
+            // Add profit diagram
+            $profitDiagram[] = [
+                $rowValue->time_stamp,
+                //$rowValue->net_profit
+                $rowValue->accumulated_profit // Profit diagram without commission
+            ];
+
         }
 
         $seriesData = array(
@@ -79,7 +86,8 @@ class HistoryBars extends \App\Http\Controllers\Controller
             "priceChannelLowValues" => $priceChannelLowValues,
             "longTradeMarkers" => $longTradeMarkers,
             "shortTradeMarkers" => $shortTradeMarkers,
-            "sma" => $sma
+            "sma" => $sma,
+            "profitDiagram" => $profitDiagram
         );
 
         //              0                   1                       2                   3                   4              5

@@ -62,7 +62,7 @@ class Chart
     //public function index($mode, $barDate, $timeStamp, $barClosePrice, $id)
     public function index($mode, $barDate, $timeStamp, $bbbbb, $id)
     {
-        echo "**********************************************Chart.php!<br>\n";
+        echo "********************************************** Chart.php!<br>\n";
 
         /**
          * @todo Read the whole settings row and access it with keys.
@@ -106,7 +106,8 @@ class Chart
 
         $barClosePrice = $assetRow[0]->sma;
 
-        /** We do this check because sometimes, don't really understand under which circumstances, we get
+        /**
+         * We do this check because sometimes, don't really understand under which circumstances, we get
          * trying to get property of non-object
          */
         if (!is_null(DB::table('asset_1')->where('id', $recordId - 1)->get()->first()))
@@ -127,10 +128,12 @@ class Chart
         }
 
 
-        // Do not calculate profit if there is no open position. If do not do this check - zeros in table occur
-        // $this->trade_flag != "all" if it is "all" - it means that it is a first or initial start
-        // We do not store position in DB thus we use "all" check to determine a position absence
-        // if "all" - no position has been opened yet
+        /**
+         * Do not calculate profit if there is no open position. If do not do this check - zeros in table occu
+         * $this->trade_flag != "all" if it is "all" - it means that it is a first or initial start
+         * We do not store position in DB thus we use "all" check to determine a position absence
+         * if "all" - no position has been opened yet
+         */
         if ($this->position != null && $this->trade_flag != "all"){
 
             // Get the price of the last trade
@@ -140,7 +143,6 @@ class Chart
                     //->where('time_stamp', '<', $timeStamp) // Find the last trade. This check is needed only for historical back testing.
                     ->orderBy('id', 'desc') // Form biggest to smallest values
                     ->value('trade_price'); // Get trade price value
-
 
             $this->tradeProfit =
                     (($this->position == "long" ?
@@ -176,7 +178,6 @@ class Chart
             DB::table('settings_tester')
                 ->where('id', '1')
                 ->value('commission_value');
-
 
         // If > high price channel. BUY
         // price > price channel
@@ -232,8 +233,13 @@ class Chart
                     'trade_price' => $assetRow[0]->close,
                     'trade_direction' => "buy",
                     'trade_volume' => $this->volume,
-                    'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
-                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    //'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    // IB forex commission
+                    'trade_commission' => 2,
+
+                    //'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    // IB Forex commission
+                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + 2
                 ]);
 
             echo "Trade price: " . $assetRow[0]->close . "<br>\n";
@@ -293,8 +299,12 @@ class Chart
                     'trade_price' => $assetRow[0]->close,
                     'trade_direction' => "sell",
                     'trade_volume' => $this->volume,
-                    'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
-                    'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    //'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    'trade_commission' => 2,
+
+                    //'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
+                    // IB Forex comission
+                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + 2,
                 ]);
 
             $messageArray['flag'] = "sell"; // Send flag to VueJS app.js

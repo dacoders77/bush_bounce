@@ -31,7 +31,7 @@ class SettingsRealtime extends Migration
             $table->boolean('sma_filter_on')->nullable();
             $table->boolean('allow_trading');
             $table->string('trade_flag'); // Long or short trade flag. Indicates a position state
-            $table->float('commission_value')->nullable();
+            $table->float('commission_value', 8, 3)->nullable();
             $table->date('history_from')->nullable();
             $table->date('history_to')->nullable();
         });

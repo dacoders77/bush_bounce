@@ -4,9 +4,39 @@
         <b-tabs>
             <b-tab title="Main" active>
 
-                <form class="form-inline" >
-                    <div class="container">
+                        <table class="table-sm">
+                            <tbody>
+                            <tr>
+                                <td>Symbol/Currecy:</td>
+                                <td>EUR</td>
+                                <td>USD</td>
+                            </tr>
+                            <tr>
+                                <td>Volume/Commission:</td>
+                                <td>{{ volume }}</td>
+                                <td>{{ commission }}</td>
+                            </tr>
+                            <tr>
+                                <td>Longs/Shorts:</td>
+                                <td>23</td>
+                                <td>18</td>
+                            </tr>
+                            <tr>
+                                <td>Net profit: </td>
+                                <td colspan="2" class="text-left">{{ netProfit }}</td>
+                            </tr>
+                            <tr>
+                                <td>Broadcast: </td>
+                                <td colspan="2">{{ broadcastAllowed }}</td>
+                            </tr>
+                            <tr>
+                                <td>App mode: </td>
+                                <td colspan="2">{{ appMode }}</td>
+                            </tr>
+                            </tbody>
+                        </table>
 
+                        <!--
                         <div class="row">
                             <div class="form-group">
                                 <small>Symbol: </small>
@@ -66,9 +96,12 @@
                             </div>
                         </div>
 
-                    </div>
-                </form>
+                        -->
 
+
+
+
+                <!--
                 <form v-on:submit.prevent="priceChannelUpdate" :disabled="priceChannelFormDisabled" class="form-inline">
                     <small>
                         Price channel / Stop channel period:<br>
@@ -79,37 +112,8 @@
                         <button :disabled="priceChannelFormDisabled">Params update</button>
                     </small>
                 </form>
-
-
-                <!--
-                <div style="border: thin solid green; padding: 5px" class="form-inline">
-                    Symbol:<input type="text" min="1" max="7" class="form-control form-control-sm" v-model="symbol"/><span> v.23.1</span><br>
-                    Volume: {{ volume }}<br>
-                    Net profit: {{ netProfit }}<br>
-                    Requested bars (realtime): <input type="number" min="1" max="100" class="form-control form-control-sm" v-model="requestBars"/><br>
-                    Tst: <input type="date" class="form-control form-control-sm" v-model="historyFrom" style="width: 130px"> - <input type="date" class="form-control form-control-sm" v-model="historyTo" style="width: 130px"><br>
-                    Time frame: <input type="number" min="1" max="100" class="form-control" v-model="timeFrame"/><br>
-                    Commission: {{ commission }}<br>
-                    Trading allowed: {{ tradingAllowed }}<br>
-                    Broadcast: {{ broadcastAllowed }}<br>
-                </div>
-
-
-                <div style="border: thin solid darkgray; padding: 5px; margin-top: 5px">
-                    Application mode: <a href="" v-on:click.prevent="modeToggle">{{ appMode }}</a><br>
-
-                    Initial start:
-                    <button v-on:click="initialStartButton" id="initial-start">Run</button><br>
-
-                    <form v-on:submit.prevent="priceChannelUpdate" :disabled="priceChannelFormDisabled">
-                        Price channel / Stop channel period:<br>
-                        <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" :disabled="priceChannelFormDisabled">
-                        <input type="number" min="1" max="100" class="form-control" v-model="priceChannelPeriod" :disabled="priceChannelFormDisabled">
-                        <button :disabled="priceChannelFormDisabled">Upd</button>
-                        <br>
-                    </form>
-                </div>
                 -->
+
 
                 <div style="padding: 5px; margin-top: 5px">
 
@@ -149,6 +153,18 @@
 
     </div>
 </template>
+
+<style>
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+</style>
 
 <script>
     export default {
@@ -358,40 +374,7 @@
                     console.log('ChartControl.vue. line 252. Enter realtime mode error: ');
                     console.log(error.response);
                 }
-
-                /*
-                axios.get('/stopbroadcast')
-                    .then(response => {
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. line 150. /stopbroadcast controller error:');
-                        console.log(error.response);
-                    })
-
-                // Load history period
-                axios.get('/historyperiod')
-                    .then(response => {
-                        //console.log('ChartControl.vue. line 121. /historyperiodt controller response ');
-                        this.$bus.$emit('my-event', {param : "reload-whole-chart"}); // Inform Chart.vue that chart bars must be reloaded
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. line 161. /historyperiod controller error: ');
-                        console.log(error.response);
-                    });
-
-                // Update app_mode in DB
-                axios.post('/chartcontrolupdate', this.$data)
-                    .then(response => {
-                    })
-                    .catch(error => {
-                        console.log('ChartControl.vue. line 170. /chartcontrolupdate. controller error: ');
-                        console.log(error.response);
-                    });
-                */
-
             }
-
-
         },
         created() {
 

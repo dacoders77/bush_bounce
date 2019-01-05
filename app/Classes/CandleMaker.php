@@ -45,7 +45,7 @@ class CandleMaker
      * @param date          $tickDate The date of the trade
      * @param double        $tickVolume The volume of the trade. Can be less than 1
      * @param collection    $settings Row of settings from DB
-     * @param Command       $command Needed for throwing colored meddages to the console output (->info, ->error etc.)
+     * @param Command       $command Needed for throwing colored messages to the console output (->info, ->error etc.)
      */
     public function index(float $tickPrice, $tickDate, $tickVolume, $chart, $settings, $command){
 

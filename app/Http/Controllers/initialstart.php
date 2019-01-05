@@ -14,7 +14,7 @@ class initialstart extends Controller
 
         // Set trade_flag to all. in the DB
         DB::table('settings_realtime')->where('id', 1)->update(['trade_flag' => 'all']); // First ever trade flag
-        DB::table(env("ASSET_TABLE"))->truncate();
+        //DB::table(env("ASSET_TABLE"))->truncate();
         DB::table(env("PROFIT_TABLE"))->truncate();
         DB::table('orders')->truncate();
 
