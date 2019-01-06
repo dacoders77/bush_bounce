@@ -22,7 +22,6 @@ const app = new Vue({
 */
 
 
-
 Object.defineProperties(Vue.prototype, { // Attached bus
     $bus: {
         get: function () {
@@ -45,10 +44,29 @@ const EventBus = new Vue({
 
 Vue.component('chart-control', require('./components/ChartControl.vue'));
 Vue.component('chart', require('./components/Chart.vue'));
+Vue.component('vue-sidebar-menu', require('./components/VueSidebarMenu.vue'));
 
 const app = new Vue({
     el: '#vue-app', // This #.. covers the whole code
+        components: {
+            //SidebarMenu // Register your component
+        }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

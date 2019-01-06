@@ -14,16 +14,22 @@ use Illuminate\Support\Facades\Cache;
 class RatchetPawlSocket extends Command
 {
     /* @var bool $isFirstTimeBroadcastCheck First time running broadcast check. Is used only once the app is started*/
-    private $isFirstTimeBroadcastCheck = true;
+    //private $isFirstTimeBroadcastCheck = true;
+
     /* @var bool $isFirstTimeTickCheck First tick check. Used in order to decrease quantity of ticks because pusher limit exceeds sometime*/
-    private $isFirstTimeTickCheck = true;
+    //private $isFirstTimeTickCheck = true;
+
     /* @var integer $addedTime Used in order to determine whether the broadcast is allowed or not. This check is performed once a second */
-    private $addedTime = null;
+    //private $addedTime = null;
+
     /* @var integer $addedTickTime The same but for ticks*/
-    private $addedTickTime = null;
+    // private $addedTickTime = null;
+
     /* @var bool $isBroadCastAllowed Flag whether to allow broadcasting or not. This flag is retrieved from the DB onece a second */
-    private $isBroadCastAllowed;
+    //private $isBroadCastAllowed;
+
     private $settings;
+
     /* @var bool $initStartFlag Sybolyses when the command was executed from artsan console */
     private $initStartFlag = true;
 

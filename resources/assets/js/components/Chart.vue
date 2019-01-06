@@ -1,8 +1,5 @@
 <template>
-    <!--
-    <div class="container">
-    </div>
-    -->
+
 </template>
 
 <script>
@@ -226,7 +223,6 @@
 
                     // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
                     this.$bus.$emit('new-bar-added', {});
-
                 }
                 // Initial start was initiated from the server. php artisan ratchet start
                 if (e.update["serverInitialStart"]) {
@@ -236,14 +232,12 @@
                 }
 
         });
-
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
                 //console.log($event.param);
                 this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
             });
-
         }
     }
 </script>

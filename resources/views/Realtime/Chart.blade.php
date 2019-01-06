@@ -18,17 +18,18 @@
 <body>
 
 
-
-<div style="border-color: transparent; border-width: 1px; border-style: solid; display: grid; grid-template-columns: 70% 30%" id="vue-app">
-
+<div style="border-color: red; border-width: 1px; border-style: solid; height: 100vh; display: grid; grid-template-columns: 30% 50% 20%" id="vue-app">
+    <!-- Right menu -->
+    <div>
+        <!--<sidebar-menu menu=""></sidebar-menu>-->
+        <vue-sidebar-menu></vue-sidebar-menu>
+    </div>
     <!-- High charts chart -->
     <div style="border-color: transparent; border-width: 1px; border-style: solid;" id="container">
         <chart></chart>
     </div>
 
-
     <div style="height: 600px; padding: 10px">
-
         <!-- Event bus test event rise. Not a component! -->
         <div style="display: none;">
             <button @click="$bus.$emit('my-event')">Click to trigger event</button>
@@ -36,7 +37,6 @@
         <!-- Vue Chart-control component -->
         <chart-control></chart-control>
     </div>
-
 </div>
 
 <!-- Highstock chart
@@ -45,10 +45,7 @@
 </div>
 -->
 
-
 <script src="js/app.js" charset="ut8-8"></script>
-
-
 
 </body>
 </html>

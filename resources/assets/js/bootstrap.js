@@ -18,7 +18,6 @@ try {
  */
 
 window.axios = require('axios');
-
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 /**
@@ -42,9 +41,7 @@ if (token) {
  */
 
 import Echo from 'laravel-echo'
-
 window.Pusher = require('pusher-js');
-
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: process.env.MIX_PUSHER_APP_KEY, // 2b46347b60f2aec00074  process.env.MIX_PUSHER_APP_KEY
@@ -62,6 +59,12 @@ axios.defaults.baseURL = window.siteUrl;
 import Vue from 'vue'
 import BootstrapVue from 'bootstrap-vue'
 Vue.use(BootstrapVue);
-//import 'bootstrap/dist/css/bootstrap.css' // This css style-sheet is linked in ChartControl.bue. Otherwise the default laravel
+// import 'bootstrap/dist/css/bootstrap.css' // This css style-sheet is linked in ChartControl.vue. Otherwise the default laravel
 // style is broken.
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+
+
+
+import VueSidebarMenu from 'vue-sidebar-menu'
+import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
+Vue.use(VueSidebarMenu)
