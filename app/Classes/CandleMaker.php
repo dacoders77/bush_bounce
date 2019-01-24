@@ -7,6 +7,7 @@
  */
 
 namespace App\Classes;
+use App\Classes\WsApiMessages\PusherApiMessage;
 use App\Console\Commands\RatchetPawlSocket;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
@@ -20,27 +21,24 @@ use Illuminate\Support\Facades\Log;
  *
  * @return ??
  */
-
 class CandleMaker
 {
     private $symbol;
     private $tt; // Time
-    private $timeFrame;
+    //private $timeFrame;
     private $barHigh = 0; // For high value calculation
     private $barLow = 9999999;
     private $settings;
     private $isFirstTickInBar;
 
+    private $pusherApiMessage;
+
     public function __construct()
     {
         $this->isFirstTickInBar = true;
-        //$this->settings = DB::table('settings_realtime')->first(); // Removed to ratchet. Delete it
     }
 
     /**
-     *
-     * @return ??
-     * where is it? tickTicker Ticker (BTCUSD, EYHUSD etc.)
      * @param double        $tickPrice The price of the current trade (tick)
      * @param date          $tickDate The date of the trade
      * @param double        $tickVolume The volume of the trade. Can be less than 1
@@ -49,10 +47,7 @@ class CandleMaker
      */
     public function index(float $tickPrice, $tickDate, $tickVolume, $chart, $settings, $command){
 
-        echo "**********************************************CandleMaker.php<br>\n";
-
-        //$chart = new Chart(); // Moved new instance creation to Ratchet class
-
+        echo "********************************************** CandleMaker.php<br>\n";
         /** @todo remove this variable. use just $settings*/
         $this->settings = $settings;
 
@@ -73,49 +68,29 @@ class CandleMaker
             ));
         }
 
-
         /** Take seconds off and add 1 min. Do it only once per interval (for example 1min) */
         if ($this->isFirstTickInBar) {
-
             $x = date("Y-m-d H:i", $tickDate / 1000) . "\n"; // Take seconds off. Convert timestamp to date
             $this->tt = strtotime($x . $this->settings->time_frame . "minute");
             $this->isFirstTickInBar = false;
         }
 
         /** Calculate high and low of the bar then pass it to the chart in $messageArray */
-        if ($tickPrice > $this->barHigh) // High
-        {
-            $this->barHigh = $tickPrice;
-        }
+        if ($tickPrice > $this->barHigh) $this->barHigh = $tickPrice; // HIgh
+        if ($tickPrice < $this->barLow) $this->barLow = $tickPrice; // Low
 
-        if ($tickPrice < $this->barLow) // Low
-        {
-            $this->barLow = $tickPrice;
-        }
+        $lastRecordId = DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id;
 
-        try{
-            $lastRecordId = DB::table('asset_1')->orderBy('time_stamp', 'desc')->first()->id;
-        }
-        catch(Exception $exception) {
-            echo "CandleMaker.php. Get last id of the record error: " . $exception;
-        }
-
-        try {
-            DB::table('asset_1')
-                ->where('id', $lastRecordId) // id of the last record. desc - descent order
-                ->update([
-                    'close' => $tickPrice,
-                    'high' => $this->barHigh,
-                    'low' => $this->barLow,
-                ]);
-        }
-        catch(Exception $e) {
-            echo 'DB record update error: ' . $e->getMessage();
-        }
+        DB::table('asset_1')
+            ->where('id', $lastRecordId) // id of the last record. desc - descent order
+            ->update([
+                'close' => $tickPrice,
+                'high' => $this->barHigh,
+                'low' => $this->barLow,
+            ]);
 
         $command->error("current tick   : " . gmdate("Y-m-d G:i:s", ($tickDate / 1000)) . " price: $tickPrice");
-
-        echo "time to comapre: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
+        echo "time to compare: " . gmdate("Y-m-d G:i:s", ($this->tt)) . "\n";
         echo "time frame: " . $this->settings->time_frame . "\n";
 
         /*
@@ -190,24 +165,40 @@ class CandleMaker
         $messageArray['tradeBarHigh'] = $this->barHigh; // High value of the bar
         $messageArray['tradeBarLow'] = $this->barLow; // Low value of the bar
 
-        /** Get price channel values. Sometimes we get non object value error. In this case we have to do null check */
-
-        // Get value. Do the null check
-        // If null - add zero to the message array
-
+        /** Get price channel values. Sometimes we get non object value error. In this case we have to do null check
+         * Get value. Do the null check
+         * If null - add zero to the message array
+         */
         $messageArray['priceChannelHighValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_high_value;
         $messageArray['priceChannelLowValue'] = (DB::table('asset_1')->orderBy('id', 'desc')->first())->price_channel_low_value;
 
-
         /** Send the information to the chart. Event is received in Chart.vue */
-        event(new \App\Events\BushBounce($messageArray));
+        //event(new \App\Events\BushBounce($messageArray));
 
+        $pusherApiMessage = new PusherApiMessage();
+        $pusherApiMessage->clientId = 12345;
+        $pusherApiMessage->messageType = 'symbolTickPriceResponse'; // symbolTickPriceResponse, error
+        $pusherApiMessage->payload = $messageArray;
+        dump($pusherApiMessage->toArray());
+
+        event(new \App\Events\BushBounce($pusherApiMessage->toArray()));
 
         /** Reset high, low of the bar but do not out send these values to the chart. Next bar will be started from scratch */
         if ($this->isFirstTickInBar == true){
             $this->barHigh = 0;
             $this->barLow = 9999999;
         }
-
     }
 }
+
+/*
+clientId - pusher id from .env
+messageType - tick, error, info
+payLoad - array
+
+1. Create a separate folder for messages
+2.
+*/
+
+
+

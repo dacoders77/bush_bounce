@@ -122,9 +122,8 @@ class Chart
         }
         else
         {
-            echo "Null check. Chart.php line 132";
-            event(new \App\Events\ConnectionError("Excp catch! Chart.php line 132. Null check penultimate"));
-            //die();
+            echo "Null check. Chart.php " . __LINE__;
+            event(new \App\Events\ConnectionError("Excp catch! Null check penultimate " . __LINE__));
         }
 
 
@@ -188,7 +187,6 @@ class Chart
         if (($barClosePrice > $penUltimanteRow->price_channel_high_value) &&
             ($this->trade_flag == "all" || $this->trade_flag == "long")){
             echo "####### HIGH TRADE!<br>\n";
-            Log::debug("Chart.php line 193. ####### HIGH TRADE!. Bar closed higher than upper price channel. barClosePrice: $barClosePrice");
 
             // Trading allowed? This value is pulled from DB. If false orders are not sent to the exchange
             if ($allow_trading == 1){
@@ -253,7 +251,6 @@ class Chart
         if (($barClosePrice < $penUltimanteRow->price_channel_low_value) &&
             ($this->trade_flag == "all"  || $this->trade_flag == "short")) {
             echo "####### LOW TRADE!<br>\n";
-            Log::debug("Chart.php line 193. ####### LOW TRADE!. Bar closed lower than lower channel. barClosePrice: $barClosePrice");
 
             // trading allowed?
             if ($allow_trading == 1){
@@ -345,15 +342,8 @@ class Chart
                     ->get();
 
             // Need to check whether $assetRow and $z are equal
-            Log::debug("asset_row: " . json_encode($assetRow) );
-            Log::debug("asset_row: " . json_encode($z) );
-
-
             /** On this code we get this error: Trying to get property of non object */
             if ($z[0]->trade_direction == "buy" || $z[0]->trade_direction == "sell") {
-
-                //Log::debug("Chart.php line 341: " . (count($temp) > 1 ? $temp[count($temp) - 2]->accumulated_profit + $this->tradeProfit : 666) . " last id: " . $z[0]->trade_direction);
-
                 DB::table('asset_1')
                     ->where('id', $recordId)
                     ->update([
@@ -362,19 +352,12 @@ class Chart
 
             } else
             {
-                //Log::debug("jo: " . (count($temp) > 1 ? $temp[count($temp) - 1]->id  : 888) );
-
                 DB::table('asset_1')
                     ->where('id', $recordId)
                     ->update([
                         'accumulated_profit' => (count($temp) > 1 ? $temp[count($temp) - 1]->accumulated_profit + $this->tradeProfit : 0)
                     ]);
             }
-
-
-
-
-
         }
 
         /** @todo try to remove this $firstPositionEver flag */

@@ -1,5 +1,4 @@
 <template>
-
 </template>
 
 <script>
@@ -11,7 +10,7 @@
                 netProfit: 0,
                 requestedBars: '',
                 commission: '',
-                tradingAllowed: ''
+                tradingAllowed: '',
             }
         },
         methods:{
@@ -48,12 +47,52 @@
                         console.log('Chart.vue. line 51 /historybarsload function controller error: ');
                         console.log(error.response);
                     })
-            }
+            },
+            ChartBarsUpdate: function (e, chart1){
+                let last = chart1.series[0].data[chart1.series[0].data.length - 1];
+                last.update({
+                    // 'open': is created when new bar is added to the chart
+                    'high': e.update['payload']['tradeBarHigh'],
+                    'low': e.update['payload']['tradeBarLow'],
+                    'close': e.update['payload']['tradePrice']
+                }, true);
+
+                // New bar is issued. Flag sent from CandleMaker.php
+                if (e.update['payload']['flag']) {
+                    console.log('Chart.vue. New bar is added');
+                    // Add bar to the chart. We add just a bar (an empty bar) where all OLHC values are the same. Later these values are gonna update via websocket listener
+                    chart1.series[0].addPoint([e.update['payload']['tradeDate'],e.update['payload']['tradePrice'],e.update['payload']['tradePrice'],e.update['payload']['tradePrice'],e.update['payload']['tradePrice']],true, false); // Works good
+                    // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
+                    axios.get('/historybarsload') // Load history data from BR
+                        .then(response => {
+                            console.log('reload-price-channel 2');
+                            chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
+                            chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
+                            chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
+                            chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
+                            chart1.series[5].setData(response.data['sma'],true);
+                        })
+                        .catch(error => {
+                            console.log('Chart.vue. line 200 /historybarsload controller error: ');
+                            console.log(error.response);
+                        })
+
+                    // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
+                    this.$bus.$emit('new-bar-added', {});
+                }
+                // Initial start was initiated from the server. php artisan ratchet start
+                if (e.update['payload']['serverInitialStart']) {
+                    // Load history data from DB and send "reload-whole-chart" parameter
+                    this.HistoryBarsLoad(chart1, "reload-whole-chart");
+                }
+            },
         },
         created() {
             // First created then Mounted
         },
+
         mounted(){
+
             var chart1 = Highcharts.stockChart('container', {
                 chart: {
                     animation: false,
@@ -179,65 +218,77 @@
                         negativeColor: 'red',
                         //threshold: 2,
                         lineWidth: 1,
-
                     }
-
                 ]
             });
-
             // Load history data from DB and send "reload-whole-chart" parameter
             this.HistoryBarsLoad(chart1, "reload-whole-chart");
 
             // Websocket event listener. Used only for updating and adding new bars to the chart
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
-                //console.log(e.update);
-                var last = chart1.series[0].data[chart1.series[0].data.length - 1];
-                last.update({
-                    //'open': 1000,
-                    'high': e.update["tradeBarHigh"],
-                    'low': e.update["tradeBarLow"],
-                    'close': e.update["tradePrice"]
-                }, true);
-
-                // New bar is issued. Flag sent from CandleMaker.php
-                if (e.update["flag"]) { // e.update["flag"] = true
-                    console.log('Chart.vue. New bar is added');
-
-                    // Add bar to the chart. We add just a bar (an empty bar) where all OLHC values are the same. Later these values are gonna update via websocket listener
-                    chart1.series[0].addPoint([e.update["tradeDate"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"],e.update["tradePrice"]],true, false); // Works good
-
-                    // Add price channel calculated values. Price channel is calculated on each new bar issued. CandleMaker.php line 165
-                    axios.get('/historybarsload') // Load history data from BR
-                        .then(response => {
-                            console.log('reload-price-channel 2');
-                            chart1.series[1].setData(response.data['priceChannelHighValues'],true);// High. Precancel high
-                            chart1.series[2].setData(response.data['priceChannelLowValues'],true);// Low. Price channel low
-                            chart1.series[3].setData(response.data['longTradeMarkers'],true);// Low. Price channel low
-                            chart1.series[4].setData(response.data['shortTradeMarkers'],true);// Low. Price channel low
-                            chart1.series[5].setData(response.data['sma'],true);
-                        })
-                        .catch(error => {
-                            console.log('Chart.vue. line 200 /historybarsload controller error: ');
-                            console.log(error.response);
-                        })
-
-                    // Send a message to ChartControl.vue in order to reload calculated net profit and show it at the from
-                    this.$bus.$emit('new-bar-added', {});
+                // Here access to different bot clones will be performed. We have only one ID for now.
+                if(e.update['clientId'] == 12345){
+                    if (e.update['messageType'] == 'symbolTickPriceResponse') this.ChartBarsUpdate(e, chart1); // Sent from CandleMaker.php
+                    if (e.update['messageType'] == 'error') swal("Failed!", "Error: " + e.update['payload'], "warning");
+                    if (e.update['messageType'] == 'info') toast({ type: 'success', title: e.update['payload']});
                 }
-                // Initial start was initiated from the server. php artisan ratchet start
-                if (e.update["serverInitialStart"]) {
+            });
 
-                    // Load history data from DB and send "reload-whole-chart" parameter
-                    this.HistoryBarsLoad(chart1, "reload-whole-chart");
-                }
-
-        });
             // Event bus listener
             // This event is received from ChartControl.vue component when price channel update button is clicked
             this.$bus.$on('my-event', ($event) => {
-                //console.log($event.param);
                 this.HistoryBarsLoad(chart1, $event.param); // Load history data from DB
             });
+
+            // @see https://github.com/shakee93/vue-toasted#actions--fire
+            // @see https://fontawesome.com/cheatsheet?from=io
+            Vue.toasted.show('hello there, i am a toast !!', { icon : 'check'});
+
+            Vue.toasted.show('Pavel PERMINOV !!', {
+
+                // Options
+                action : [
+                    // Array of actions
+                    {
+                        text : 'Cancel',
+                        onClick : (e, toastObject) => {
+                            toastObject.goAway(1500);
+                        },
+
+                    },
+                    {
+                        text : 'Undo',
+                        // Vue router navigation
+                        push : {
+                            name : 'somewhere',
+                            // This will prevent toast from closing
+                            dontClose : true
+                        }
+                    }
+                ],
+                type: 'error', // 'success', 'info', 'error'
+                //fullWidth: true,
+                position: 'top-right',
+                icon : 'shield-alt',
+            } );
+
+            Vue.toasted.show("Holla !!", { type: 'info' });
+            Vue.toasted.show("Holla !!", { type: 'success' });
+            Vue.toasted.show("New message !!", { type: 'success' });
+            Vue.toasted.show("Now type message goes here");
+
+            // Listen to mousemove event of main div in which the StockChart is rendered.
+            // This div is located in: VueSideBarMeny.vue
+            // When mouse is moved, we wait 3 seconds and then clear all notifications.
+            // @see https://stackoverflow.com/questions/51873582/how-do-i-get-the-mousemove-event-to-function-correctly-inside-a-vue-component
+            document.getElementById("container").addEventListener('mousemove', function(event){
+                console.log(event.screenX + '-' + event.screenY);
+                setTimeout(function(){
+                    let toast = Vue.toasted.clear();
+                }, 3000);
+            });
+
         }
+
     }
 </script>

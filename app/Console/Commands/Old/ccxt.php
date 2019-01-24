@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Old;
 
 use ccxt\ccex;
 use ccxt\hitbtc2;
@@ -55,13 +55,13 @@ class ccxt extends Command
 
 
         // Works good. History bars received.
-        $exchange = new \ccxt\ccex();
+        $exchange = new \ccxt\bitmex();
         dump('Get BITMEX history bars for Roger');
         //dump($exchange);
         // exchange.fetchOHLCV ("BTC/USD", "1m" , since, 5 )
         //$bars = $exchange->fetchOHLCV("BTC/USD", "1m" , null, 5);
         //dump($bars);
-        dump($exchange->fees);
+        dump($exchange->fetchMarkets());
         die();
 
 

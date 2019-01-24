@@ -7,8 +7,21 @@ use App\Classes;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Routing\Tests\Matcher\DumpedUrlMatcherTest;
 
+// 1. real-time command is started
+// 2. currency, symbol is provided
+// 3. time frame is entered
+// 4. time frame value is updated in DB
+// 5. when historyLoad method is performed, there are two types of value: 1 min and >1min -> 1 mins, 2 mins, 3 mins etc.
+
+
 /**
  * Send a real-time trades subscription request to C#.
+ * Sample call: php artisan realtime:start --param=init --param=EUR --param=USD --param="15 mins"
+ *
+ * $this->option('param')[0] - init start (reserved)
+ * $this->option('param')[1] - symbol
+ * $this->option('param')[2] - currency
+ * $this->option('param')[3] - time frame
  *
  * Class RealTime
  * @package App\Console\Commands
@@ -73,7 +86,8 @@ class RealTime extends Command
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
-                $conn->send($this->requestObject());
+                $conn->send($this->historyLoad()); // Request history bars and store them in DB
+                $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
 
             }, function (\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
@@ -96,8 +110,7 @@ class RealTime extends Command
      * @param $loop
      */
     private function parseWebSocketMessage(array $message, Classes\CandleMaker $candleMaker, Classes\Chart $chart, Command $command, $loop){
-        //dump($message); // symbolTickPrice
-        if ($message['clientId'] == env("PUSHER_APP_ID")){
+        if ($message['clientId'] == env("PUSHER_APP_ID")){ // 547841
             if (array_key_exists('messageType', $message)){
                 if($message['messageType'] == 'SymbolTickPriceResponse'){
                     /**
@@ -110,11 +123,31 @@ class RealTime extends Command
                      */
                     $candleMaker->index($message['symbolTickPrice'], $message['symbolTickTime'], 1, $chart, $this->settings, $command);
                 }
-                // TICK ERROR MESSAG!
                 if($message['messageType'] == 'Error'){
                     $this->error('Error');
                     dump($message);
-                    // send pusher message
+                    $pusherApiMessage = new Classes\WsApiMessages\PusherApiMessage();
+                    $pusherApiMessage->clientId = 12345;
+                    $pusherApiMessage->messageType = 'error'; // symbolTickPriceResponse, error, info etc.
+                    $pusherApiMessage->payload = $message['errorText'];
+                    event(new \App\Events\BushBounce($pusherApiMessage->toArray()));
+                }
+                if($message['messageType'] == 'Info'){
+                    $this->error('Info');
+                    dump($message);
+                    $pusherApiMessage = new Classes\WsApiMessages\PusherApiMessage();
+                    $pusherApiMessage->clientId = 12345;
+                    $pusherApiMessage->messageType = 'info';
+                    $pusherApiMessage->payload = $message['infoText'];
+                    event(new \App\Events\BushBounce($pusherApiMessage->toArray()));
+                }
+
+                if (array_key_exists('barsList', $message)){
+                    echo "History bars received from C#: " . count($message['barsList']) . "\n";
+                    Classes\History::load($message);
+                    \App\Classes\PriceChannel::calculate();
+                    //\App\Classes\Backtest::start();
+                    //$loop->stop();
                 }
             }
         }
@@ -124,7 +157,7 @@ class RealTime extends Command
         }
     }
 
-    private function requestObject(){
+    private function subscribeToSymbol(){
         $requestObject = json_encode([
             'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
             'requestType' => "subscribeToSymbol",
@@ -132,11 +165,38 @@ class RealTime extends Command
                 //'symbol' => DB::table('settings_realtime')->first()->symbol,
                 'symbol' => $this->option('param')[1], // EUR
                 'currency' => $this->option('param')[2], // USD
-                //'queryTime' => $this->option('param')[3], // 20180127 23:59:59, 20190101 23:59:59
-                //'duration' => $this->option('param')[4],
-                //'timeFrame' => $this->option('param')[5],
+                'queryTime' => null,
+                'duration' => null,
+                'timeFrame' => null,
             ]
         ]);
         return $requestObject;
     }
+
+    /**
+     * Load necessary amount of bars by the time the real-time trading is started.
+     * These bars are needed for plotting the chart and price channel.
+     * By default 3600 seconds of history bars is requested.
+     * If 1 day is needed: 'duration' => '1 D'
+     *
+     * @see https://interactivebrokers.github.io/tws-api/historical_bars.html
+     * @return string
+     */
+    private function historyLoad(){
+        $arr = explode(" ", $this->option('param')[3], 2); // Get time digits out of time frame string
+        DB::table('settings_realtime')->where('id', 1)->update(['time_frame' => $arr[0],]); // Stare in DB
+        $requestObject = json_encode([
+            'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
+            'requestType' => "historyLoad",
+            'body' => [
+                'symbol' => $this->option('param')[1], // EUR
+                'currency' => $this->option('param')[2], // USD
+                'queryTime' => null, // 20180127 23:59:59, 20190101 23:59:59
+                'duration' => '3600 S', // 1 D
+                'timeFrame' => $this->option('param')[3], // 1 min, 15 mins
+            ]
+        ]);
+        return $requestObject;
+    }
+
 }

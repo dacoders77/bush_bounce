@@ -7,7 +7,7 @@
                         <table class="table-sm">
                             <tbody>
                             <tr>
-                                <td>Symbol/Currecy:</td>
+                                <td>Symbol/Currency</td>
                                 <td>EUR</td>
                                 <td>USD</td>
                             </tr>
@@ -476,5 +476,7 @@ https://bootstrap-vue.js.org/docs/components/tabs/
 -->
 <style src="bootstrap/dist/css/bootstrap.css"></style>
 <style></style>
+
+
 
 

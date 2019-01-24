@@ -18,15 +18,12 @@
 <body>
 
 
-<div style="border-color: red; border-width: 1px; border-style: solid; height: 100vh; display: grid; grid-template-columns: 30% 50% 20%" id="vue-app">
-    <!-- Right menu -->
-    <div>
-        <!--<sidebar-menu menu=""></sidebar-menu>-->
+<div style="border-color: red; border-width: 0px; border-style: solid; height: 99.5vh; display: grid;
+    grid-template-columns: 80% 20%" id="vue-app">
+
+    <!-- Side bar menu container. Chart.vue container is inside side bar container -->
+    <div style="border-color: transparent; border-width: 1px; border-style: solid;" @on>
         <vue-sidebar-menu></vue-sidebar-menu>
-    </div>
-    <!-- High charts chart -->
-    <div style="border-color: transparent; border-width: 1px; border-style: solid;" id="container">
-        <chart></chart>
     </div>
 
     <div style="height: 600px; padding: 10px">
@@ -37,6 +34,7 @@
         <!-- Vue Chart-control component -->
         <chart-control></chart-control>
     </div>
+
 </div>
 
 <!-- Highstock chart

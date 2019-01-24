@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\DB;
 /**
  * Request history bars from C#, store them in DB and backtest.
  * Sample command call:
- * php artisan ratchet:start --param=init --param=EUR --param=USD --param="20190101 23:59:59" --param="1 D" -param="15 mins"
- *
+ * FOREX: php artisan backtest:start --param=init --param=EUR --param=USD --param="20190101 23:59:59" --param="1 D" --param="15 mins"
+ * STOCK: php artisan backtest:start --param=init --param=AAPL --param=USD --param="20190102 23:59:59" --param="5 D" --param="5 mins"
+ * YYYYMMDD
  * Class Backtest
  * @package App\Console\Commands
  */
@@ -157,8 +158,8 @@ class Backtest extends Command
                 'symbol' => $this->option('param')[1], // EUR
                 'currency' => $this->option('param')[2], // USD
                 'queryTime' => $this->option('param')[3], // 20180127 23:59:59, 20190101 23:59:59
-                'duration' => $this->option('param')[4],
-                'timeFrame' => $this->option('param')[5],
+                'duration' => $this->option('param')[4], // 1 H, 1 D
+                'timeFrame' => $this->option('param')[5], // 1 min, 15 mins
             ]
         ]);
         return $requestObject;

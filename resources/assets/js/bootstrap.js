@@ -63,8 +63,8 @@ Vue.use(BootstrapVue);
 // style is broken.
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
-
-
+// Sid bar menu
+// https://github.com/yaminncco/vue-sidebar-menu
 import VueSidebarMenu from 'vue-sidebar-menu'
 import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
 Vue.use(VueSidebarMenu)
