@@ -83,6 +83,7 @@
                 // Initial start was initiated from the server. php artisan ratchet start
                 if (e.update['payload']['serverInitialStart']) {
                     // Load history data from DB and send "reload-whole-chart" parameter
+                    alert('Chart.vue RELOAD CHART! line 86'); // We don't get to this code
                     this.HistoryBarsLoad(chart1, "reload-whole-chart");
                 }
             },
@@ -228,9 +229,14 @@
             Echo.channel('Bush-channel').listen('BushBounce', (e) => {
                 // Here access to different bot clones will be performed. We have only one ID for now.
                 if(e.update['clientId'] == 12345){
-                    if (e.update['messageType'] == 'symbolTickPriceResponse') this.ChartBarsUpdate(e, chart1); // Sent from CandleMaker.php
-                    if (e.update['messageType'] == 'error') swal("Failed!", "Error: " + e.update['payload'], "warning");
-                    if (e.update['messageType'] == 'info') toast({ type: 'success', title: e.update['payload']});
+                    if (e.update['messageType'] === 'symbolTickPriceResponse') this.ChartBarsUpdate(e, chart1); // Sent from CandleMaker.php
+                    if (e.update['messageType'] === 'error') swal("Failed!", "Error: " + e.update['payload'], "warning");
+                    if (e.update['messageType'] === 'info') toast({ type: 'success', title: e.update['payload']});
+                    if (e.update['messageType'] === 'reloadChartAfterHistoryLoaded'){
+                        Vue.toasted.show("Chart is reloaded!", { type: 'success' });
+                        this.HistoryBarsLoad(chart1, "reload-whole-chart");
+                    }
+
                 }
             });
 
@@ -273,16 +279,16 @@
             } );
 
             Vue.toasted.show("Holla !!", { type: 'info' });
-            Vue.toasted.show("Holla !!", { type: 'success' });
-            Vue.toasted.show("New message !!", { type: 'success' });
-            Vue.toasted.show("Now type message goes here");
+            //Vue.toasted.show("Holla !!", { type: 'success' });
+            //Vue.toasted.show("New message !!", { type: 'success' });
+            //Vue.toasted.show("Now type message goes here");
 
             // Listen to mousemove event of main div in which the StockChart is rendered.
             // This div is located in: VueSideBarMeny.vue
             // When mouse is moved, we wait 3 seconds and then clear all notifications.
             // @see https://stackoverflow.com/questions/51873582/how-do-i-get-the-mousemove-event-to-function-correctly-inside-a-vue-component
             document.getElementById("container").addEventListener('mousemove', function(event){
-                console.log(event.screenX + '-' + event.screenY);
+                //console.log(event.screenX + '-' + event.screenY); // Output coordinates to the console
                 setTimeout(function(){
                     let toast = Vue.toasted.clear();
                 }, 3000);

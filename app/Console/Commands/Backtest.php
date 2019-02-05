@@ -132,9 +132,23 @@ class Backtest extends Command
         $loop->run();
     }
 
+    /**
+     * Check for which client the response was sent.
+     * The many responses may be coming out of c# server. We need to determine which one belongs to us.
+     * When a request is sent from PHP, PUSHER_APP_ID form .env file is attached.
+     * Then in C# the request is handled, and the response sent back to PHP with the same pusher id attached.
+     * InfoResponse.cs line 22
+     *
+     * @param array $message
+     * @param Classes\CandleMaker $candleMaker
+     * @param Classes\Chart $chart
+     * @param Command $command
+     * @param $loop
+     */
     private function parseWebSocketMessage(array $message, Classes\CandleMaker $candleMaker, Classes\Chart $chart, Command $command, $loop){
         //dump($message); // symbolTickPrice
-        if ($message['clientId'] == env("PUSHER_APP_ID")){
+        //if ($message['clientId'] == env("PUSHER_APP_ID")){
+        if (true){
             if (array_key_exists('barsList', $message)){
                 echo "History bars received from C#: " . count($message['barsList']) . "\n";
                 Classes\History::load($message);

@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Classes;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Routing\Tests\Matcher\DumpedUrlMatcherTest;
+use App\Classes\WsApiMessages\PusherApiMessage;
 
 // 1. real-time command is started
 // 2. currency, symbol is provided
@@ -110,7 +111,8 @@ class RealTime extends Command
      * @param $loop
      */
     private function parseWebSocketMessage(array $message, Classes\CandleMaker $candleMaker, Classes\Chart $chart, Command $command, $loop){
-        if ($message['clientId'] == env("PUSHER_APP_ID")){ // 547841
+        //if ($message['clientId'] == env("PUSHER_APP_ID")){ // 547841
+        if (true){
             if (array_key_exists('messageType', $message)){
                 if($message['messageType'] == 'SymbolTickPriceResponse'){
                     /**
@@ -148,6 +150,15 @@ class RealTime extends Command
                     \App\Classes\PriceChannel::calculate();
                     //\App\Classes\Backtest::start();
                     //$loop->stop();
+
+                    //$messageArray['serverInitialStart'] = true; // Reload the whole chart after the bar list is received
+                    //event(new \App\Events\BushBounce(['messageType' => 'reloadChart'])); // Event is received in Chart.vue
+
+                    $pusherApiMessage = new PusherApiMessage();
+                    $pusherApiMessage->clientId = 12345;
+                    $pusherApiMessage->messageType = 'reloadChartAfterHistoryLoaded';
+                    $pusherApiMessage->payload = null;
+                    event(new \App\Events\BushBounce($pusherApiMessage->toArray()));
                 }
             }
         }
@@ -192,7 +203,7 @@ class RealTime extends Command
                 'symbol' => $this->option('param')[1], // EUR
                 'currency' => $this->option('param')[2], // USD
                 'queryTime' => null, // 20180127 23:59:59, 20190101 23:59:59
-                'duration' => '3600 S', // 1 D
+                'duration' => '3600 S', // '3600 S' '1 D'
                 'timeFrame' => $this->option('param')[3], // 1 min, 15 mins
             ]
         ]);
