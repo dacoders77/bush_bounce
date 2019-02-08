@@ -232,11 +232,9 @@ class Chart
                     'trade_direction' => "buy",
                     'trade_volume' => $this->volume,
                     //'trade_commission' => round(($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
-                    'trade_commission' => 0.35, // Fixed commission 
-
+                    'trade_commission' => 0.35, // Fixed commission
                     //'accumulated_commission' => round(DB::table('asset_1')->sum('trade_commission') + ($assetRow[0]->close * $commisionValue / 100) * $this->volume, 4),
-                    // IB Forex commission
-                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission') + 2
+                    'accumulated_commission' => DB::table('asset_1')->sum('trade_commission')
                 ]);
 
             echo "Trade price: " . $assetRow[0]->close . "<br>\n";
