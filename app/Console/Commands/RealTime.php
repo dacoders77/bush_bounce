@@ -17,7 +17,7 @@ use App\Classes\WsApiMessages\PusherApiMessage;
 
 /**
  * Send a real-time trades subscription request to C#.
- * Sample call: php artisan realtime:start --param=init --param=EUR --param=USD --param="15 mins"
+ * Sample call: php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins"
  *
  * $this->option('param')[0] - init start (reserved)
  * $this->option('param')[1] - symbol
