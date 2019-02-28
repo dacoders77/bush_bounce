@@ -98,14 +98,21 @@ class RealTime extends Command
                  * It means that a test trade should be executed.
                  * History load and real-time subscriptions - will not.
                  */
-                if ($this->option('param')[4] != '' || $this->option('param')[4] == null) {
+                if ($this->option('param')[4] == 'BUY' || $this->option('param')[4] == 'SELL') {
                     $conn->send($this->placeTestOrder($this->option('param')[1], $this->option('param')[4], $this->option('param')[5]));
-                    // die('die from RealTime.php');
+                    //die('die from RealTime.php');
                 }
-                else {
+
+
+                //dump($this->option('param')[4]);
+                if ($this->option('param')[4] == 'NONE') {
                     $conn->send($this->historyLoad()); // Request history bars and store them in DB
                     $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
+                    // die('die from RealTime.php SUBSCRIPTION');
                 }
+
+                //$conn->send($this->historyLoad()); // Request history bars and store them in DB
+                //$conn->send($this->subscribeToSymbol()); // Subscribe to ticks
 
             }, function (\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
