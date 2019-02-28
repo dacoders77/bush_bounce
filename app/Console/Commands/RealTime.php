@@ -93,21 +93,19 @@ class RealTime extends Command
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
-                // dump($this->option('param')[4]);
-                // Check 4th parsm
-                // if not != ''
-                // -> go to separate class
-                // throw trade
-                // die
-                // ($conn, $this->option('param')[1], $this->option('param')[4])
-
-                if ($this->option('param')[4] != '') {
+                /**
+                 * When console command has these two params at the end: --param=SELL --param=22
+                 * It means that a test trade should be executed.
+                 * History load and real-time subscriptions - will not.
+                 */
+                if ($this->option('param')[4] != '' || $this->option('param')[4] == null) {
                     $conn->send($this->placeTestOrder($this->option('param')[1], $this->option('param')[4], $this->option('param')[5]));
-                    // $conn->send($this->historyLoad());
                     // die('die from RealTime.php');
                 }
-                // $conn->send($this->historyLoad()); // Request history bars and store them in DB
-                // $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
+                else {
+                    $conn->send($this->historyLoad()); // Request history bars and store them in DB
+                    $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
+                }
 
             }, function (\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
