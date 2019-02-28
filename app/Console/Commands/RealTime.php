@@ -18,11 +18,14 @@ use App\Classes\WsApiMessages\PusherApiMessage;
 /**
  * Send a real-time trades subscription request to C#.
  * Sample call: php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins"
+ *              php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins" --param=BUY
  *
  * $this->option('param')[0] - init start (reserved)
  * $this->option('param')[1] - symbol
  * $this->option('param')[2] - currency
  * $this->option('param')[3] - time frame
+ * $this->option('param')[4] - BUY/SELL place market order test. Used when have no time to wait and need to test a trade
+ * $this->option('param')[5] - order volume
  *
  * Class RealTime
  * @package App\Console\Commands
@@ -61,6 +64,9 @@ class RealTime extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
+        // dump($this->option('param')[3]);
+        // die('RealTime.php');
+        // $this->placeTestOrder->PlaceMarketOrder()
         echo "Params: = ";
         dump($this->option('param'));
         DB::table(env("ASSET_TABLE"))->truncate();
@@ -87,8 +93,21 @@ class RealTime extends Command
                     $this->handle($chart, $candleMaker); // Call the main method of this class
                 });
 
-                $conn->send($this->historyLoad()); // Request history bars and store them in DB
-                $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
+                // dump($this->option('param')[4]);
+                // Check 4th parsm
+                // if not != ''
+                // -> go to separate class
+                // throw trade
+                // die
+                // ($conn, $this->option('param')[1], $this->option('param')[4])
+
+                if ($this->option('param')[4] != '') {
+                    $conn->send($this->placeTestOrder($this->option('param')[1], $this->option('param')[4], $this->option('param')[5]));
+                    // $conn->send($this->historyLoad());
+                    // die('die from RealTime.php');
+                }
+                // $conn->send($this->historyLoad()); // Request history bars and store them in DB
+                // $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
 
             }, function (\Exception $e) use ($loop, $chart, $candleMaker) {
                 $errorString = "RatchetPawlSocket.php. Could not connect. Reconnect in 5 sec. \n Reason: {$e->getMessage()} \n";
@@ -174,7 +193,7 @@ class RealTime extends Command
             'requestType' => "subscribeToSymbol",
             'body' => [
                 //'symbol' => DB::table('settings_realtime')->first()->symbol,
-                'symbol' => $this->option('param')[1], // EUR
+                'symbol' => $this->option('param')[1], // EUR AAPL
                 'currency' => $this->option('param')[2], // USD
                 'queryTime' => null,
                 'duration' => null,
@@ -205,6 +224,22 @@ class RealTime extends Command
                 'queryTime' => null, // 20180127 23:59:59, 20190101 23:59:59
                 'duration' => '3600 S', // '3600 S' '1 D'
                 'timeFrame' => $this->option('param')[3], // 1 min, 15 mins
+            ]
+        ]);
+        return $requestObject;
+    }
+
+    private function placeTestOrder($symbol, $direction, $volume){
+        // $arr = explode(" ", $this->option('param')[3], 2); // Get time digits out of time frame string
+        // DB::table('settings_realtime')->where('id', 1)->update(['time_frame' => $arr[0],]); // Stare in DB
+        $requestObject = json_encode([
+            'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
+            'requestType' => "placeOrder", // historyLoad
+            'body' => [
+                'symbol' => $symbol, // EUR AAPL
+                'currency' => 'USD', // USD
+                'direction' => $direction,
+                'volume' => $volume
             ]
         ]);
         return $requestObject;
