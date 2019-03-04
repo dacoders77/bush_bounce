@@ -9,9 +9,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Request history bars from C#, store them in DB and backtest.
  * Sample command call:
- * FOREX: php artisan backtest:start --param=init --param=EUR --param=USD --param="20190101 23:59:59" --param="1 D" --param="15 mins"
  * STOCK: php artisan backtest:start --param=init --param=AAPL --param=USD --param="20190102 23:59:59" --param="5 D" --param="5 mins"
- * YYYYMMDD
+ * Date format: YYYYMMDD
  * Class Backtest
  * @package App\Console\Commands
  */

@@ -17,13 +17,17 @@ use App\Classes\WsApiMessages\PusherApiMessage;
 
 /**
  * Send a real-time trades subscription request to C#.
- * Sample call: php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins"
- *              php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins" --param=BUY
+ * Load history bars and subscribe to ticks:
+ * php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins" --param=NONE
+ * Test trade (no history or subscription):
+ * php artisan realtime:start --param=init --param=AAPL --param=USD --param="1 min" --param=BUY
+ *
  *
  * $this->option('param')[0] - init start (reserved)
  * $this->option('param')[1] - symbol
  * $this->option('param')[2] - currency
  * $this->option('param')[3] - time frame
+ * ---
  * $this->option('param')[4] - BUY/SELL place market order test. Used when have no time to wait and need to test a trade
  * $this->option('param')[5] - order volume
  *
@@ -100,14 +104,17 @@ class RealTime extends Command
                  */
                 if ($this->option('param')[4] == 'BUY' || $this->option('param')[4] == 'SELL') {
                     $conn->send($this->placeTestOrder($this->option('param')[1], $this->option('param')[4], $this->option('param')[5]));
-                    //die('die from RealTime.php');
+                    // die('die from RealTime.php');
                 }
 
-
-                //dump($this->option('param')[4]);
                 if ($this->option('param')[4] == 'NONE') {
                     $conn->send($this->historyLoad()); // Request history bars and store them in DB
                     $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
+                    // die('die from RealTime.php SUBSCRIPTION');
+                }
+
+                if ($this->option('param')[4] == 'HIST') {
+                    $conn->send($this->historyLoad());
                     // die('die from RealTime.php SUBSCRIPTION');
                 }
 
