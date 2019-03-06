@@ -9,19 +9,12 @@ use Symfony\Component\Routing\Tests\Matcher\DumpedUrlMatcherTest;
 use App\Classes\WsApiMessages\PusherApiMessage;
 use Illuminate\Support\Facades\Cache;
 
-// 1. real-time command is started
-// 2. currency, symbol is provided
-// 3. time frame is entered
-// 4. time frame value is updated in DB
-// 5. when historyLoad method is performed, there are two types of value: 1 min and >1min -> 1 mins, 2 mins, 3 mins etc.
-
-
 /**
- * Send a real-time trades subscription request to C#.
+ * Send a real-time FX trades subscription request to C#.
  * Load history bars and subscribe to ticks:
- * php artisan realtime:start --param=init --param=AAPL --param=USD --param="15 mins" --param=NONE
+ * php artisan realtimefx:start --param=init --param=EUR --param=USD --param="15 mins" --param=NONE
  * Test trade (no history or subscription):
- * php artisan realtime:start --param=init --param=AAPL --param=USD --param="1 min" --param=BUY
+ * php artisan realtimefx:start --param=init --param=EUR --param=USD --param="1 min" --param=SELL --param=1
  *
  *
  * $this->option('param')[0] - init start (reserved)
@@ -35,7 +28,7 @@ use Illuminate\Support\Facades\Cache;
  * Class RealTime
  * @package App\Console\Commands
  */
-class RealTime extends Command
+class RealTimeFx extends Command
 {
     private $rateLimitTime;
     protected $connection;
@@ -46,7 +39,7 @@ class RealTime extends Command
      *
      * @var string
      */
-    protected $signature = 'realtime:start {--param=*}'; // Params array input
+    protected $signature = 'realtimefx:start {--param=*}'; // Params array input
 
     /**
      * The console command description.
@@ -73,9 +66,6 @@ class RealTime extends Command
      */
     public function handle(Classes\Chart $chart, Classes\CandleMaker $candleMaker)
     {
-        // dump($this->option('param')[3]);
-        // die('RealTime.php');
-        // $this->placeTestOrder->PlaceMarketOrder()
         echo "Params: = ";
         dump($this->option('param'));
         DB::table(env("ASSET_TABLE"))->truncate();
@@ -109,14 +99,14 @@ class RealTime extends Command
                  * History load and real-time subscriptions - will not.
                  */
                 if ($this->option('param')[4] == 'BUY' || $this->option('param')[4] == 'SELL') {
-                    $conn->send($this->placeTestOrder($this->option('param')[1], $this->option('param')[4], $this->option('param')[5]));
+                    $conn->send($this->placeTestOrder($this->option('param')[1], $this->option('param')[2], $this->option('param')[4], $this->option('param')[5]));
                     // die('die from RealTime.php');
                 }
 
                 if ($this->option('param')[4] == 'NONE') {
                     $conn->send($this->historyLoad()); // Request history bars and store them in DB
                     $conn->send($this->subscribeToSymbol()); // Subscribe to ticks
-                    // die('die from RealTime.php SUBSCRIPTION');
+                    //die('die from RealTime.php SUBSCRIPTION');
                 }
 
                 if ($this->option('param')[4] == 'HIST') {
@@ -208,7 +198,7 @@ class RealTime extends Command
     private function subscribeToSymbol(){
         $requestObject = json_encode([
             'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
-            'requestType' => "subscribeToSymbol",
+            'requestType' => "subscribeToSymbolFx",
             'body' => [
                 //'symbol' => DB::table('settings_realtime')->first()->symbol,
                 'symbol' => $this->option('param')[1], // EUR AAPL
@@ -235,7 +225,7 @@ class RealTime extends Command
         DB::table('settings_realtime')->where('id', 1)->update(['time_frame' => $arr[0],]); // Stare in DB
         $requestObject = json_encode([
             'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
-            'requestType' => "historyLoad",
+            'requestType' => "historyLoadFx",
             'body' => [
                 'symbol' => $this->option('param')[1], // EUR
                 'currency' => $this->option('param')[2], // USD
@@ -247,15 +237,13 @@ class RealTime extends Command
         return $requestObject;
     }
 
-    private function placeTestOrder($symbol, $direction, $volume){
-        // $arr = explode(" ", $this->option('param')[3], 2); // Get time digits out of time frame string
-        // DB::table('settings_realtime')->where('id', 1)->update(['time_frame' => $arr[0],]); // Stare in DB
+    private function placeTestOrder($symbol, $currency, $direction, $volume){
         $requestObject = json_encode([
             'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
-            'requestType' => "placeOrder", // historyLoad
+            'requestType' => "placeOrderFx", // historyLoad
             'body' => [
-                'symbol' => $symbol, // EUR AAPL
-                'currency' => 'USD', // USD
+                'symbol' => $symbol, // EUR, AAPL
+                'currency' => $currency, // USD
                 'direction' => $direction,
                 'volume' => $volume
             ]
@@ -284,29 +272,11 @@ class RealTime extends Command
             if (Cache::get('webSocketObject' . env("DB_DATABASE")) != null)
             {
                 $this->value = json_decode(Cache::get('webSocketObject' . env("DB_DATABASE"), true));
-                // dump(json_decode($this->value, true));
-
-                /*if ($value->action == "placeOrder"){
-                    // Place order with the price and volume from cache
-                    $orderObject = json_encode([
-                        'method' => 'newOrder',
-                        'params' => [
-                            'clientOrderId' => $value->orderId,
-                            'symbol' => DB::table('settings_realtime')->first()->symbol,
-                            'side' => $value->direction,
-                            'type' => 'limit',
-                            'price' => $value->price,
-                            'quantity' => $value->quantity
-                        ],
-                        'id' => '123'
-                    ]);
-                }*/
-
                 if ($this->connection){
                     // $this->connection->send(json_encode(['method' => 'getOrders', 'params' => [], 'id' => '123'])); // Get order statuses
                     // if ($orderObject) $this->connection->send($orderObject); // Send object to websocket stream;
 
-                    if ($this->value)$this->connection->send($this->placeTestOrder($this->value->symbol, $this->value->direction, $this->value->volume));
+                    if ($this->value)$this->connection->send($this->placeTestOrder($this->value->symbol, $this->value->currency, $this->value->direction, $this->value->volume));
                 }
                 else{
                     dump('no connection. RealTime.php');

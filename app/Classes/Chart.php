@@ -15,6 +15,7 @@ use App\Events\eventTrigger;
 use PhpParser\Node\Expr\Variable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 
 
 /**
@@ -195,15 +196,17 @@ class Chart
                 if ($this->trade_flag == "all"){
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy"); // Works good
+                    //app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy"); // Works good
+                    Cache::put('webSocketObject' . env("DB_DATABASE"), json_encode(['symbol' => 'EUR', 'currency' => 'USD', 'direction' => 'BUY', 'volume' => 1]), 5);
                     event(new \App\Events\ConnectionError("INFO. Chart.php line 211. BUY ORDER. "));
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    // app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    // app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("buy");
+                    Cache::put('webSocketObject' . env("DB_DATABASE"), json_encode(['symbol' => 'EUR', 'currency' => 'USD', 'direction' => 'BUY', 'volume' => 1]), 5);
                     event(new \App\Events\ConnectionError("INFO. Chart.php line 222 . BUY ORDER. "));
                 }
             }
@@ -257,15 +260,17 @@ class Chart
                     // open order buy vol = vol
                     echo "---------------------- FIRST EVER TRADE<br>\n";
                     //event(new \App\Events\BushBounce('First ever trade'));
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    //app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    Cache::put('webSocketObject' . env("DB_DATABASE"), json_encode(['symbol' => 'EUR', 'currency' => 'USD', 'direction' => 'SELL', 'volume' => 1]), 5);
                     event(new \App\Events\ConnectionError("INFO. Chart.php line 274. SELL ORDER. "));
                 }
                 else // Not the first trade. Close the current position and open opposite trade. vol = vol * 2
                 {
                     // open order buy vol = vol * 2
                     echo "---------------------- NOT FIRST EVER TRADE. CLOSE + OPEN. VOL*2<br>\n";
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
-                    app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    //app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    //app('App\Http\Controllers\PlaceOrder\BitFinexAuthApi')->placeOrder("sell");
+                    Cache::put('webSocketObject' . env("DB_DATABASE"), json_encode(['symbol' => 'EUR', 'currency' => 'USD', 'direction' => 'SELL', 'volume' => 1]), 5);
                     event(new \App\Events\ConnectionError("INFO. Chart.php line 285. SELL ORDER. "));
 
                 }

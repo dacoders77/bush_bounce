@@ -7,22 +7,22 @@ use App\Classes;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Request history bars from C#, store them in DB and backtest.
+ * Request FX history bars from C#, store them in DB and backtest.
  * Sample command call:
- * STOCK:
- * php artisan backtest:start --param=init --param=AAPL --param=USD --param="20190102 23:59:59" --param="5 D" --param="5 mins"
+ * FX:
+ * php artisan backtestfx:start --param=init --param=AAPL --param=USD --param="20190102 23:59:59" --param="5 D" --param="5 mins"
  * Date format: YYYYMMDD
  * Class Backtest
  * @package App\Console\Commands
  */
-class Backtest extends Command
+class BacktestFx extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'backtest:start {--param=*}'; // Params array input
+    protected $signature = 'backtestfx:start {--param=*}'; // Params array input
 
     /**
      * The console command description.
@@ -66,53 +66,6 @@ class Backtest extends Command
                 $conn->on('message', function (\Ratchet\RFC6455\Messaging\MessageInterface $socketMessage) use ($conn, $chart, $candleMaker, $loop) {
                     $nojsonMessage = json_decode($socketMessage->getPayload(), true);
                     if ($nojsonMessage) $this->parseWebSocketMessage($nojsonMessage, $candleMaker, $chart, $this, $loop);
-                    /*
-                    if (array_key_exists('method', $nojsonMessage)) {
-
-                        $timestamp = strtotime($nojsonMessage['params']['data'][0]['timestamp']) * 1000;
-
-                        // Check whether broadcast is allowed only once a second
-                        if ($this->isFirstTimeBroadcastCheck || $timestamp >= $this->addedTime) {
-                            $this->addedTime = $timestamp + 1000;
-                            $this->isFirstTimeBroadcastCheck = false;
-
-                            // @var collection $settings The whole row from settings table.
-                            //  Passed to CandleMaker. The reason to locate this variable here is to read this value only once a second.
-                            //  We already have this functionality here - broadcast allowed check
-                            $this->settings = DB::table('settings_realtime')->first(); // Read settings row and pass it to CandleMaker as a parameter
-
-                            if (DB::table('settings_realtime')
-                                    ->where('id', 1)
-                                    ->value('broadcast_stop') == 0) {
-                                $this->isBroadCastAllowed = true;
-                            } else {
-                                $this->isBroadCastAllowed = false;
-                                echo "RatchetPawlSocket.php Broadcast flag is set to FALSE. line 226  \n";
-                                event(new \App\Events\ConnectionError("Broadcast stopped. " . (new \DateTime())->format('H:i:s')));
-                            }
-                        }
-
-
-                         // 1st condition $this->isFirstTimeTickCheck - enter here only once when the app starts
-                         // 2nd tick time > computed time and broadcast is allowed
-
-                        if ($this->isFirstTimeTickCheck || ($timestamp >= $this->addedTickTime && $this->isBroadCastAllowed)) {
-
-                            $this->isFirstTimeTickCheck = false;
-                            $this->addedTickTime = $timestamp + $this->settings->skip_ticks_msec; // Allow to send ticks not more frequent that twice a second
-                            //
-                            //  @param double $nojsonMessage [2][3] ($tickPrice) Price of the trade
-                            //  @param integer $nojsonMessage [2][1] ($tickDate) Timestamp
-                            //  @param double $nojsonMessage [2][2] ($tickVolume) Volume of the trade
-                            //  @param Classes\Chart $chart Chart class instance
-                            //  @param collection $settings Row of settings from DB
-                            //  @param command $command variable for graphical strings output to the console
-                            //
-                            $candleMaker->index($nojsonMessage['params']['data'][0]['price'], $timestamp, $nojsonMessage['params']['data'][0]['quantity'], $chart, $this->settings, $this);
-                        }
-                    }
-                    */
-
                 });
 
                 $conn->on('close', function ($code = null, $reason = null) use ($chart, $candleMaker) {
@@ -166,7 +119,7 @@ class Backtest extends Command
     private function requestObject(){
         $requestObject = json_encode([
             'clientId' => env("PUSHER_APP_ID"), // The same client id must be returned from C#. Requests from several bots cant be sent at the same time to the server.
-            'requestType' => "historyLoad",
+            'requestType' => "historyLoadFx",
             'body' => [
                 //'symbol' => DB::table('settings_realtime')->first()->symbol,
                 'symbol' => $this->option('param')[1], // EUR
