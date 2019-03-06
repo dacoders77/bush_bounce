@@ -257,8 +257,8 @@ class RealTimeFx extends Command
 
             /* Kill process after a while*/
             if (time() > $this->rateLimitTime + 900){
-                dump(__FILE__ . ' ' . __LINE__ . " Process killed due expiration. >15 min.");
-                $loop->stop();
+                //dump(__FILE__ . ' ' . __LINE__ . " Process killed due expiration. >15 min.");
+                //$loop->stop();
             }
 
             /* Finish end exit from the current command*/
